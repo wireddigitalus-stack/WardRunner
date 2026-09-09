@@ -69,7 +69,7 @@ export default function HomePage() {
                 Manager Command
               </h3>
               <p className="text-sm text-slate-400">
-                Built for Operations Lead Allen Hurley: Clustered map markers, competitor reconnaissance, Bristol AADT traffic corridors, and CSV/GeoJSON export.
+                Built for Campaign Field Operations: Clustered map markers, competitor reconnaissance, Bristol AADT traffic corridors, and CSV/GeoJSON export.
               </p>
             </div>
             <div className="mt-6 flex items-center text-blue-400 font-bold text-sm gap-2">

@@ -70,14 +70,14 @@ const MAP_STYLES = {
    SEED DATA (used until Supabase returns rows)
    ================================================================ */
 const SEED_SIGNS: Sign[] = [
-  { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Allen Hurley',    sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
-  { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6010, longitude: -82.1780, placed_by_name: 'Allen Hurley',    sign_type: 'banner',     is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
-  { id: '3', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5880, longitude: -82.1950, placed_by_name: 'Sarah Volunteer',  sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 12).toISOString() },
-  { id: '4', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5975, longitude: -82.1830, placed_by_name: 'Sarah Volunteer',  sign_type: 'yard_sign',  is_competitor: true, competitor_name: 'Bob Reynolds', status: 'placed', created_at: new Date(Date.now() - 3600000 * 8).toISOString() },
-  { id: '5', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6085, longitude: -82.1720, placed_by_name: 'Dave K.',          sign_type: 'billboard',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 24).toISOString() },
-  { id: '6', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5840, longitude: -82.1810, placed_by_name: 'Mike Johnson',     sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 4).toISOString() },
-  { id: '7', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6030, longitude: -82.1920, placed_by_name: 'Allen Hurley',    sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 1).toISOString() },
-  { id: '8', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5860, longitude: -82.1750, placed_by_name: 'Dave K.',          sign_type: 'large_sign', is_competitor: true, competitor_name: 'Common Sense Slate', status: 'placed', created_at: new Date(Date.now() - 3600000 * 6).toISOString() },
+  { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Campaign Volunteer', street_address: '620 State Street', sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
+  { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6010, longitude: -82.1780, placed_by_name: 'Campaign Volunteer', street_address: '1430 Lee Highway', sign_type: 'banner', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
+  { id: '3', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5880, longitude: -82.1950, placed_by_name: 'Campaign Volunteer', street_address: '920 Volunteer Parkway', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 12).toISOString() },
+  { id: '4', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5975, longitude: -82.1830, placed_by_name: 'Opponent Volunteer', street_address: '412 State Street', sign_type: 'yard_sign', is_competitor: true, competitor_name: 'Bob Reynolds', status: 'placed', created_at: new Date(Date.now() - 3600000 * 8).toISOString() },
+  { id: '5', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6085, longitude: -82.1720, placed_by_name: 'Campaign Volunteer', street_address: '2105 Lee Highway', sign_type: 'billboard', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 24).toISOString() },
+  { id: '6', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5840, longitude: -82.1810, placed_by_name: 'Campaign Volunteer', street_address: '1750 Bluff City Highway', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 4).toISOString() },
+  { id: '7', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6030, longitude: -82.1920, placed_by_name: 'Campaign Volunteer', street_address: '1100 West State Street', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 1).toISOString() },
+  { id: '8', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5860, longitude: -82.1750, placed_by_name: 'Opponent Volunteer', street_address: '1820 Bluff City Highway', sign_type: 'large_sign', is_competitor: true, competitor_name: 'Common Sense Slate', status: 'placed', created_at: new Date(Date.now() - 3600000 * 6).toISOString() },
 ];
 
 /* ================================================================
@@ -142,7 +142,8 @@ export default function DashboardPage() {
   const [loadingAddress, setLoadingAddress] = useState(false);
   const geocodeCacheRef = useRef<Record<string, string>>({});
 
-  const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
+  const reverseGeocode = useCallback(async (lat: number, lng: number, fallback?: string | null): Promise<string> => {
+    if (fallback && fallback.trim()) return fallback;
     const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
     if (geocodeCacheRef.current[key]) return geocodeCacheRef.current[key];
     try {
@@ -153,11 +154,11 @@ export default function DashboardPage() {
       const addr = data.address;
       const street = addr?.road || addr?.pedestrian || addr?.footway || '';
       const num = addr?.house_number || '';
-      const result = num && street ? `${num} ${street}` : street || data.display_name?.split(',').slice(0, 2).join(',') || 'Unknown location';
+      const result = num && street ? `${num} ${street}` : street || data.display_name?.split(',').slice(0, 2).join(',') || fallback || 'Bristol, TN';
       geocodeCacheRef.current[key] = result;
       return result;
     } catch {
-      return 'Location unavailable';
+      return fallback || 'Bristol, TN';
     }
   }, []);
 
@@ -218,9 +219,14 @@ export default function DashboardPage() {
   /* ---------- Reverse Geocode Selected Sign ---------- */
   useEffect(() => {
     if (!selectedSign) { setStreetAddress(''); return; }
+    if (selectedSign.street_address) {
+      setStreetAddress(selectedSign.street_address);
+      setLoadingAddress(false);
+      return;
+    }
     let cancelled = false;
     setLoadingAddress(true);
-    reverseGeocode(Number(selectedSign.latitude), Number(selectedSign.longitude)).then(addr => {
+    reverseGeocode(Number(selectedSign.latitude), Number(selectedSign.longitude), selectedSign.street_address).then(addr => {
       if (!cancelled) { setStreetAddress(addr); setLoadingAddress(false); }
     });
     return () => { cancelled = true; };
@@ -539,7 +545,7 @@ export default function DashboardPage() {
                   border: 1px solid rgba(255,255,255,0.1);
                 ">
                   <div style="color:white;font-size:13px;font-weight:800;line-height:1.3;">${tooltipName}</div>
-                  <div style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:600;margin-top:2px;">${tooltipType} · ${sign.placed_by_name}</div>
+                  <div style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:600;margin-top:2px;">${tooltipType} · ${sign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'}</div>
                 </div>
                 <div style="
                   width:0;height:0;
@@ -738,22 +744,25 @@ export default function DashboardPage() {
             </div>
 
             <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
-              <div>
-                <span className="text-[9px] uppercase font-bold opacity-30 block">📍 Street Address</span>
+              <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10">
+                <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider block">📍 Street Address</span>
                 {loadingAddress ? (
-                  <span className={`inline-block h-4 w-40 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+                  <span className={`inline-block h-4 w-44 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
                 ) : (
-                  <span className="font-semibold mt-0.5 block text-[13px]">{streetAddress}</span>
+                  <span className="font-extrabold mt-1 block text-sm text-white">{streetAddress || selectedSign.street_address || 'Bristol, TN'}</span>
                 )}
+                <span className="text-[10px] opacity-40 block mt-0.5 font-mono">Bristol, TN • {Number(selectedSign.latitude).toFixed(4)}, {Number(selectedSign.longitude).toFixed(4)}</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[9px] uppercase font-bold opacity-30 block">Placed By</span>
-                  <span className="font-semibold mt-0.5 block">{selectedSign.placed_by_name}</span>
+                  <span className="text-[9px] uppercase font-bold opacity-30 block">Logged By</span>
+                  <span className="font-semibold mt-0.5 block">
+                    {selectedSign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'}
+                  </span>
                 </div>
                 <div>
                   <span className="text-[9px] uppercase font-bold opacity-30 block">GPS</span>
-                  <span className="font-mono opacity-60 mt-0.5 block">{Number(selectedSign.latitude).toFixed(5)}, {Number(selectedSign.longitude).toFixed(5)}</span>
+                  <span className="font-mono opacity-60 mt-0.5 block">{Number(selectedSign.latitude).toFixed(4)}, {Number(selectedSign.longitude).toFixed(4)}</span>
                 </div>
               </div>
             </div>
@@ -813,13 +822,14 @@ export default function DashboardPage() {
 
             {/* Details Section */}
             <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
-              <div>
-                <span className="text-[9px] uppercase font-bold opacity-30 block">📍 Verified Street Address</span>
+              <div className="p-3 rounded-2xl bg-white/[0.04] border border-amber-500/20">
+                <span className="text-[9px] uppercase font-bold text-amber-400 tracking-wider block">📍 Street Address / Intersection</span>
                 {loadingRecAddress ? (
-                  <span className={`inline-block h-4 w-40 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+                  <span className={`inline-block h-4 w-44 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
                 ) : (
-                  <span className="font-semibold mt-0.5 block text-[13px]">{recAddress || selectedRec.street}</span>
+                  <span className="font-extrabold mt-1 block text-sm text-white">{recAddress || selectedRec.street}</span>
                 )}
+                <span className="text-[10px] opacity-40 block mt-0.5 font-mono">Bristol, TN • {selectedRec.lat.toFixed(4)}, {selectedRec.lng.toFixed(4)}</span>
               </div>
 
               <div>
@@ -917,7 +927,7 @@ export default function DashboardPage() {
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-30" />
                 <input
                   type="text"
-                  placeholder="Search volunteers or opponents…"
+                  placeholder="Search streets, signs, or opponents…"
                   value={searchQ}
                   onChange={e => setSearchQ(e.target.value)}
                   className={`w-full h-10 pl-10 pr-4 rounded-xl border text-sm focus:outline-none transition ${isDark ? 'bg-white/5 border-white/10 focus:border-emerald-500/50 text-white placeholder:text-zinc-500' : 'bg-black/[0.03] border-black/10 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400'}`}
@@ -1117,7 +1127,7 @@ export default function DashboardPage() {
                                 <span className="text-xs font-bold truncate">{sign.is_competitor ? sign.competitor_name : 'Melissa K. Brown'}</span>
                                 {sign.is_competitor && <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-rose-400" />}
                               </div>
-                              <p className="text-[10px] opacity-40 truncate">{sign.placed_by_name} · {relativeTime(sign.created_at)}</p>
+                              <p className="text-[10px] opacity-40 truncate">{sign.street_address ? `${sign.street_address} · ` : ''}{sign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'} · {relativeTime(sign.created_at)}</p>
                             </div>
                           </div>
                           <span className={`shrink-0 text-[9px] font-extrabold px-2 py-0.5 rounded-md ${sign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>

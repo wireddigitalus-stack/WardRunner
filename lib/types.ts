@@ -21,6 +21,7 @@ export interface Sign {
   competitor_name?: string | null;
   photo_url?: string | null;
   status: SignStatus;
+  street_address?: string | null;
   created_at: string;
   retrieved_at?: string | null;
 }

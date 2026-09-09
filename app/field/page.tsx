@@ -156,7 +156,7 @@ export default function FieldPage() {
           return;
         }
 
-        setAuthError('Invalid PIN. Contact Campaign Operations Lead Allen Hurley for the PIN.');
+        setAuthError('Invalid PIN. Contact Campaign Headquarters for the PIN.');
         setIsAuthenticating(false);
         return;
       }
@@ -349,7 +349,7 @@ export default function FieldPage() {
             campaign_id: session.campaignId,
             latitude: (coords?.latitude || 41.673) + 0.0004,
             longitude: (coords?.longitude || -72.946) + 0.0005,
-            placed_by_name: 'Allen Hurley',
+            placed_by_name: 'Campaign Volunteer',
             sign_type: 'large_sign',
             is_competitor: false,
             status: 'placed',
@@ -464,7 +464,7 @@ export default function FieldPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Allen Hurley or Sarah T."
+                  placeholder="e.g. Field Volunteer or Volunteer #1"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   className="w-full h-13 px-4 text-base bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-white placeholder:text-slate-600 transition"
