@@ -88,6 +88,30 @@ export default function DashboardPage() {
   const [ownerFilter, setOwnerFilter] = useState<'all' | 'ours' | 'theirs'>('all');
   const [searchQ, setSearchQ] = useState('');
 
+  // Reverse geocoding for street names
+  const [streetAddress, setStreetAddress] = useState<string>('');
+  const [loadingAddress, setLoadingAddress] = useState(false);
+  const geocodeCacheRef = useRef<Record<string, string>>({});
+
+  const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
+    const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+    if (geocodeCacheRef.current[key]) return geocodeCacheRef.current[key];
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=18&addressdetails=1`, {
+        headers: { 'Accept-Language': 'en' },
+      });
+      const data = await res.json();
+      const addr = data.address;
+      const street = addr?.road || addr?.pedestrian || addr?.footway || '';
+      const num = addr?.house_number || '';
+      const result = num && street ? `${num} ${street}` : street || data.display_name?.split(',').slice(0, 2).join(',') || 'Unknown location';
+      geocodeCacheRef.current[key] = result;
+      return result;
+    } catch {
+      return 'Location unavailable';
+    }
+  }, []);
+
   /* ---------- Data Fetching ---------- */
   useEffect(() => { fetchSigns(); }, []);
 
@@ -118,6 +142,17 @@ export default function DashboardPage() {
   }), [signs]);
 
   const isDark = theme === 'dark';
+
+  /* ---------- Reverse Geocode Selected Sign ---------- */
+  useEffect(() => {
+    if (!selectedSign) { setStreetAddress(''); return; }
+    let cancelled = false;
+    setLoadingAddress(true);
+    reverseGeocode(Number(selectedSign.latitude), Number(selectedSign.longitude)).then(addr => {
+      if (!cancelled) { setStreetAddress(addr); setLoadingAddress(false); }
+    });
+    return () => { cancelled = true; };
+  }, [selectedSign, reverseGeocode]);
 
   /* ---------- Map Initialization ---------- */
   useEffect(() => {
@@ -521,14 +556,24 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} grid grid-cols-2 gap-3 text-xs`}>
+            <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
               <div>
-                <span className="text-[9px] uppercase font-bold opacity-30 block">Placed By</span>
-                <span className="font-semibold mt-0.5 block">{selectedSign.placed_by_name}</span>
+                <span className="text-[9px] uppercase font-bold opacity-30 block">📍 Street Address</span>
+                {loadingAddress ? (
+                  <span className={`inline-block h-4 w-40 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+                ) : (
+                  <span className="font-semibold mt-0.5 block text-[13px]">{streetAddress}</span>
+                )}
               </div>
-              <div>
-                <span className="text-[9px] uppercase font-bold opacity-30 block">GPS</span>
-                <span className="font-mono opacity-60 mt-0.5 block">{Number(selectedSign.latitude).toFixed(5)}, {Number(selectedSign.longitude).toFixed(5)}</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-[9px] uppercase font-bold opacity-30 block">Placed By</span>
+                  <span className="font-semibold mt-0.5 block">{selectedSign.placed_by_name}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase font-bold opacity-30 block">GPS</span>
+                  <span className="font-mono opacity-60 mt-0.5 block">{Number(selectedSign.latitude).toFixed(5)}, {Number(selectedSign.longitude).toFixed(5)}</span>
+                </div>
               </div>
             </div>
 
