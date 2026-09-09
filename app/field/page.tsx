@@ -19,6 +19,7 @@ import {
   ShieldAlert,
   Compass,
 } from 'lucide-react';
+import DictateButton from '@/app/components/DictateButton';
 
 const SIGN_TYPES: { id: SignType; label: string; icon: string; size: string }[] = [
   { id: 'yard_sign', label: 'Yard Sign', icon: '🏡', size: 'Standard 24"x18"' },
@@ -486,14 +487,24 @@ export default function FieldPage() {
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                   Volunteer Name / Call Sign
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Field Volunteer or Volunteer #1"
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full h-13 px-4 text-base bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-white placeholder:text-slate-600 transition"
-                  required
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. Field Volunteer or Volunteer #1"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    spellCheck={true}
+                    autoCorrect="on"
+                    autoCapitalize="words"
+                    className="flex-1 h-13 px-4 text-base bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-white placeholder:text-slate-600 transition"
+                    required
+                  />
+                  <DictateButton
+                    onTranscript={(dictated) => setNameInput(dictated)}
+                    size="lg"
+                    title="Push to dictate your name"
+                  />
+                </div>
               </div>
 
               <button
@@ -673,14 +684,24 @@ export default function FieldPage() {
                 <label className="block text-xs font-bold text-rose-400 uppercase tracking-wide mb-1">
                   Competitor Candidate / Slate
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Bob Reynolds or Common Sense Slate"
-                  value={competitorName}
-                  onChange={(e) => setCompetitorName(e.target.value)}
-                  className="w-full h-11 px-3 bg-slate-950 border border-rose-500/40 rounded-xl text-white text-sm focus:outline-none focus:border-rose-400 transition"
-                  autoFocus
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. Bob Reynolds or Common Sense Slate"
+                    value={competitorName}
+                    onChange={(e) => setCompetitorName(e.target.value)}
+                    spellCheck={true}
+                    autoCorrect="on"
+                    autoCapitalize="words"
+                    className="flex-1 h-11 px-3 bg-slate-950 border border-rose-500/40 rounded-xl text-white text-sm focus:outline-none focus:border-rose-400 transition"
+                    autoFocus
+                  />
+                  <DictateButton
+                    onTranscript={(dictated) => setCompetitorName(dictated)}
+                    size="md"
+                    title="Push to dictate competitor candidate name"
+                  />
+                </div>
               </div>
             )}
           </div>

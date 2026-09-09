@@ -12,6 +12,7 @@ import {
   Edit2,
   Save,
 } from 'lucide-react';
+import DictateButton from '@/app/components/DictateButton';
 
 export interface Volunteer {
   id: string;
@@ -328,14 +329,24 @@ export default function VolunteerManagerModal({
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                     Full Name *
                   </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Rachel Miller"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full h-9 px-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50"
-                  />
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Rachel Miller"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      spellCheck={true}
+                      autoCorrect="on"
+                      autoCapitalize="words"
+                      className="flex-1 h-9 px-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500/50"
+                    />
+                    <DictateButton
+                      onTranscript={(dictated) => setName(dictated)}
+                      size="sm"
+                      title="Push to dictate volunteer name"
+                    />
+                  </div>
                 </div>
 
                 <div>

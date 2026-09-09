@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import type { Sign, SignType, Recommendation } from '@/lib/types';
 import type { TrafficStation, Intersection } from '@/lib/trafficData';
+import DictateButton from '@/app/components/DictateButton';
 
 interface SmartScoutProps {
   signs: Sign[];
@@ -320,19 +321,27 @@ export default function SmartScout({
             {/* Chat Input */}
             {tab === 'chat' && (
               <div className="p-2.5 border-t border-white/[0.06] shrink-0">
-                <div className="flex gap-1.5">
+                <div className="flex items-center gap-1.5">
                   <input
                     type="text"
-                    placeholder="Ask Scout…"
+                    placeholder="Ask Scout (or tap mic)…"
                     value={chatInput}
                     onChange={e => setChatInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !chatLoading && sendChat()}
+                    spellCheck={true}
+                    autoCorrect="on"
+                    autoCapitalize="sentences"
                     className="flex-1 h-9 px-3 rounded-xl border bg-white/5 border-white/10 focus:border-amber-500/50 text-white placeholder:text-zinc-500 text-[11px] focus:outline-none transition"
+                  />
+                  <DictateButton
+                    onTranscript={(dictated) => setChatInput(dictated)}
+                    size="sm"
+                    title="Push to dictate to Scout AI"
                   />
                   <button
                     onClick={sendChat}
                     disabled={chatLoading || !chatInput.trim()}
-                    className="h-9 w-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/25 active:scale-90 transition-all disabled:opacity-30"
+                    className="h-9 w-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/25 active:scale-90 transition-all disabled:opacity-30 shrink-0"
                   >
                     <Send className="w-3.5 h-3.5" />
                   </button>

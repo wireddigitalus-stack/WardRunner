@@ -7,6 +7,8 @@ import { getTrafficData, stationsToGeoJSON, intersectionsToGeoJSON, TrafficStati
 import realCorridors from '@/lib/realCorridors.json';
 import SmartScout from './components/SmartScout';
 import VolunteerManagerModal from './components/VolunteerManagerModal';
+import MapSearchBar from './components/MapSearchBar';
+import DictateButton from '@/app/components/DictateButton';
 import {
   Users,
   Download,
@@ -185,13 +187,58 @@ export default function DashboardPage() {
     } catch { setSigns(SEED_SIGNS); } finally { setLoading(false); }
   };
 
+  // Search Target Pin Marker
+  const searchMarkerRef = useRef<any>(null);
+
+  const handleSearchSelectLocation = useCallback((lat: number, lng: number, title?: string) => {
+    if (!mapRef.current) return;
+    mapRef.current.flyTo({
+      center: [lng, lat],
+      zoom: 16.5,
+      pitch: is3D ? 55 : 0,
+      duration: 900,
+    });
+
+    if (searchMarkerRef.current) {
+      searchMarkerRef.current.remove();
+      searchMarkerRef.current = null;
+    }
+
+    const mgl = (window as any).maplibregl;
+    if (mgl) {
+      const el = document.createElement('div');
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;pointer-events:none;">
+          <div style="background:rgba(16,185,129,0.95);color:white;padding:5px 12px;border-radius:9999px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 4px 16px rgba(16,185,129,0.5);border:1.5px solid rgba(255,255,255,0.4);margin-bottom:3px;">
+            📍 ${title || 'Target Location'}
+          </div>
+          <div style="width:16px;height:16px;background:#10b981;border:2.5px solid white;border-radius:50%;box-shadow:0 0 14px #10b981;"></div>
+        </div>
+      `;
+      const marker = new mgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(mapRef.current);
+      searchMarkerRef.current = marker;
+
+      setTimeout(() => {
+        if (searchMarkerRef.current === marker) {
+          marker.remove();
+          searchMarkerRef.current = null;
+        }
+      }, 25000);
+    }
+  }, [is3D]);
+
   /* ---------- Derived ---------- */
   const filtered = useMemo(() => signs.filter(s => {
     if (typeFilter !== 'all' && s.sign_type !== typeFilter) return false;
     if (statusFilter !== 'all' && s.status !== statusFilter) return false;
     if (ownerFilter === 'ours' && s.is_competitor) return false;
     if (ownerFilter === 'theirs' && !s.is_competitor) return false;
-    if (searchQ && !s.placed_by_name.toLowerCase().includes(searchQ.toLowerCase()) && !(s.competitor_name || '').toLowerCase().includes(searchQ.toLowerCase())) return false;
+    if (searchQ && 
+      !s.placed_by_name.toLowerCase().includes(searchQ.toLowerCase()) && 
+      !(s.competitor_name || '').toLowerCase().includes(searchQ.toLowerCase()) &&
+      !(s.street_address || '').toLowerCase().includes(searchQ.toLowerCase()) &&
+      !s.sign_type.replace('_', ' ').toLowerCase().includes(searchQ.toLowerCase())
+    ) return false;
     return true;
   }), [signs, typeFilter, statusFilter, ownerFilter, searchQ]);
 
@@ -722,6 +769,20 @@ export default function DashboardPage() {
       </header>
 
       {/* ============================================================
+          FAST MAP SEARCH CAPSULE (Floating under header)
+          ============================================================ */}
+      <div className="absolute top-[68px] sm:top-[72px] left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+        <MapSearchBar
+          signs={signs}
+          onSelectLocation={handleSearchSelectLocation}
+          onSelectSign={(sign) => {
+            setSelectedSign(sign);
+          }}
+          isDark={isDark}
+        />
+      </div>
+
+      {/* ============================================================
           RIGHT-RAIL MAP CONTROLS (Apple Maps style)
           ============================================================ */}
       <div className="absolute right-3 sm:right-4 top-20 z-10 flex flex-col gap-2 pointer-events-auto animate-slide-up" style={{ animationDelay: '200ms' }}>
@@ -967,15 +1028,34 @@ export default function DashboardPage() {
             <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-6">
 
               {/* Search */}
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-30" />
+              <div className="relative flex items-center">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search streets, signs, or opponents…"
                   value={searchQ}
                   onChange={e => setSearchQ(e.target.value)}
-                  className={`w-full h-10 pl-10 pr-4 rounded-xl border text-sm focus:outline-none transition ${isDark ? 'bg-white/5 border-white/10 focus:border-emerald-500/50 text-white placeholder:text-zinc-500' : 'bg-black/[0.03] border-black/10 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400'}`}
+                  spellCheck={true}
+                  autoCorrect="on"
+                  autoCapitalize="words"
+                  className={`w-full h-10 pl-10 pr-16 rounded-xl border text-sm focus:outline-none transition ${isDark ? 'bg-white/5 border-white/10 focus:border-emerald-500/50 text-white placeholder:text-zinc-500' : 'bg-black/[0.03] border-black/10 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400'}`}
                 />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {searchQ && (
+                    <button
+                      onClick={() => setSearchQ('')}
+                      className="p-1 rounded-md text-slate-400 hover:text-white"
+                      title="Clear filter"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <DictateButton
+                    onTranscript={(dictated) => setSearchQ(dictated)}
+                    size="sm"
+                    title="Push to dictate search filter"
+                  />
+                </div>
               </div>
 
               {/* Owner Segment */}
