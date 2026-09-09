@@ -1,0 +1,17 @@
+{
+  "name": "WardRunner Field Ops",
+  "short_name": "WardRunner",
+  "description": "Rapid field sign logistics and intelligence for campaigns",
+  "start_url": "/field",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 248, 250, 252;
+  --background-start-rgb: 2, 6, 23;
+  --background-end-rgb: 15, 23, 42;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: #020617;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Touch targets optimization for field volunteers */
+button, input, select {
+  touch-action: manipulation;
+}
