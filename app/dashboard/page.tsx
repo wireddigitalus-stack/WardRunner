@@ -200,8 +200,8 @@ export default function DashboardPage() {
           data: realCorridors as any,
         });
         map.addLayer({ id: 'corridor-glow', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 12, 'line-opacity': isDark ? 0.22 : 0.14, 'line-blur': 6 } });
-        map.addLayer({ id: 'corridor-core', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 3.5, 'line-opacity': 0.9 } });
-        map.addLayer({ id: 'corridor-dash', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 1.2, 'line-opacity': 0.35, 'line-dasharray': [3, 4] } });
+        map.addLayer({ id: 'corridor-core', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 4, 'line-opacity': 0.95 } });
+        map.addLayer({ id: 'corridor-inner', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 1.5, 'line-opacity': 0.55 } });
 
         // Hover tooltip on corridor lines
         try {
@@ -245,7 +245,7 @@ export default function DashboardPage() {
     const cVis = showCorridors ? 'visible' : 'none';
     const hVis = showHeatmap ? 'visible' : 'none';
     ['boundary-fill', 'boundary-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', bVis));
-    ['corridor-glow', 'corridor-core', 'corridor-dash'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
+    ['corridor-glow', 'corridor-core', 'corridor-inner'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
     ['traffic-heat-glow', 'traffic-heat-core'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', hVis));
   }, [showBoundary, showCorridors, showHeatmap]);
 
