@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Sign } from '@/lib/types';
+import { getTrafficData, stationsToGeoJSON, intersectionsToGeoJSON, TrafficStation, Intersection } from '@/lib/trafficData';
+import SmartScout from './components/SmartScout';
 import {
   Download,
   Layers,
@@ -25,6 +27,7 @@ import {
   Eye,
   EyeOff,
   RotateCcw,
+  Flame,
 } from 'lucide-react';
 
 /* ================================================================
@@ -81,7 +84,13 @@ export default function DashboardPage() {
   const [is3D, setIs3D] = useState(false);
   const [showBoundary, setShowBoundary] = useState(true);
   const [showCorridors, setShowCorridors] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Traffic data from TDOT + OSM
+  const [trafficStations, setTrafficStations] = useState<TrafficStation[]>([]);
+  const [trafficIntersections, setTrafficIntersections] = useState<Intersection[]>([]);
+  const scoutMarkersRef = useRef<any[]>([]);
 
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -113,7 +122,14 @@ export default function DashboardPage() {
   }, []);
 
   /* ---------- Data Fetching ---------- */
-  useEffect(() => { fetchSigns(); }, []);
+  useEffect(() => {
+    fetchSigns();
+    // Fetch TDOT + OSM traffic data
+    getTrafficData().then(td => {
+      setTrafficStations(td.stations);
+      setTrafficIntersections(td.intersections);
+    }).catch(console.warn);
+  }, []);
 
   const fetchSigns = async () => {
     setLoading(true);
@@ -215,9 +231,72 @@ export default function DashboardPage() {
     if (!m?.isStyleLoaded?.()) return;
     const bVis = showBoundary ? 'visible' : 'none';
     const cVis = showCorridors ? 'visible' : 'none';
+    const hVis = showHeatmap ? 'visible' : 'none';
     ['boundary-fill', 'boundary-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', bVis));
     ['corridor-glow', 'corridor-core', 'corridor-dash'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
-  }, [showBoundary, showCorridors]);
+    ['traffic-heat-glow', 'traffic-heat-core'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', hVis));
+  }, [showBoundary, showCorridors, showHeatmap]);
+
+  /* ---------- Traffic Heatmap Layer ---------- */
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || trafficStations.length === 0) return;
+
+    (async () => {
+    const mgl = (await import('maplibre-gl')).default;
+
+    const addHeatmap = () => {
+      if (m.getSource('traffic-stations')) {
+        (m.getSource('traffic-stations') as any).setData(stationsToGeoJSON(trafficStations));
+        return;
+      }
+      m.addSource('traffic-stations', { type: 'geojson', data: stationsToGeoJSON(trafficStations) });
+      // Outer glow
+      m.addLayer({
+        id: 'traffic-heat-glow', type: 'circle', source: 'traffic-stations',
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['get', 'aadt'], 5000, 16, 12000, 28, 25000, 48],
+          'circle-color': ['interpolate', ['linear'], ['get', 'aadt'], 5000, '#22c55e', 12000, '#eab308', 20000, '#ef4444'],
+          'circle-opacity': 0.15,
+          'circle-blur': 1,
+        },
+      });
+      // Core dot
+      m.addLayer({
+        id: 'traffic-heat-core', type: 'circle', source: 'traffic-stations',
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['get', 'aadt'], 5000, 5, 12000, 8, 25000, 13],
+          'circle-color': ['interpolate', ['linear'], ['get', 'aadt'], 5000, '#22c55e', 12000, '#eab308', 20000, '#ef4444'],
+          'circle-opacity': 0.7,
+          'circle-stroke-width': 1.5,
+          'circle-stroke-color': 'rgba(255,255,255,0.6)',
+        },
+      });
+
+      // Popup on hover (use dynamically imported mgl)
+      try {
+        const popup = new mgl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
+        m.on('mouseenter', 'traffic-heat-core', (e: any) => {
+          m.getCanvas().style.cursor = 'pointer';
+          const f = e.features?.[0];
+          if (!f) return;
+          const p = f.properties;
+          popup.setLngLat(e.lngLat)
+            .setHTML(`<div style="background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);border-radius:10px;padding:8px 12px;border:1px solid rgba(255,255,255,0.1);">
+              <div style="color:white;font-size:12px;font-weight:800;">${p.route}</div>
+              <div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:2px;">${p.location || ''}</div>
+              <div style="color:#fbbf24;font-size:13px;font-weight:900;margin-top:4px;">${Number(p.aadt).toLocaleString()} <span style="font-size:9px;color:rgba(255,255,255,0.4);">AADT</span></div>
+            </div>`)
+            .addTo(m);
+        });
+        m.on('mouseleave', 'traffic-heat-core', () => { m.getCanvas().style.cursor = ''; popup.remove(); });
+      } catch {}
+    };
+
+    if (m.isStyleLoaded()) addHeatmap();
+    else m.on('load', addHeatmap);
+    })();
+  }, [trafficStations, theme]);
 
   /* ---------- Markers ---------- */
   useEffect(() => {
@@ -496,6 +575,9 @@ export default function DashboardPage() {
           <button onClick={() => setShowCorridors(!showCorridors)} title="AADT Corridors" className={`p-2 rounded-xl transition-all ${showCorridors ? 'bg-amber-500/15 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}>
             <TrendingUp className="w-4 h-4" />
           </button>
+          <button onClick={() => setShowHeatmap(!showHeatmap)} title="Traffic Heatmap" className={`p-2 rounded-xl transition-all ${showHeatmap ? 'bg-rose-500/15 text-rose-400' : 'text-zinc-400 hover:text-zinc-200'}`}>
+            <Flame className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -760,6 +842,48 @@ export default function DashboardPage() {
           </aside>
         </>
       )}
+      {/* ============================================================
+          SMART SCOUT — AI SIGN PLACEMENT ADVISOR
+          ============================================================ */}
+      <SmartScout
+        signs={signs}
+        trafficStations={trafficStations}
+        intersections={trafficIntersections}
+        isDark={isDark}
+        onFlyTo={(lat, lng) => {
+          mapRef.current?.flyTo({ center: [lng, lat], zoom: 16, pitch: is3D ? 55 : 0, duration: 800 });
+        }}
+        onShowOnMap={async (recs) => {
+          const m = mapRef.current;
+          if (!m) return;
+          const mgl = (await import('maplibre-gl')).default;
+          // Clear old scout markers
+          scoutMarkersRef.current.forEach(mk => mk.remove());
+          scoutMarkersRef.current = [];
+          // Drop gold preview pins
+          recs.forEach((rec, i) => {
+            const el = document.createElement('div');
+            el.innerHTML = `
+              <div class="animate-pin-drop" style="animation-delay:${i * 100}ms">
+                <div class="relative flex flex-col items-center">
+                  <div class="absolute w-16 h-16 rounded-full animate-ripple pointer-events-none" style="background:rgba(245,158,11,0.3);top:-4px;left:-4px;"></div>
+                  <div style="width:48px;height:48px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:16px;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,0.95);box-shadow:0 4px 20px rgba(245,158,11,0.5),0 2px 4px rgba(0,0,0,0.2);">
+                    <span style="color:white;font-size:16px;font-weight:900;text-shadow:0 1px 3px rgba(0,0,0,0.4);">★</span>
+                  </div>
+                  <div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:8px solid #d97706;margin-top:-2px;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.15));"></div>
+                  <div style="width:8px;height:4px;background:rgba(0,0,0,0.15);border-radius:50%;margin-top:2px;filter:blur(1px);"></div>
+                </div>
+              </div>`;
+            const marker = new mgl.Marker({ element: el }).setLngLat([rec.lng, rec.lat]).addTo(m);
+            scoutMarkersRef.current.push(marker);
+          });
+          // Fit bounds to show all recommendations
+          if (recs.length > 1) {
+            const bounds = recs.reduce((b, r) => b.extend([r.lng, r.lat]), new mgl.LngLatBounds([recs[0].lng, recs[0].lat], [recs[0].lng, recs[0].lat]));
+            m.fitBounds(bounds, { padding: 80, duration: 1000 });
+          }
+        }}
+      />
     </div>
   );
 }
