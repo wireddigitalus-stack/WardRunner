@@ -116,11 +116,11 @@ export default function SmartScout({
   return (
     <>
       {/* ============================================
-          LEFT-MIDDLE RAIL: MAP LEGEND & SCOUT CARD
+          LEFT RAIL: MAP LEGEND & SCOUT CARD (level with right nav)
           ============================================ */}
-      <div className="absolute bottom-4 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-24px)] sm:w-[320px] flex flex-col gap-2 animate-slide-up" style={{ animationDelay: '250ms' }}>
+      <div className="absolute bottom-4 sm:bottom-auto sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-24px)] sm:w-[340px] flex flex-col gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
 
-        {/* --- Map Legend (Desktop Left-Middle) --- */}
+        {/* --- Map Legend (Desktop Left Rail) --- */}
         <div className="hidden sm:block pointer-events-auto">
           <div className="glass rounded-2xl px-3.5 py-2 flex items-center justify-between text-[10px]">
             <div className="flex items-center gap-3">
@@ -180,10 +180,10 @@ export default function SmartScout({
 
         {/* --- Expanded Panel --- */}
         {expanded && (
-          <div className="glass rounded-2xl overflow-hidden animate-fade-in" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+          <div className="glass rounded-2xl overflow-hidden animate-fade-in flex flex-col" style={{ maxHeight: 'calc(100vh - 170px)' }}>
 
             {/* Tab Switcher */}
-            <div className="px-3 pt-3 pb-2">
+            <div className="px-3 pt-3 pb-2 shrink-0">
               <div className="grid grid-cols-2 gap-1 p-0.5 rounded-xl bg-white/5">
                 <button
                   onClick={() => setTab('recs')}
@@ -201,7 +201,7 @@ export default function SmartScout({
             </div>
 
             {/* Scrollable Content */}
-            <div className="overflow-y-auto custom-scrollbar px-3 pb-3" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-3 pb-3 space-y-2 min-h-0">
 
               {/* === RECOMMENDATIONS === */}
               {tab === 'recs' && (
@@ -325,7 +325,7 @@ export default function SmartScout({
 
             {/* Chat Input */}
             {tab === 'chat' && (
-              <div className="p-2.5 border-t border-white/[0.06]">
+              <div className="p-2.5 border-t border-white/[0.06] shrink-0">
                 <div className="flex gap-1.5">
                   <input
                     type="text"
