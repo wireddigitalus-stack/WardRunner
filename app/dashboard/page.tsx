@@ -209,7 +209,6 @@ export default function DashboardPage() {
         zoom: 13.2,
         pitch: is3D ? 50 : 0,
         bearing: 0,
-        antialias: true,
         attributionControl: false,
       });
 
