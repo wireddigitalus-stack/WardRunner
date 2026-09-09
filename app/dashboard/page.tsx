@@ -81,7 +81,7 @@ export default function DashboardPage() {
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
 
-  const [is3D, setIs3D] = useState(false);
+  const [is3D, setIs3D] = useState(true);
   const [showBoundary, setShowBoundary] = useState(true);
   const [showCorridors, setShowCorridors] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(true);
