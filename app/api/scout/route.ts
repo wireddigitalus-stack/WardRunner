@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
-const SYSTEM_PROMPT = `You are Smart Scout, an AI field strategist for down-ballot political campaigns. You specialize in yard sign placement optimization for maximum voter visibility.
+const SYSTEM_PROMPT = `You are Scout, an AI field strategist for down-ballot political campaigns. You specialize in yard sign placement optimization for maximum voter visibility.
 
 CAMPAIGN CONTEXT:
 - Candidate: Melissa K. Brown
@@ -66,7 +66,7 @@ Respond ONLY with a valid JSON array. Each element must have:
       const result = await model.generateContent({
         contents: [
           { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
-          { role: 'model', parts: [{ text: 'I understand. I am Smart Scout, ready to analyze Bristol TN for optimal sign placements.' }] },
+          { role: 'model', parts: [{ text: 'I understand. I am Scout, ready to analyze Bristol TN for optimal sign placements.' }] },
           { role: 'user', parts: [{ text: prompt }] },
         ],
       });
@@ -88,7 +88,7 @@ Respond ONLY with a valid JSON array. Each element must have:
       const result = await model.generateContent({
         contents: [
           { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
-          { role: 'model', parts: [{ text: 'I understand. I am Smart Scout, ready to help with sign placement strategy in Bristol TN.' }] },
+          { role: 'model', parts: [{ text: 'I understand. I am Scout, ready to help with sign placement strategy in Bristol TN.' }] },
           { role: 'user', parts: [{ text: `${campaignContext}\n\nUser question: ${userMessage}\n\nProvide a helpful, strategic response. If you recommend specific locations, include approximate GPS coordinates. Keep your response concise and actionable — this is for a busy campaign manager checking from their phone.` }] },
         ],
       });

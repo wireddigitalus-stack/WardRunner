@@ -572,7 +572,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ============================================================
-          BOTTOM-LEFT: MAP LEGEND (compact, below Smart Scout card)
+          BOTTOM-LEFT: MAP LEGEND (compact, below Scout card)
           ============================================================ */}
       <div className="absolute bottom-[calc(3.5rem+20px)] sm:bottom-[calc(3.5rem+20px)] left-3 sm:left-4 z-10 hidden sm:block pointer-events-none animate-slide-up" style={{ animationDelay: '350ms' }}>
         <div className="glass rounded-xl px-3 py-2 flex items-center gap-4 text-[10px]">
@@ -830,7 +830,7 @@ export default function DashboardPage() {
         </>
       )}
       {/* ============================================================
-          SMART SCOUT — AI SIGN PLACEMENT ADVISOR
+          SCOUT — AI SIGN PLACEMENT ADVISOR
           ============================================================ */}
       <SmartScout
         signs={signs}

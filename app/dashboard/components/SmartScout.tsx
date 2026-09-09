@@ -131,7 +131,7 @@ export default function SmartScout({
             </div>
             <div>
               <div className="text-[11px] font-bold flex items-center gap-1.5">
-                Smart Scout
+                Scout
                 <span className="text-[8px] font-extrabold px-1 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20 leading-none">AI</span>
               </div>
               <p className="text-[9px] opacity-35 leading-none mt-0.5">
@@ -305,7 +305,7 @@ export default function SmartScout({
                 <div className="flex gap-1.5">
                   <input
                     type="text"
-                    placeholder="Ask Smart Scout…"
+                    placeholder="Ask Scout…"
                     value={chatInput}
                     onChange={e => setChatInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !chatLoading && sendChat()}
