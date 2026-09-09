@@ -70,6 +70,14 @@ export default function FieldPage() {
         localStorage.removeItem('wardrunner_session');
       }
     }
+    // Check URL parameters for direct link sharing (?pin=...&name=...)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlPin = params.get('pin');
+      const urlName = params.get('name');
+      if (urlPin) setPinInput(urlPin);
+      if (urlName) setNameInput(urlName);
+    }
     fetchCurrentLocation();
   }, []);
 
@@ -142,13 +150,27 @@ export default function FieldPage() {
         .maybeSingle();
 
       if (error || !data) {
-        // Fallback for pilot campaign demo if Supabase keys are not set up yet
-        if (pinInput.trim() === '246810') {
+        // Fallback for pilot campaign demo / local roster
+        const storedMasterPin = (typeof window !== 'undefined' && localStorage.getItem('wardrunner_campaign_pin')) || '246810';
+        let matchedVolunteer: any = null;
+        if (typeof window !== 'undefined') {
+          try {
+            const rawVols = localStorage.getItem('wardrunner_volunteers');
+            if (rawVols) {
+              const vols = JSON.parse(rawVols);
+              matchedVolunteer = vols.find(
+                (v: any) => v.active && (v.pin === pinInput.trim() || (!v.pin && pinInput.trim() === storedMasterPin))
+              );
+            }
+          } catch (e) {}
+        }
+
+        if (pinInput.trim() === '246810' || pinInput.trim() === storedMasterPin || matchedVolunteer) {
           const fallbackSession: VolunteerSession = {
             campaignId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
             campaignName: 'Melissa K. Brown for Bristol TN City Council',
             pin: pinInput.trim(),
-            volunteerName: nameInput.trim(),
+            volunteerName: matchedVolunteer?.name || nameInput.trim(),
           };
           localStorage.setItem('wardrunner_session', JSON.stringify(fallbackSession));
           setSession(fallbackSession);

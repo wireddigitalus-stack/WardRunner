@@ -6,7 +6,9 @@ import { Sign, SignType, Recommendation, InventoryStock } from '@/lib/types';
 import { getTrafficData, stationsToGeoJSON, intersectionsToGeoJSON, TrafficStation, Intersection } from '@/lib/trafficData';
 import realCorridors from '@/lib/realCorridors.json';
 import SmartScout from './components/SmartScout';
+import VolunteerManagerModal from './components/VolunteerManagerModal';
 import {
+  Users,
   Download,
   Layers,
   TrendingUp,
@@ -116,6 +118,9 @@ export default function DashboardPage() {
   const [inventoryStock, setInventoryStock] = useState<InventoryStock>(DEFAULT_INVENTORY_STOCK);
   const [editingStock, setEditingStock] = useState(false);
 
+  // Volunteer & PIN Directory Modal
+  const [showVolunteerModal, setShowVolunteerModal] = useState(false);
+
   // Load saved inventory stock from localStorage
   useEffect(() => {
     try {
@@ -213,6 +218,16 @@ export default function DashboardPage() {
     const pctDeployed = totalStock > 0 ? Math.min(100, Math.round((totalPlaced / totalStock) * 100)) : 0;
     return { placedByType, totalStock, totalPlaced, totalReserve, pctDeployed };
   }, [signs, inventoryStock]);
+
+  const signsCountByVolunteer = useMemo(() => {
+    const counts: Record<string, number> = {};
+    signs.forEach(s => {
+      if (s.placed_by_name) {
+        counts[s.placed_by_name] = (counts[s.placed_by_name] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [signs]);
 
   const isDark = theme === 'dark';
 
@@ -652,22 +667,49 @@ export default function DashboardPage() {
 
           {/* — KPI Pills — */}
           <div className="hidden lg:flex pointer-events-auto glass rounded-2xl px-1 py-1 items-center gap-1 animate-slide-up" style={{ animationDelay: '80ms' }}>
-            {[
-              { label: 'Our Signs', value: stats.ours, color: 'text-emerald-400', dot: 'bg-emerald-400', glow: 'shadow-emerald-400/40' },
-              { label: 'Inventory', value: `${inventoryStats.totalPlaced}/${inventoryStats.totalStock}`, color: 'text-amber-400', dot: 'bg-amber-400', glow: 'shadow-amber-400/40' },
-              { label: 'Competitor', value: stats.theirs, color: 'text-rose-400', dot: 'bg-rose-400', glow: 'shadow-rose-400/40' },
-              { label: 'Arterials', value: stats.highImpact, color: 'text-sky-400', dot: 'bg-sky-400', glow: 'shadow-sky-400/40' },
-            ].map((kpi, i) => (
-              <div key={kpi.label} className={`flex items-center gap-2 px-3.5 py-2 rounded-xl ${i === 0 ? '' : ''}`}>
-                <span className={`w-2 h-2 rounded-full ${kpi.dot} shadow-md ${kpi.glow}`} />
-                <span className="text-[11px] font-medium opacity-60">{kpi.label}</span>
-                <span className={`text-sm font-black ${kpi.color} animate-count-up`} style={{ animationDelay: `${200 + i * 100}ms` }}>{kpi.value}</span>
-              </div>
-            ))}
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/40" />
+              <span className="text-[11px] font-medium opacity-60">Our Signs</span>
+              <span className="text-sm font-black text-emerald-400 animate-count-up">{stats.ours}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
+              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-md shadow-amber-400/40" />
+              <span className="text-[11px] font-medium opacity-60">Inventory</span>
+              <span className="text-sm font-black text-amber-400 animate-count-up">{inventoryStats.totalPlaced}/{inventoryStats.totalStock}</span>
+            </div>
+            {/* Quick Link next to Inventory */}
+            <button
+              onClick={() => setShowVolunteerModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-purple-500/15 border border-purple-500/20 bg-purple-500/10 text-purple-300 transition active:scale-95 group"
+              title="Manage Volunteers & Access PINs"
+            >
+              <Users className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
+              <span className="text-[11px] font-bold">Volunteers & PINs</span>
+            </button>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
+              <span className="w-2 h-2 rounded-full bg-rose-400 shadow-md shadow-rose-400/40" />
+              <span className="text-[11px] font-medium opacity-60">Competitor</span>
+              <span className="text-sm font-black text-rose-400 animate-count-up">{stats.theirs}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
+              <span className="w-2 h-2 rounded-full bg-sky-400 shadow-md shadow-sky-400/40" />
+              <span className="text-[11px] font-medium opacity-60">Arterials</span>
+              <span className="text-sm font-black text-sky-400 animate-count-up">{stats.highImpact}</span>
+            </div>
           </div>
 
           {/* — Right Controls — */}
           <div className="pointer-events-auto flex items-center gap-2 animate-slide-up" style={{ animationDelay: '160ms' }}>
+            {/* Quick Access to Volunteers Modal on all screen sizes */}
+            <button
+              onClick={() => setShowVolunteerModal(true)}
+              className="glass rounded-2xl px-3.5 py-2 flex items-center gap-2 hover:scale-105 transition-all text-xs font-bold border border-purple-500/25 hover:border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 shadow-lg shadow-purple-500/10 active:scale-95"
+              title="Manage Volunteers & Field PINs"
+            >
+              <Users className="w-4 h-4 text-purple-400" />
+              <span className="hidden sm:inline">Volunteers</span>
+            </button>
+
             {/* Drawer Toggle */}
             <button
               onClick={() => setDrawerOpen(!drawerOpen)}
@@ -1216,6 +1258,16 @@ export default function DashboardPage() {
             m.fitBounds(bounds, { padding: 80, duration: 1000 });
           }
         }}
+      />
+
+      {/* ============================================================
+          VOLUNTEER & PIN DIRECTORY MODAL (Center Pop Card)
+          ============================================================ */}
+      <VolunteerManagerModal
+        isOpen={showVolunteerModal}
+        onClose={() => setShowVolunteerModal(false)}
+        signsCountByVolunteer={signsCountByVolunteer}
+        isDark={isDark}
       />
     </div>
   );
