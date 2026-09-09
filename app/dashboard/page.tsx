@@ -72,7 +72,7 @@ const SEED_SIGNS: Sign[] = [
    COMPONENT
    ================================================================ */
 export default function DashboardPage() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const theme = 'dark' as const;
   const [signs, setSigns] = useState<Sign[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSign, setSelectedSign] = useState<Sign | null>(null);
@@ -528,16 +528,6 @@ export default function DashboardPage() {
 
           {/* — Right Controls — */}
           <div className="pointer-events-auto flex items-center gap-2 animate-slide-up" style={{ animationDelay: '160ms' }}>
-            {/* Theme Toggle */}
-            <div className="glass rounded-2xl p-1 flex items-center">
-              <button onClick={() => setTheme('light')} className={`p-2 rounded-xl transition-all duration-300 ${!isDark ? 'bg-white dark:bg-zinc-800 shadow-md text-amber-500 scale-105' : 'text-zinc-400 hover:text-zinc-200'}`}>
-                <Sun className="w-4 h-4" />
-              </button>
-              <button onClick={() => setTheme('dark')} className={`p-2 rounded-xl transition-all duration-300 ${isDark ? 'bg-zinc-800 shadow-md text-sky-400 scale-105' : 'text-zinc-400 hover:text-zinc-800'}`}>
-                <Moon className="w-4 h-4" />
-              </button>
-            </div>
-
             {/* Drawer Toggle */}
             <button
               onClick={() => setDrawerOpen(!drawerOpen)}
