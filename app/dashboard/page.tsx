@@ -572,28 +572,25 @@ export default function DashboardPage() {
       </div>
 
       {/* ============================================================
-          BOTTOM-LEFT: MAP LEGEND
+          BOTTOM-LEFT: MAP LEGEND (compact, below Smart Scout card)
           ============================================================ */}
-      <div className="absolute bottom-4 left-3 sm:left-4 z-10 hidden sm:block pointer-events-auto animate-slide-up" style={{ animationDelay: '300ms' }}>
-        <div className="glass rounded-2xl p-4 space-y-3 min-w-[210px]">
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] opacity-40">Map Legend</p>
+      <div className="absolute bottom-[calc(3.5rem+20px)] sm:bottom-[calc(3.5rem+20px)] left-3 sm:left-4 z-10 hidden sm:block pointer-events-none animate-slide-up" style={{ animationDelay: '350ms' }}>
+        <div className="glass rounded-xl px-3 py-2 flex items-center gap-4 text-[10px]">
           {[
-            { bg: '#059669', label: 'YARD', desc: 'Melissa Brown — Yard Signs' },
-            { bg: '#2563eb', label: '4×4',  desc: '4×4s, Banners & Billboards' },
-            { bg: '#e11d48', label: 'VS',   desc: 'Competitor Placements' },
+            { bg: '#059669', label: 'YARD' },
+            { bg: '#2563eb', label: '4×4' },
+            { bg: '#e11d48', label: 'VS' },
           ].map(item => (
-            <div key={item.desc} className="flex items-center gap-3">
-              <div style={{ background: item.bg, width: 28, height: 28, borderRadius: 8, border: '2px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 8px ${item.bg}66`, flexShrink: 0 }}>
-                <span style={{ color: 'white', fontSize: 10, fontWeight: 900, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{item.label}</span>
+            <div key={item.label} className="flex items-center gap-1.5">
+              <div style={{ background: item.bg, width: 18, height: 18, borderRadius: 5, border: '1.5px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 1px 4px ${item.bg}44`, flexShrink: 0 }}>
+                <span style={{ color: 'white', fontSize: 7, fontWeight: 900 }}>{item.label}</span>
               </div>
-              <span className="text-[12px] font-semibold opacity-80">{item.desc}</span>
+              <span className="font-semibold opacity-60">{item.label === 'VS' ? 'Opponent' : item.label === '4×4' ? 'Large' : 'Yard'}</span>
             </div>
           ))}
-          <div className={`pt-2.5 border-t ${isDark ? 'border-white/10' : 'border-black/10'}`}>
-            <div className="flex items-center gap-3">
-              <span className="w-7 h-[3px] rounded-full bg-amber-400 shrink-0" />
-              <span className="text-[12px] font-semibold opacity-80">AADT Traffic Corridors</span>
-            </div>
+          <div className="flex items-center gap-1.5 border-l border-white/10 pl-4">
+            <span className="w-5 h-[2px] rounded-full bg-amber-400 shrink-0" />
+            <span className="font-semibold opacity-60">AADT</span>
           </div>
         </div>
       </div>
