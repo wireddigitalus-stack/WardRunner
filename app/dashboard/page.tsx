@@ -738,7 +738,7 @@ export default function DashboardPage() {
                   {selectedSign.is_competitor ? selectedSign.competitor_name : 'Melissa K. Brown'}
                 </h3>
                 <p className="text-xs opacity-50 capitalize mt-0.5">
-                  {selectedSign.sign_type.replace('_', ' ')} · <span className={selectedSign.is_competitor ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{selectedSign.is_competitor ? 'Reported' : selectedSign.status}</span> · {selectedSign.is_competitor ? 'Reported' : 'Placed'} {relativeTime(selectedSign.created_at)}
+                  {selectedSign.sign_type.replace('_', ' ')} · <span className={selectedSign.is_competitor ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{selectedSign.is_competitor ? 'Reported' : (selectedSign.status === 'placed' ? 'Placed' : selectedSign.status.replace('_', ' '))}</span> {relativeTime(selectedSign.created_at)}
                 </p>
               </div>
             </div>
@@ -1129,7 +1129,7 @@ export default function DashboardPage() {
                                 <span className="text-xs font-bold truncate">{sign.is_competitor ? sign.competitor_name : 'Melissa K. Brown'}</span>
                                 {sign.is_competitor && <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-rose-400" />}
                               </div>
-                              <p className="text-[10px] opacity-40 truncate">{sign.street_address ? `${sign.street_address} · ` : ''}{sign.is_competitor ? 'Reported' : 'Placed'} · {relativeTime(sign.created_at)}</p>
+                              <p className="text-[10px] opacity-40 truncate">{sign.street_address ? `${sign.street_address} · ` : ''}{sign.is_competitor ? 'Reported' : 'Placed'} {relativeTime(sign.created_at)}</p>
                             </div>
                           </div>
                           <span className={`shrink-0 text-[9px] font-extrabold px-2 py-0.5 rounded-md ${sign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
