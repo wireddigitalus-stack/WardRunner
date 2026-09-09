@@ -2,20 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "maplibre-gl/dist/maplibre-gl.css";
+
 :root {
+  --foreground-rgb: 15, 23, 42;
+  --background-rgb: 248, 250, 252;
+}
+
+.dark {
   --foreground-rgb: 248, 250, 252;
-  --background-start-rgb: 2, 6, 23;
-  --background-end-rgb: 15, 23, 42;
+  --background-rgb: 9, 9, 11;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: #020617;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-tap-highlight-color: transparent;
-  user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Touch targets optimization for field volunteers */
+/* Touch targets optimization */
 button, input, select {
   touch-action: manipulation;
 }
+
+/* Custom Apple Maps Styled Controls */
+.maplibregl-ctrl-group {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden !important;
+}
+
+.dark .maplibregl-ctrl-group {
+  background: rgba(24, 24, 27, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.maplibregl-ctrl-group button {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+.dark .maplibregl-ctrl-group button {
+  filter: invert(1);
+}
+
+/* Apple Map Marker Pin Animations */
+@keyframes apple-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-apple-drop {
+  animation: apple-drop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* MapLibre Popup Styling */
+.maplibregl-popup-content {
+  border-radius: 20px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.maplibregl-popup-tip {
+  display: none !important;
+}
+
