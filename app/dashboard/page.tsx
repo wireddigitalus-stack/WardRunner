@@ -535,11 +535,11 @@ export default function DashboardPage() {
       <header className="absolute top-4 left-4 right-4 z-20 pointer-events-none">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           {/* Brand Glass Capsule */}
-          <div className="pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-3xl backdrop-blur-2xl border shadow-xl transition-all duration-300 ${
+          <div className={`pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-3xl backdrop-blur-2xl border shadow-xl transition-all duration-300 ${
             isDark
               ? 'bg-zinc-900/80 border-white/10 shadow-black/40 text-white'
               : 'bg-white/85 border-black/10 shadow-slate-200/80 text-slate-900'
-          }">
+          }`}>
             <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black text-sm shadow-md shadow-emerald-500/30">
               WR
             </div>
@@ -555,9 +555,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Center Apple-Style KPI Quick Pill */}
-          <div className="hidden md:flex pointer-events-auto items-center gap-5 px-5 py-2.5 rounded-3xl backdrop-blur-2xl border shadow-xl ${
+          <div className={`hidden md:flex pointer-events-auto items-center gap-5 px-5 py-2.5 rounded-3xl backdrop-blur-2xl border shadow-xl ${
             isDark ? 'bg-zinc-900/80 border-white/10' : 'bg-white/85 border-black/10'
-          }">
+          }`}>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-xs font-semibold">Our Signs:</span>
@@ -807,9 +807,9 @@ export default function DashboardPage() {
       {/* 3. APPLE iOS SLIDE-OVER CONTROL DRAWER (Filters & Inventory Feed)    */}
       {/* ===================================================================== */}
       {sidebarOpen && (
-        <aside className="fixed inset-y-0 right-0 z-40 w-full sm:w-[420px] shadow-2xl flex flex-col backdrop-blur-3xl animate-fadeIn ${
+        <aside className={`fixed inset-y-0 right-0 z-40 w-full sm:w-[420px] shadow-2xl flex flex-col backdrop-blur-3xl animate-fadeIn ${
           isDark ? 'bg-zinc-950/95 border-l border-white/10 text-white' : 'bg-white/95 border-l border-black/10 text-slate-900'
-        }">
+        }`}>
           {/* Drawer Header */}
           <div className="p-5 border-b border-zinc-500/20 flex items-center justify-between">
             <div className="flex items-center gap-2">

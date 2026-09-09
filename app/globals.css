@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "maplibre-gl/dist/maplibre-gl.css";
-
 :root {
   --foreground-rgb: 15, 23, 42;
   --background-rgb: 248, 250, 252;
