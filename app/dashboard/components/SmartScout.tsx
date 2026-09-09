@@ -116,11 +116,35 @@ export default function SmartScout({
   return (
     <>
       {/* ============================================
-          COLLAPSIBLE CARD — sits above the legend
+          LEFT-MIDDLE RAIL: MAP LEGEND & SCOUT CARD
           ============================================ */}
-      <div className="absolute bottom-4 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-24px)] sm:w-[320px] animate-slide-up" style={{ animationDelay: '250ms' }}>
+      <div className="absolute bottom-4 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-24px)] sm:w-[320px] flex flex-col gap-2 animate-slide-up" style={{ animationDelay: '250ms' }}>
 
-        {/* --- Collapsed Bar --- */}
+        {/* --- Map Legend (Desktop Left-Middle) --- */}
+        <div className="hidden sm:block pointer-events-auto">
+          <div className="glass rounded-2xl px-3.5 py-2 flex items-center justify-between text-[10px]">
+            <div className="flex items-center gap-3">
+              {[
+                { bg: '#059669', label: 'YARD', title: 'Yard' },
+                { bg: '#2563eb', label: '4×4',  title: 'Large' },
+                { bg: '#e11d48', label: 'VS',   title: 'Opponent' },
+              ].map(item => (
+                <div key={item.label} className="flex items-center gap-1.5">
+                  <div style={{ background: item.bg, width: 18, height: 18, borderRadius: 5, border: '1.5px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 1px 4px ${item.bg}44`, flexShrink: 0 }}>
+                    <span style={{ color: 'white', fontSize: 7, fontWeight: 900 }}>{item.label}</span>
+                  </div>
+                  <span className="font-semibold opacity-70">{item.title}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+              <span className="w-4 h-[2px] rounded-full bg-amber-400 shrink-0" />
+              <span className="font-semibold opacity-70">AADT</span>
+            </div>
+          </div>
+        </div>
+
+        {/* --- Scout Bar --- */}
         <div
           onClick={() => { setExpanded(!expanded); if (!expanded && recs.length === 0 && !loading) fetchRecommendations(); }}
           className="glass rounded-2xl px-3.5 py-2.5 flex items-center justify-between cursor-pointer hover:border-amber-500/30 transition-all group active:scale-[0.98]"
@@ -156,7 +180,7 @@ export default function SmartScout({
 
         {/* --- Expanded Panel --- */}
         {expanded && (
-          <div className="mt-2 glass rounded-2xl overflow-hidden animate-fade-in" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+          <div className="glass rounded-2xl overflow-hidden animate-fade-in" style={{ maxHeight: 'calc(100vh - 220px)' }}>
 
             {/* Tab Switcher */}
             <div className="px-3 pt-3 pb-2">
