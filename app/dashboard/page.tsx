@@ -30,7 +30,7 @@ import {
 /* ================================================================
    CONSTANTS
    ================================================================ */
-const BRISTOL_CENTER: [number, number] = [-72.9460, 41.6730];
+const BRISTOL_CENTER: [number, number] = [-82.1887, 36.5951];
 
 const SIGN_TYPE_META: Record<string, { emoji: string; label: string; short: string }> = {
   yard_sign:  { emoji: '🏡', label: 'Yard Sign',    short: 'Yard' },
@@ -40,10 +40,10 @@ const SIGN_TYPE_META: Record<string, { emoji: string; label: string; short: stri
 };
 
 const AADT_CORRIDORS = [
-  { name: 'Route 229 — ESPN Corridor',   aadt: 28900, pct: 100, color: '#f59e0b' },
-  { name: 'Route 6 — Farmington Ave',    aadt: 24500, pct: 85,  color: '#fbbf24' },
-  { name: 'Route 72 — Pine St / School', aadt: 19800, pct: 68,  color: '#38bdf8' },
-  { name: 'King St — CT-229 Connector',  aadt: 14200, pct: 49,  color: '#10b981' },
+  { name: 'State St (US-11E/19)',          aadt: 21400, pct: 100, color: '#f59e0b' },
+  { name: 'Volunteer Pkwy (US-11W)',       aadt: 18200, pct: 85,  color: '#fbbf24' },
+  { name: 'Lee Hwy (US-11/19)',            aadt: 15600, pct: 73,  color: '#38bdf8' },
+  { name: 'Bluff City Hwy',               aadt: 11300, pct: 53,  color: '#10b981' },
 ];
 
 const MAP_STYLES = {
@@ -55,14 +55,14 @@ const MAP_STYLES = {
    SEED DATA (used until Supabase returns rows)
    ================================================================ */
 const SEED_SIGNS: Sign[] = [
-  { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 41.6730, longitude: -72.9460, placed_by_name: 'Allen Hurley',    sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
-  { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 41.6785, longitude: -72.9372, placed_by_name: 'Allen Hurley',    sign_type: 'banner',     is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
-  { id: '3', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 41.6695, longitude: -72.9510, placed_by_name: 'Sarah Volunteer',  sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 12).toISOString() },
-  { id: '4', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 41.6742, longitude: -72.9415, placed_by_name: 'Sarah Volunteer',  sign_type: 'yard_sign',  is_competitor: true, competitor_name: 'Bob Reynolds', status: 'placed', created_at: new Date(Date.now() - 3600000 * 8).toISOString() },
-  { id: '5', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 41.6850, longitude: -72.9250, placed_by_name: 'Dave K.',          sign_type: 'billboard',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 24).toISOString() },
-  { id: '6', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 41.6650, longitude: -72.9340, placed_by_name: 'Mike Johnson',     sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 4).toISOString() },
-  { id: '7', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 41.6810, longitude: -72.9490, placed_by_name: 'Allen Hurley',    sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 1).toISOString() },
-  { id: '8', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 41.6660, longitude: -72.9280, placed_by_name: 'Dave K.',          sign_type: 'large_sign', is_competitor: true, competitor_name: 'Common Sense Slate', status: 'placed', created_at: new Date(Date.now() - 3600000 * 6).toISOString() },
+  { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Allen Hurley',    sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
+  { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6010, longitude: -82.1780, placed_by_name: 'Allen Hurley',    sign_type: 'banner',     is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
+  { id: '3', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5880, longitude: -82.1950, placed_by_name: 'Sarah Volunteer',  sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 12).toISOString() },
+  { id: '4', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5975, longitude: -82.1830, placed_by_name: 'Sarah Volunteer',  sign_type: 'yard_sign',  is_competitor: true, competitor_name: 'Bob Reynolds', status: 'placed', created_at: new Date(Date.now() - 3600000 * 8).toISOString() },
+  { id: '5', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6085, longitude: -82.1720, placed_by_name: 'Dave K.',          sign_type: 'billboard',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 24).toISOString() },
+  { id: '6', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5840, longitude: -82.1810, placed_by_name: 'Mike Johnson',     sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 4).toISOString() },
+  { id: '7', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6030, longitude: -82.1920, placed_by_name: 'Allen Hurley',    sign_type: 'yard_sign',  is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 1).toISOString() },
+  { id: '8', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5860, longitude: -82.1750, placed_by_name: 'Dave K.',          sign_type: 'large_sign', is_competitor: true, competitor_name: 'Common Sense Slate', status: 'placed', created_at: new Date(Date.now() - 3600000 * 6).toISOString() },
 ];
 
 /* ================================================================
@@ -148,9 +148,9 @@ export default function DashboardPage() {
           data: {
             type: 'FeatureCollection',
             features: [
-              { type: 'Feature', properties: { name: 'Route 229', color: '#f59e0b' }, geometry: { type: 'LineString', coordinates: [[-72.930, 41.650], [-72.934, 41.662], [-72.937, 41.675], [-72.939, 41.690]] } },
-              { type: 'Feature', properties: { name: 'Route 6',   color: '#fbbf24' }, geometry: { type: 'LineString', coordinates: [[-72.975, 41.682], [-72.955, 41.678], [-72.935, 41.675], [-72.915, 41.672]] } },
-              { type: 'Feature', properties: { name: 'Route 72',  color: '#38bdf8' }, geometry: { type: 'LineString', coordinates: [[-72.952, 41.658], [-72.946, 41.671], [-72.941, 41.682]] } },
+              { type: 'Feature', properties: { name: 'State St (US-11E/19)', color: '#f59e0b' }, geometry: { type: 'LineString', coordinates: [[-82.210, 36.595], [-82.198, 36.596], [-82.188, 36.596], [-82.175, 36.597]] } },
+              { type: 'Feature', properties: { name: 'Volunteer Pkwy (US-11W)', color: '#fbbf24' }, geometry: { type: 'LineString', coordinates: [[-82.205, 36.610], [-82.198, 36.603], [-82.190, 36.595], [-82.183, 36.585]] } },
+              { type: 'Feature', properties: { name: 'Lee Hwy (US-11/19)', color: '#38bdf8' }, geometry: { type: 'LineString', coordinates: [[-82.215, 36.585], [-82.200, 36.590], [-82.188, 36.595], [-82.170, 36.600]] } },
             ],
           } as any,
         });
@@ -161,7 +161,7 @@ export default function DashboardPage() {
         /* --- Ward boundary polygon --- */
         map.addSource('boundary', {
           type: 'geojson',
-          data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[-72.968, 41.695], [-72.918, 41.690], [-72.912, 41.655], [-72.945, 41.648], [-72.975, 41.662], [-72.968, 41.695]]] } } as any,
+          data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[-82.215, 36.615], [-82.165, 36.612], [-82.160, 36.578], [-82.185, 36.572], [-82.220, 36.585], [-82.215, 36.615]]] } } as any,
         });
         map.addLayer({ id: 'boundary-fill', type: 'fill', source: 'boundary', paint: { 'fill-color': isDark ? '#0ea5e9' : '#0284c7', 'fill-opacity': isDark ? 0.06 : 0.04 } });
         map.addLayer({ id: 'boundary-line', type: 'line', source: 'boundary', paint: { 'line-color': isDark ? '#38bdf8' : '#0284c7', 'line-width': 2.5, 'line-dasharray': [4, 3], 'line-opacity': 0.6 } });
@@ -393,7 +393,7 @@ export default function DashboardPage() {
                 <h1 className="font-extrabold text-sm tracking-tight">WardRunner</h1>
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">LIVE</span>
               </div>
-              <p className="text-[11px] opacity-50 leading-none mt-0.5">Melissa K. Brown • Bristol City Council</p>
+              <p className="text-[11px] opacity-50 leading-none mt-0.5">Melissa K. Brown • Bristol TN City Council</p>
             </div>
           </div>
 

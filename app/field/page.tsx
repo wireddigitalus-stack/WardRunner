@@ -146,7 +146,7 @@ export default function FieldPage() {
         if (pinInput.trim() === '246810') {
           const fallbackSession: VolunteerSession = {
             campaignId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-            campaignName: 'Melissa K. Brown for Bristol City Council',
+            campaignName: 'Melissa K. Brown for Bristol TN City Council',
             pin: pinInput.trim(),
             volunteerName: nameInput.trim(),
           };
@@ -428,7 +428,7 @@ export default function FieldPage() {
                 Pilot Campaign
               </span>
               <h2 className="text-lg font-bold text-white mt-2">Melissa K. Brown</h2>
-              <p className="text-sm text-slate-400">Bristol City Council Campaign</p>
+              <p className="text-sm text-slate-400">Bristol TN City Council Campaign</p>
             </div>
 
             {authError && (

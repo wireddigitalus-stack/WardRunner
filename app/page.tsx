@@ -25,7 +25,7 @@ export default function HomePage() {
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-semibold">
             <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-            Pilot Campaign: Melissa K. Brown for Bristol City Council
+            Pilot Campaign: Melissa K. Brown for Bristol TN City Council
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
             Yard sign intelligence for campaigns that refuse to overpay.
@@ -100,7 +100,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="pt-6 border-t border-slate-900 text-center text-xs text-slate-500">
-        WardRunner • Melissa K. Brown for Bristol City Council • Powered by Supabase & Next.js
+        WardRunner • Melissa K. Brown for Bristol TN City Council • Powered by Supabase & Next.js
       </footer>
     </div>
   );
