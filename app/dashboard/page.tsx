@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient';
 import { Sign } from '@/lib/types';
 import { getTrafficData, stationsToGeoJSON, intersectionsToGeoJSON, TrafficStation, Intersection } from '@/lib/trafficData';
+import realCorridors from '@/lib/realCorridors.json';
 import SmartScout from './components/SmartScout';
 import {
   Download,
@@ -193,21 +194,32 @@ export default function DashboardPage() {
       map.on('load', () => {
         if (!alive) return;
 
-        /* --- AADT corridor glow lines --- */
+        /* --- AADT corridor glow lines (Real Road Geometry) --- */
         map.addSource('corridors', {
           type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: [
-              { type: 'Feature', properties: { name: 'State St (US-11E/19)', color: '#f59e0b' }, geometry: { type: 'LineString', coordinates: [[-82.210, 36.595], [-82.198, 36.596], [-82.188, 36.596], [-82.175, 36.597]] } },
-              { type: 'Feature', properties: { name: 'Volunteer Pkwy (US-11W)', color: '#fbbf24' }, geometry: { type: 'LineString', coordinates: [[-82.205, 36.610], [-82.198, 36.603], [-82.190, 36.595], [-82.183, 36.585]] } },
-              { type: 'Feature', properties: { name: 'Lee Hwy (US-11/19)', color: '#38bdf8' }, geometry: { type: 'LineString', coordinates: [[-82.215, 36.585], [-82.200, 36.590], [-82.188, 36.595], [-82.170, 36.600]] } },
-            ],
-          } as any,
+          data: realCorridors as any,
         });
-        map.addLayer({ id: 'corridor-glow', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 14, 'line-opacity': isDark ? 0.18 : 0.12, 'line-blur': 8 } });
-        map.addLayer({ id: 'corridor-core', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 3, 'line-opacity': 0.85 } });
-        map.addLayer({ id: 'corridor-dash', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 1, 'line-opacity': isDark ? 0.15 : 0.25, 'line-dasharray': [2, 4] } });
+        map.addLayer({ id: 'corridor-glow', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 12, 'line-opacity': isDark ? 0.22 : 0.14, 'line-blur': 6 } });
+        map.addLayer({ id: 'corridor-core', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 3.5, 'line-opacity': 0.9 } });
+        map.addLayer({ id: 'corridor-dash', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 1.2, 'line-opacity': 0.35, 'line-dasharray': [3, 4] } });
+
+        // Hover tooltip on corridor lines
+        try {
+          const corridorPopup = new mgl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+          map.on('mouseenter', 'corridor-core', (e: any) => {
+            map.getCanvas().style.cursor = 'pointer';
+            const f = e.features?.[0];
+            if (!f) return;
+            const p = f.properties;
+            corridorPopup.setLngLat(e.lngLat)
+              .setHTML(`<div style="background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);border-radius:10px;padding:6px 10px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 4px 14px rgba(0,0,0,0.4);">
+                <div style="color:white;font-size:11px;font-weight:800;">${p.name}</div>
+                <div style="color:#fbbf24;font-size:10px;font-weight:700;margin-top:2px;">${p.aadt || 'Primary Arterial'}</div>
+              </div>`)
+              .addTo(map);
+          });
+          map.on('mouseleave', 'corridor-core', () => { map.getCanvas().style.cursor = ''; corridorPopup.remove(); });
+        } catch {}
 
         /* --- Ward boundary polygon --- */
         map.addSource('boundary', {
