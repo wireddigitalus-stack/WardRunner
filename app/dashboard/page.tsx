@@ -210,7 +210,7 @@ export default function DashboardPage() {
         pitch: is3D ? 50 : 0,
         bearing: 0,
         attributionControl: false,
-      });
+      } as any);
 
       map.on('load', () => {
         if (!isMounted) return;
