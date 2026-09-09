@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Sign } from '@/lib/types';
+import { Sign, SignType, Recommendation, InventoryStock } from '@/lib/types';
 import { getTrafficData, stationsToGeoJSON, intersectionsToGeoJSON, TrafficStation, Intersection } from '@/lib/trafficData';
 import realCorridors from '@/lib/realCorridors.json';
 import SmartScout from './components/SmartScout';
@@ -29,12 +29,23 @@ import {
   EyeOff,
   RotateCcw,
   Flame,
+  Check,
+  Package,
+  Plus,
+  Minus,
 } from 'lucide-react';
 
 /* ================================================================
    CONSTANTS
    ================================================================ */
 const BRISTOL_CENTER: [number, number] = [-82.1887, 36.5951];
+
+const DEFAULT_INVENTORY_STOCK: InventoryStock = {
+  yard_sign: 250,
+  large_sign: 25,
+  banner: 10,
+  billboard: 4,
+};
 
 const SIGN_TYPE_META: Record<string, { emoji: string; label: string; short: string }> = {
   yard_sign:  { emoji: '🏡', label: 'Yard Sign',    short: 'Yard' },
@@ -91,7 +102,35 @@ export default function DashboardPage() {
   // Traffic data from TDOT + OSM
   const [trafficStations, setTrafficStations] = useState<TrafficStation[]>([]);
   const [trafficIntersections, setTrafficIntersections] = useState<Intersection[]>([]);
-  const scoutMarkersRef = useRef<any[]>([]);
+  const scoutMarkersRef = useRef<{ marker: any; rank: number }[]>([]);
+
+  // AI Scout Recommendations & Approval
+  const [scoutRecs, setScoutRecs] = useState<Recommendation[]>([]);
+  const [selectedRec, setSelectedRec] = useState<Recommendation | null>(null);
+  const [selectedRecSignType, setSelectedRecSignType] = useState<SignType>('yard_sign');
+  const [recAddress, setRecAddress] = useState<string>('');
+  const [loadingRecAddress, setLoadingRecAddress] = useState(false);
+  const [approvingRec, setApprovingRec] = useState(false);
+
+  // Sign Inventory Management
+  const [inventoryStock, setInventoryStock] = useState<InventoryStock>(DEFAULT_INVENTORY_STOCK);
+  const [editingStock, setEditingStock] = useState(false);
+
+  // Load saved inventory stock from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('wardrunner_inventory_stock');
+      if (saved) setInventoryStock(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  const updateStockQuantity = (type: keyof InventoryStock, delta: number) => {
+    setInventoryStock(prev => {
+      const next = { ...prev, [type]: Math.max(0, prev[type] + delta) };
+      try { localStorage.setItem('wardrunner_inventory_stock', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -158,6 +197,22 @@ export default function DashboardPage() {
     total:      signs.length,
   }), [signs]);
 
+  /* ---------- Inventory Supply Calculations ---------- */
+  const inventoryStats = useMemo(() => {
+    const activeOurs = signs.filter(s => !s.is_competitor && s.status === 'placed');
+    const placedByType = {
+      yard_sign: activeOurs.filter(s => s.sign_type === 'yard_sign').length,
+      large_sign: activeOurs.filter(s => s.sign_type === 'large_sign').length,
+      banner: activeOurs.filter(s => s.sign_type === 'banner').length,
+      billboard: activeOurs.filter(s => s.sign_type === 'billboard').length,
+    };
+    const totalStock = Object.values(inventoryStock).reduce((a, b) => a + b, 0);
+    const totalPlaced = Object.values(placedByType).reduce((a, b) => a + b, 0);
+    const totalReserve = Math.max(0, totalStock - totalPlaced);
+    const pctDeployed = totalStock > 0 ? Math.min(100, Math.round((totalPlaced / totalStock) * 100)) : 0;
+    return { placedByType, totalStock, totalPlaced, totalReserve, pctDeployed };
+  }, [signs, inventoryStock]);
+
   const isDark = theme === 'dark';
 
   /* ---------- Reverse Geocode Selected Sign ---------- */
@@ -170,6 +225,69 @@ export default function DashboardPage() {
     });
     return () => { cancelled = true; };
   }, [selectedSign, reverseGeocode]);
+
+  /* ---------- Reverse Geocode Selected Recommendation ---------- */
+  useEffect(() => {
+    if (!selectedRec) { setRecAddress(''); return; }
+    let cancelled = false;
+    setLoadingRecAddress(true);
+    reverseGeocode(selectedRec.lat, selectedRec.lng).then(addr => {
+      if (!cancelled) { setRecAddress(addr); setLoadingRecAddress(false); }
+    });
+    return () => { cancelled = true; };
+  }, [selectedRec, reverseGeocode]);
+
+  /* ---------- Recommendation Actions ---------- */
+  const handleApproveRec = async (rec: Recommendation, signType: SignType) => {
+    setApprovingRec(true);
+    const newSign: Sign = {
+      id: crypto.randomUUID(),
+      campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      latitude: rec.lat,
+      longitude: rec.lng,
+      placed_by_name: 'Scout AI (Approved)',
+      sign_type: signType,
+      is_competitor: false,
+      competitor_name: null,
+      photo_url: null,
+      status: 'placed',
+      created_at: new Date().toISOString(),
+    };
+
+    try {
+      await supabase.from('signs').insert([newSign]);
+    } catch (err) {
+      console.warn('Supabase insert fallback:', err);
+    }
+
+    // Immediately update campaign signs state
+    setSigns(prev => [newSign, ...prev]);
+
+    // Remove this recommendation from scout recs
+    setScoutRecs(prev => prev.filter(r => r.rank !== rec.rank));
+
+    // Remove the gold preview marker from the map
+    const markerItem = scoutMarkersRef.current.find(item => item.rank === rec.rank);
+    if (markerItem) {
+      markerItem.marker?.remove?.();
+      scoutMarkersRef.current = scoutMarkersRef.current.filter(item => item.rank !== rec.rank);
+    }
+
+    setApprovingRec(false);
+    setSelectedRec(null);
+    setSelectedSign(newSign);
+    mapRef.current?.flyTo({ center: [rec.lng, rec.lat], zoom: 16, pitch: is3D ? 55 : 0, duration: 600 });
+  };
+
+  const handleDeclineRec = (rec: Recommendation) => {
+    setScoutRecs(prev => prev.filter(r => r.rank !== rec.rank));
+    const markerItem = scoutMarkersRef.current.find(item => item.rank === rec.rank);
+    if (markerItem) {
+      markerItem.marker?.remove?.();
+      scoutMarkersRef.current = scoutMarkersRef.current.filter(item => item.rank !== rec.rank);
+    }
+    setSelectedRec(null);
+  };
 
   /* ---------- Map Initialization ---------- */
   useEffect(() => {
@@ -230,7 +348,10 @@ export default function DashboardPage() {
         map.addLayer({ id: 'boundary-line', type: 'line', source: 'boundary', paint: { 'line-color': isDark ? '#38bdf8' : '#0284c7', 'line-width': 2.5, 'line-dasharray': [4, 3], 'line-opacity': 0.6 } });
       });
 
-      map.on('click', () => setSelectedSign(null));
+      map.on('click', () => {
+        setSelectedSign(null);
+        setSelectedRec(null);
+      });
       mapRef.current = map;
     })();
 
@@ -527,6 +648,7 @@ export default function DashboardPage() {
           <div className="hidden lg:flex pointer-events-auto glass rounded-2xl px-1 py-1 items-center gap-1 animate-slide-up" style={{ animationDelay: '80ms' }}>
             {[
               { label: 'Our Signs', value: stats.ours, color: 'text-emerald-400', dot: 'bg-emerald-400', glow: 'shadow-emerald-400/40' },
+              { label: 'Inventory', value: `${inventoryStats.totalPlaced}/${inventoryStats.totalStock}`, color: 'text-amber-400', dot: 'bg-amber-400', glow: 'shadow-amber-400/40' },
               { label: 'Competitor', value: stats.theirs, color: 'text-rose-400', dot: 'bg-rose-400', glow: 'shadow-rose-400/40' },
               { label: 'Arterials', value: stats.highImpact, color: 'text-sky-400', dot: 'bg-sky-400', glow: 'shadow-sky-400/40' },
             ].map((kpi, i) => (
@@ -654,6 +776,114 @@ export default function DashboardPage() {
       )}
 
       {/* ============================================================
+          SCOUT RECOMMENDATION — APPROVAL CARD (Bottom Center slide-up)
+          ============================================================ */}
+      {selectedRec && (
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-[420px] max-w-[calc(100vw-32px)] pointer-events-auto animate-slide-up">
+          <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl shadow-amber-500/10">
+            {/* Amber glowing top edge */}
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300" />
+
+            <button onClick={() => setSelectedRec(null)} className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
+              <X className="w-3.5 h-3.5 opacity-50" />
+            </button>
+
+            {/* Header Badge & Title */}
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl text-white font-black shadow-lg shadow-amber-500/30 shrink-0">
+                ★
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                    selectedRec.priority === 'critical' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                    selectedRec.priority === 'high' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                    'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                  }`}>
+                    {selectedRec.priority} Priority
+                  </span>
+                  <span className="text-[10px] font-black text-amber-400">★ {selectedRec.score}/10 Score</span>
+                </div>
+                <h3 className="font-extrabold text-base mt-1 truncate">{selectedRec.street}</h3>
+                <p className="text-xs opacity-60 mt-0.5 font-medium">
+                  {selectedRec.aadt ? `${selectedRec.aadt.toLocaleString()} vehicles/day` : 'High-impact corridor'}
+                </p>
+              </div>
+            </div>
+
+            {/* Details Section */}
+            <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
+              <div>
+                <span className="text-[9px] uppercase font-bold opacity-30 block">📍 Verified Street Address</span>
+                {loadingRecAddress ? (
+                  <span className={`inline-block h-4 w-40 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+                ) : (
+                  <span className="font-semibold mt-0.5 block text-[13px]">{recAddress || selectedRec.street}</span>
+                )}
+              </div>
+
+              <div>
+                <span className="text-[9px] uppercase font-bold opacity-30 block">🎯 Strategic Rationale</span>
+                <p className="text-xs opacity-75 leading-relaxed mt-0.5">{selectedRec.reason}</p>
+              </div>
+
+              {/* Sign Type Selector */}
+              <div>
+                <span className="text-[9px] uppercase font-bold opacity-30 block mb-1.5">Deploy As Sign Type</span>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { id: 'yard_sign', emoji: '🏡', label: 'Yard Sign' },
+                    { id: 'large_sign', emoji: '🪧', label: 'Large 4×4' },
+                    { id: 'banner', emoji: '🚩', label: 'Banner' },
+                  ].map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setSelectedRecSignType(t.id as SignType)}
+                      className={`p-2 rounded-xl text-center border transition-all ${
+                        selectedRecSignType === t.id
+                          ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm'
+                          : 'bg-white/5 border-white/10 opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <span className="text-base block">{t.emoji}</span>
+                      <span className="text-[10px] font-bold block mt-0.5 leading-none">{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => handleApproveRec(selectedRec, selectedRecSignType)}
+                disabled={approvingRec}
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 active:scale-[0.97] transition-all disabled:opacity-50"
+              >
+                <Check className="w-4 h-4" /> {approvingRec ? 'Deploying…' : 'Approve & Deploy'}
+              </button>
+              <button
+                onClick={() => handleDeclineRec(selectedRec)}
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold transition text-rose-400 border border-rose-500/20 hover:bg-rose-500/10 active:scale-95`}
+              >
+                Decline
+              </button>
+              <a
+                href={`https://maps.apple.com/?daddr=${selectedRec.lat},${selectedRec.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}
+                title="Directions in Apple Maps"
+              >
+                <Navigation className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
           iOS-STYLE SLIDE-OVER DRAWER
           ============================================================ */}
       {drawerOpen && (
@@ -762,10 +992,104 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Inventory Feed */}
+              {/* ============================================================
+                  SIGN INVENTORY & SUPPLY CHAIN TRACKER
+                  ============================================================ */}
+              <div className={`p-4 rounded-2xl border ${isDark ? 'bg-white/[0.03] border-white/[0.08]' : 'bg-black/[0.02] border-black/[0.08]'}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Sign Inventory</span>
+                  </div>
+                  <button
+                    onClick={() => setEditingStock(!editingStock)}
+                    className="text-[10px] font-bold text-sky-400 hover:underline flex items-center gap-1"
+                  >
+                    {editingStock ? '✓ Done' : '⚙ Adjust Stock'}
+                  </button>
+                </div>
+
+                {/* Overall Deployment Progress Bar */}
+                <div className="space-y-1.5 mb-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold opacity-80">Total Campaign Deployment</span>
+                    <span className="font-extrabold text-emerald-400 font-mono">
+                      {inventoryStats.totalPlaced} / {inventoryStats.totalStock} ({inventoryStats.pctDeployed}%)
+                    </span>
+                  </div>
+                  <div className={`h-2.5 rounded-full overflow-hidden ${isDark ? 'bg-white/[0.08]' : 'bg-black/[0.08]'}`}>
+                    <div
+                      className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-400 shadow-sm"
+                      style={{ width: `${inventoryStats.pctDeployed}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] opacity-40">
+                    <span>{inventoryStats.totalPlaced} placed in field</span>
+                    <span>{inventoryStats.totalReserve} in reserve</span>
+                  </div>
+                </div>
+
+                {/* Per-Type Inventory Breakdown */}
+                <div className="space-y-2.5">
+                  {[
+                    { type: 'yard_sign' as const, meta: SIGN_TYPE_META.yard_sign, color: '#10b981' },
+                    { type: 'large_sign' as const, meta: SIGN_TYPE_META.large_sign, color: '#38bdf8' },
+                    { type: 'banner' as const, meta: SIGN_TYPE_META.banner, color: '#f59e0b' },
+                    { type: 'billboard' as const, meta: SIGN_TYPE_META.billboard, color: '#ec4899' },
+                  ].map(item => {
+                    const placed = inventoryStats.placedByType[item.type] || 0;
+                    const total = inventoryStock[item.type] || 0;
+                    const reserve = Math.max(0, total - placed);
+                    const pct = total > 0 ? Math.min(100, Math.round((placed / total) * 100)) : 0;
+
+                    return (
+                      <div key={item.type} className={`p-2.5 rounded-xl border ${isDark ? 'bg-white/[0.02] border-white/[0.05]' : 'bg-black/[0.01] border-black/[0.05]'}`}>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm">{item.meta.emoji}</span>
+                            <span className="text-xs font-bold">{item.meta.label}</span>
+                          </div>
+                          {editingStock ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => updateStockQuantity(item.type, -10)}
+                                className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-xs flex items-center justify-center font-bold"
+                              >
+                                -
+                              </button>
+                              <span className="font-mono text-xs font-bold w-10 text-center">{total}</span>
+                              <button
+                                onClick={() => updateStockQuantity(item.type, 10)}
+                                className="w-5 h-5 rounded bg-white/10 hover:bg-white/20 text-xs flex items-center justify-center font-bold"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-right">
+                              <span className="text-xs font-extrabold font-mono" style={{ color: item.color }}>
+                                {placed} / {total}
+                              </span>
+                              <span className="text-[9px] opacity-40 ml-1.5">({reserve} left)</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-white/[0.06]' : 'bg-black/[0.06]'}`}>
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${pct}%`, backgroundColor: item.color }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Signs in Field Feed */}
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-2 block">
-                  Inventory ({filtered.length})
+                  Signs in Field ({filtered.length})
                 </label>
                 <div className="space-y-1.5 stagger-children max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
                   {filtered.map(sign => {
@@ -827,6 +1151,13 @@ export default function DashboardPage() {
         trafficStations={trafficStations}
         intersections={trafficIntersections}
         isDark={isDark}
+        recs={scoutRecs}
+        setRecs={setScoutRecs}
+        onSelectRec={(rec) => {
+          setSelectedSign(null);
+          setSelectedRec(rec);
+          setSelectedRecSignType(rec.aadt >= 15000 ? 'large_sign' : 'yard_sign');
+        }}
         onFlyTo={(lat, lng) => {
           mapRef.current?.flyTo({ center: [lng, lat], zoom: 16, pitch: is3D ? 55 : 0, duration: 800 });
         }}
@@ -835,11 +1166,14 @@ export default function DashboardPage() {
           if (!m) return;
           const mgl = (await import('maplibre-gl')).default;
           // Clear old scout markers
-          scoutMarkersRef.current.forEach(mk => mk.remove());
+          scoutMarkersRef.current.forEach(item => item.marker?.remove?.());
           scoutMarkersRef.current = [];
-          // Drop gold preview pins
+          setScoutRecs(recs);
+
+          // Drop gold preview pins with click handlers
           recs.forEach((rec, i) => {
             const el = document.createElement('div');
+            el.className = 'cursor-pointer hover:scale-110 active:scale-95 transition-transform';
             el.innerHTML = `
               <div class="animate-pin-drop" style="animation-delay:${i * 100}ms">
                 <div class="relative flex flex-col items-center">
@@ -851,9 +1185,19 @@ export default function DashboardPage() {
                   <div style="width:8px;height:4px;background:rgba(0,0,0,0.15);border-radius:50%;margin-top:2px;filter:blur(1px);"></div>
                 </div>
               </div>`;
+
+            el.addEventListener('click', (e) => {
+              e.stopPropagation();
+              setSelectedSign(null);
+              setSelectedRec(rec);
+              setSelectedRecSignType(rec.aadt >= 15000 ? 'large_sign' : 'yard_sign');
+              m.flyTo({ center: [rec.lng, rec.lat], zoom: 16, pitch: is3D ? 55 : 0, duration: 800 });
+            });
+
             const marker = new mgl.Marker({ element: el }).setLngLat([rec.lng, rec.lat]).addTo(m);
-            scoutMarkersRef.current.push(marker);
+            scoutMarkersRef.current.push({ marker, rank: rec.rank });
           });
+
           // Fit bounds to show all recommendations
           if (recs.length > 1) {
             const bounds = recs.reduce((b, r) => b.extend([r.lng, r.lat]), new mgl.LngLatBounds([recs[0].lng, recs[0].lat], [recs[0].lng, recs[0].lat]));

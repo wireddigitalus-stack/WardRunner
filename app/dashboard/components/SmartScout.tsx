@@ -15,27 +15,19 @@ import {
   Bell,
   BellOff,
 } from 'lucide-react';
-import type { Sign } from '@/lib/types';
+import type { Sign, SignType, Recommendation } from '@/lib/types';
 import type { TrafficStation, Intersection } from '@/lib/trafficData';
-
-interface Recommendation {
-  rank: number;
-  street: string;
-  lat: number;
-  lng: number;
-  reason: string;
-  score: number;
-  aadt: number;
-  priority: 'critical' | 'high' | 'medium';
-}
 
 interface SmartScoutProps {
   signs: Sign[];
   trafficStations: TrafficStation[];
   intersections: Intersection[];
   isDark: boolean;
+  recs: Recommendation[];
+  setRecs: React.Dispatch<React.SetStateAction<Recommendation[]>>;
   onShowOnMap: (recs: Recommendation[]) => void;
   onFlyTo: (lat: number, lng: number) => void;
+  onSelectRec: (rec: Recommendation) => void;
 }
 
 export default function SmartScout({
@@ -43,18 +35,17 @@ export default function SmartScout({
   trafficStations,
   intersections,
   isDark,
+  recs,
+  setRecs,
   onShowOnMap,
   onFlyTo,
+  onSelectRec,
 }: SmartScoutProps) {
   const [expanded, setExpanded] = useState(false);
   const [tab, setTab] = useState<'recs' | 'chat'>('recs');
-  const [recs, setRecs] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notifications, setNotifications] = useState(true);
-
-  // Pop-up card state
-  const [activeRec, setActiveRec] = useState<Recommendation | null>(null);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
@@ -236,7 +227,10 @@ export default function SmartScout({
                         return (
                           <button
                             key={i}
-                            onClick={() => setActiveRec(rec)}
+                            onClick={() => {
+                              onSelectRec(rec);
+                              onFlyTo(rec.lat, rec.lng);
+                            }}
                             className={`w-full text-left p-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-amber-500/20 transition-all animate-fade-in`}
                             style={{ animationDelay: `${i * 60}ms` }}
                           >
@@ -348,80 +342,6 @@ export default function SmartScout({
           </div>
         )}
       </div>
-
-      {/* ============================================
-          POP-UP RECOMMENDATION CARD (overlay)
-          ============================================ */}
-      {activeRec && (
-        <>
-          <div className="absolute inset-0 z-30 bg-black/30 animate-fade-in" onClick={() => setActiveRec(null)} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-[340px] max-w-[calc(100vw-32px)] pointer-events-auto animate-slide-up">
-            <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden">
-              {/* Accent top edge */}
-              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 to-orange-500" />
-
-              <button onClick={() => setActiveRec(null)} className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-white/10 transition">
-                <X className="w-3.5 h-3.5 opacity-50" />
-              </button>
-
-              {/* Header */}
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-lg font-black shadow-lg shadow-amber-500/30">
-                  #{activeRec.rank}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md border leading-none ${priorityColor(activeRec.priority).badge}`}>{activeRec.priority}</span>
-                    <div className="flex items-center gap-0.5">
-                      <Zap className="w-3 h-3 text-amber-400" />
-                      <span className="text-sm font-black text-amber-400">{activeRec.score}</span>
-                      <span className="text-[9px] opacity-30">/10</span>
-                    </div>
-                  </div>
-                  <h3 className="font-extrabold text-sm mt-1.5">{activeRec.street}</h3>
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="mt-4 pt-3 border-t border-white/[0.08] space-y-3">
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span className="text-[9px] uppercase font-bold opacity-25 block">Est. Traffic</span>
-                    <span className="font-bold text-amber-400 mt-0.5 block">{activeRec.aadt?.toLocaleString()} <span className="text-[9px] opacity-40 text-white">vehicles/day</span></span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase font-bold opacity-25 block">GPS</span>
-                    <span className="font-mono opacity-50 text-[10px] mt-0.5 block">{activeRec.lat?.toFixed(4)}, {activeRec.lng?.toFixed(4)}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[9px] uppercase font-bold opacity-25 block">Why This Spot</span>
-                  <p className="text-[11px] opacity-60 leading-relaxed mt-0.5">{activeRec.reason}</p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => { onFlyTo(activeRec.lat, activeRec.lng); setActiveRec(null); }}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 active:scale-[0.97] transition-all"
-                >
-                  <Navigation className="w-3.5 h-3.5" /> View on Map
-                </button>
-                <a
-                  href={`https://maps.apple.com/?daddr=${activeRec.lat},${activeRec.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold flex items-center gap-1.5 transition"
-                >
-                  <Navigation className="w-3 h-3" /> Navigate
-                </a>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 }

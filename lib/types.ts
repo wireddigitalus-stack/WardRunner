@@ -35,3 +35,22 @@ export interface VolunteerSession {
   pin: string;
   volunteerName: string;
 }
+
+export interface Recommendation {
+  rank: number;
+  street: string;
+  lat: number;
+  lng: number;
+  reason: string;
+  score: number;
+  aadt: number;
+  priority: 'critical' | 'high' | 'medium';
+}
+
+export interface InventoryStock {
+  yard_sign: number;
+  large_sign: number;
+  banner: number;
+  billboard: number;
+}
+
