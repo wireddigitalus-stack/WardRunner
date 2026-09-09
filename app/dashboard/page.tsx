@@ -507,7 +507,7 @@ export default function DashboardPage() {
           TOP FLOATING BAR
           ============================================================ */}
       <header className="absolute top-0 inset-x-0 z-20 pointer-events-none p-3 sm:p-4">
-        <div className="max-w-[1600px] mx-auto flex items-start justify-between gap-3">
+        <div className="w-full flex items-start justify-between gap-3">
 
           {/* — Brand Capsule — */}
           <div className="pointer-events-auto glass rounded-2xl px-4 py-2.5 flex items-center gap-3 animate-slide-up">
