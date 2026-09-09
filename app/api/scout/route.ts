@@ -40,10 +40,23 @@ export async function POST(req: Request) {
     const { mode, message, signs, trafficStations, intersections } = body;
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-    // Build context about current campaign state
     const campaignContext = buildCampaignContext(signs, trafficStations, intersections);
+
+    // Resilient model cascade starting with gemini-3.6-flash
+    const candidateModels = ['gemini-3.6-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
+    async function runGenerate(contentsPayload: any) {
+      let lastErr: any = null;
+      for (const mName of candidateModels) {
+        try {
+          const m = genAI.getGenerativeModel({ model: mName });
+          return await m.generateContent(contentsPayload);
+        } catch (err: any) {
+          lastErr = err;
+          console.warn(`[Scout] Model ${mName} failed: ${err?.message || err}. Trying next fallback...`);
+        }
+      }
+      throw lastErr;
+    }
 
     if (mode === 'recommend') {
       // One-click recommendation mode
@@ -63,7 +76,7 @@ Respond ONLY with a valid JSON array. Each element must have:
   "priority": "critical" | "high" | "medium"
 }`;
 
-      const result = await model.generateContent({
+      const result = await runGenerate({
         contents: [
           { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
           { role: 'model', parts: [{ text: 'I understand. I am Scout, ready to analyze Bristol TN for optimal sign placements.' }] },
@@ -85,7 +98,7 @@ Respond ONLY with a valid JSON array. Each element must have:
       // Chat mode — conversational Q&A
       const userMessage = message || 'What are the best locations for signs?';
 
-      const result = await model.generateContent({
+      const result = await runGenerate({
         contents: [
           { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
           { role: 'model', parts: [{ text: 'I understand. I am Scout, ready to help with sign placement strategy in Bristol TN.' }] },
