@@ -200,41 +200,109 @@ export default function DashboardPage() {
         const isComp = sign.is_competitor;
         const isBig  = ['large_sign', 'banner', 'billboard'].includes(sign.sign_type);
         const isSel  = selectedSign?.id === sign.id;
-        const meta   = SIGN_TYPE_META[sign.sign_type] || { emoji: '📍', short: '?' };
 
-        const grad = isComp
-          ? 'from-rose-500 to-pink-600'
-          : isBig
-          ? 'from-blue-500 to-indigo-600'
-          : 'from-emerald-400 to-teal-500';
+        // High-contrast solid colors — no subtle gradients, maximum readability
+        const bgColor = isComp ? '#e11d48' : isBig ? '#2563eb' : '#059669';
+        const bgColorDark = isComp ? '#be123c' : isBig ? '#1d4ed8' : '#047857';
+        const glowColor = isComp ? 'rgba(225,29,72,0.45)' : isBig ? 'rgba(37,99,235,0.4)' : 'rgba(5,150,105,0.4)';
 
-        const shadow = isComp
-          ? 'shadow-rose-500/40'
-          : isBig
-          ? 'shadow-blue-500/40'
-          : 'shadow-emerald-500/40';
+        // Bold, clear label — no emoji, just crisp uppercase text
+        const pinLabel = isComp
+          ? 'VS'
+          : sign.sign_type === 'yard_sign'
+          ? 'YARD'
+          : sign.sign_type === 'large_sign'
+          ? '4×4'
+          : sign.sign_type === 'banner'
+          ? 'BNR'
+          : 'BILL';
 
-        const pulseColor = isComp ? 'rgba(244,63,94,0.35)' : 'rgba(16,185,129,0.35)';
+        // Hover tooltip with candidate + type
+        const tooltipName = isComp ? (sign.competitor_name || 'Opponent') : 'M. Brown';
+        const tooltipType = SIGN_TYPE_META[sign.sign_type]?.label || 'Sign';
 
         el.innerHTML = `
-          <div class="animate-pin-drop" style="animation-delay:${i * 40}ms">
-            <div class="relative flex flex-col items-center">
-              ${!isComp && !isSel ? `<div class="absolute -inset-1 rounded-full animate-ripple" style="background:${pulseColor}"></div>` : ''}
-              <div class="
-                relative w-10 h-10 rounded-[14px] bg-gradient-to-br ${grad}
-                flex items-center justify-center
-                text-white text-[11px] font-extrabold tracking-tight
-                shadow-lg ${shadow}
-                border-[2.5px] border-white/90
-                transition-all duration-200
-                ${isSel ? 'scale-[1.3] ring-[3px] ring-white/60 ring-offset-2 ring-offset-transparent' : 'hover:scale-110'}
-              " style="--pulse-color:${pulseColor}" >
-                ${meta.short === '4×4' ? '4×4' : meta.short === 'Ban' ? '🚩' : isComp ? '⚔️' : meta.short === 'Bill' ? '🏢' : '✓'}
+          <div class="animate-pin-drop" style="animation-delay:${Math.min(i * 35, 500)}ms">
+            <div class="relative flex flex-col items-center group">
+
+              ${/* Pulse ring for campaign signs */''}
+              ${!isComp && !isSel ? `<div class="absolute w-14 h-14 rounded-full animate-ripple pointer-events-none" style="background:${glowColor};top:-3px;left:-3px;"></div>` : ''}
+
+              ${/* Selection glow ring */''}
+              ${isSel ? `<div class="absolute -inset-[5px] rounded-2xl animate-pin-pulse" style="--pulse-color:${glowColor};box-shadow:0 0 0 4px ${glowColor}"></div>` : ''}
+
+              ${/* === THE PIN === */''}
+              <div style="
+                width: 48px;
+                height: 48px;
+                background: linear-gradient(135deg, ${bgColor}, ${bgColorDark});
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 3px solid rgba(255,255,255,0.95);
+                box-shadow: 0 4px 16px ${glowColor}, 0 2px 4px rgba(0,0,0,0.2);
+                transition: transform 0.2s ease;
+                transform: ${isSel ? 'scale(1.25)' : 'scale(1)'};
+                position: relative;
+                z-index: ${isSel ? 30 : 10};
+              ">
+                <span style="
+                  color: white;
+                  font-size: 13px;
+                  font-weight: 900;
+                  letter-spacing: 0.5px;
+                  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+                  line-height: 1;
+                ">${pinLabel}</span>
               </div>
-              <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[6px] border-l-transparent border-r-transparent ${
-                isComp ? 'border-t-pink-600' : isBig ? 'border-t-indigo-600' : 'border-t-teal-500'
-              } -mt-[1px]"></div>
-              <div class="w-[6px] h-[6px] rounded-full bg-black/20 blur-[2px] mt-[2px]"></div>
+
+              ${/* Pin pointer triangle */''}
+              <div style="
+                width: 0; height: 0;
+                border-left: 7px solid transparent;
+                border-right: 7px solid transparent;
+                border-top: 8px solid ${bgColorDark};
+                margin-top: -2px;
+                filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+              "></div>
+
+              ${/* Ground shadow dot */''}
+              <div style="
+                width: 8px; height: 4px;
+                background: rgba(0,0,0,0.15);
+                border-radius: 50%;
+                margin-top: 2px;
+                filter: blur(1px);
+              "></div>
+
+              ${/* Hover tooltip — big text for readability */''}
+              <div class="
+                hidden group-hover:flex
+                absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                flex-col items-center pointer-events-none z-50
+              ">
+                <div style="
+                  background: rgba(0,0,0,0.88);
+                  backdrop-filter: blur(12px);
+                  border-radius: 12px;
+                  padding: 8px 14px;
+                  white-space: nowrap;
+                  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+                  border: 1px solid rgba(255,255,255,0.1);
+                ">
+                  <div style="color:white;font-size:13px;font-weight:800;line-height:1.3;">${tooltipName}</div>
+                  <div style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:600;margin-top:2px;">${tooltipType} · ${sign.placed_by_name}</div>
+                </div>
+                <div style="
+                  width:0;height:0;
+                  border-left:6px solid transparent;
+                  border-right:6px solid transparent;
+                  border-top:6px solid rgba(0,0,0,0.88);
+                  margin-top:-1px;
+                "></div>
+              </div>
+
             </div>
           </div>
         `;
@@ -243,6 +311,16 @@ export default function DashboardPage() {
           e.stopPropagation();
           setSelectedSign(sign);
           m.flyTo({ center: [Number(sign.longitude), Number(sign.latitude)], zoom: 15.8, pitch: is3D ? 55 : 0, duration: 800 });
+        });
+
+        // Hover scale
+        el.addEventListener('mouseenter', () => {
+          const pin = el.querySelector('div[style*="width: 48px"]') as HTMLElement;
+          if (pin && !isSel) pin.style.transform = 'scale(1.15)';
+        });
+        el.addEventListener('mouseleave', () => {
+          const pin = el.querySelector('div[style*="width: 48px"]') as HTMLElement;
+          if (pin && !isSel) pin.style.transform = 'scale(1)';
         });
 
         const marker = new mgl.Marker({ element: el }).setLngLat([Number(sign.longitude), Number(sign.latitude)]).addTo(m);
@@ -390,22 +468,24 @@ export default function DashboardPage() {
           BOTTOM-LEFT: MAP LEGEND
           ============================================================ */}
       <div className="absolute bottom-4 left-3 sm:left-4 z-10 hidden sm:block pointer-events-auto animate-slide-up" style={{ animationDelay: '300ms' }}>
-        <div className="glass rounded-2xl p-3.5 space-y-2.5 min-w-[180px]">
-          <p className="text-[9px] font-extrabold uppercase tracking-[0.12em] opacity-40">Map Legend</p>
+        <div className="glass rounded-2xl p-4 space-y-3 min-w-[210px]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] opacity-40">Map Legend</p>
           {[
-            { color: 'bg-gradient-to-r from-emerald-400 to-teal-500', label: 'Melissa Brown — Yard' },
-            { color: 'bg-gradient-to-r from-blue-500 to-indigo-600', label: '4×4s, Banners & Billboards' },
-            { color: 'bg-gradient-to-r from-rose-500 to-pink-600', label: 'Competitor Placements' },
+            { bg: '#059669', label: 'YARD', desc: 'Melissa Brown — Yard Signs' },
+            { bg: '#2563eb', label: '4×4',  desc: '4×4s, Banners & Billboards' },
+            { bg: '#e11d48', label: 'VS',   desc: 'Competitor Placements' },
           ].map(item => (
-            <div key={item.label} className="flex items-center gap-2.5">
-              <span className={`w-3 h-3 rounded-[4px] ${item.color} shadow-sm`} />
-              <span className="text-[11px] font-medium opacity-70">{item.label}</span>
+            <div key={item.desc} className="flex items-center gap-3">
+              <div style={{ background: item.bg, width: 28, height: 28, borderRadius: 8, border: '2px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 2px 8px ${item.bg}66`, flexShrink: 0 }}>
+                <span style={{ color: 'white', fontSize: 10, fontWeight: 900, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{item.label}</span>
+              </div>
+              <span className="text-[12px] font-semibold opacity-80">{item.desc}</span>
             </div>
           ))}
-          <div className={`pt-2 border-t ${isDark ? 'border-white/10' : 'border-black/10'}`}>
-            <div className="flex items-center gap-2.5">
-              <span className="w-5 h-[3px] rounded-full bg-amber-400" />
-              <span className="text-[11px] font-medium opacity-70">AADT Traffic Corridors</span>
+          <div className={`pt-2.5 border-t ${isDark ? 'border-white/10' : 'border-black/10'}`}>
+            <div className="flex items-center gap-3">
+              <span className="w-7 h-[3px] rounded-full bg-amber-400 shrink-0" />
+              <span className="text-[12px] font-semibold opacity-80">AADT Traffic Corridors</span>
             </div>
           </div>
         </div>
