@@ -277,7 +277,9 @@ export default function FieldPage() {
       const targetLabel = isCompetitor ? `Competitor (${competitorName})` : 'Melissa K. Brown';
 
       setSuccessMessage(
-        `Dropped ${signLabel} for ${targetLabel} in ${elapsedSeconds}s! (±${coords.accuracy}m)`
+        isCompetitor
+          ? `Reported ${signLabel} for ${targetLabel} in ${elapsedSeconds}s! (±${coords.accuracy}m)`
+          : `Dropped ${signLabel} for ${targetLabel} in ${elapsedSeconds}s! (±${coords.accuracy}m)`
       );
 
       // Reset dynamic inputs while keeping volunteer ergonomics ready for next sign
@@ -850,7 +852,7 @@ export default function FieldPage() {
                         <p className="text-xs text-slate-400">
                           {sign.distance_meters !== undefined
                             ? `${sign.distance_meters}m away`
-                            : `Lat ${Number(sign.latitude).toFixed(3)}`} • By {sign.placed_by_name}
+                            : `Lat ${Number(sign.latitude).toFixed(3)}`} • {sign.is_competitor ? 'Reported by' : 'By'} {sign.placed_by_name}
                         </p>
                       </div>
                     </div>

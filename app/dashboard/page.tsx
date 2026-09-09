@@ -545,7 +545,7 @@ export default function DashboardPage() {
                   border: 1px solid rgba(255,255,255,0.1);
                 ">
                   <div style="color:white;font-size:13px;font-weight:800;line-height:1.3;">${tooltipName}</div>
-                  <div style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:600;margin-top:2px;">${tooltipType} · ${sign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'}</div>
+                  <div style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:600;margin-top:2px;">${tooltipType} · ${sign.is_competitor ? 'Reported by Opponent Volunteer' : 'Placed by Campaign Volunteer'}</div>
                 </div>
                 <div style="
                   width:0;height:0;
@@ -594,7 +594,7 @@ export default function DashboardPage() {
   }, [is3D]);
 
   const exportCSV = () => {
-    const h = ['ID','Type','Competitor','Competitor Name','Lat','Lng','Placed By','Status','Date'];
+    const h = ['ID','Type','Competitor','Competitor Name','Lat','Lng','Placed / Reported By','Status','Date'];
     const rows = filtered.map(s => [s.id, s.sign_type, s.is_competitor, s.competitor_name||'', s.latitude, s.longitude, `"${s.placed_by_name}"`, s.status, s.created_at]);
     const a = document.createElement('a');
     a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent([h, ...rows].map(r => (r as any[]).join(',')).join('\n'));
@@ -738,7 +738,7 @@ export default function DashboardPage() {
                   {selectedSign.is_competitor ? selectedSign.competitor_name : 'Melissa K. Brown'}
                 </h3>
                 <p className="text-xs opacity-50 capitalize mt-0.5">
-                  {selectedSign.sign_type.replace('_', ' ')} · <span className="text-emerald-400 font-semibold">{selectedSign.status}</span> · {relativeTime(selectedSign.created_at)}
+                  {selectedSign.sign_type.replace('_', ' ')} · <span className={selectedSign.is_competitor ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{selectedSign.is_competitor ? 'Reported' : selectedSign.status}</span> · {selectedSign.is_competitor ? 'Reported' : 'Placed'} {relativeTime(selectedSign.created_at)}
                 </p>
               </div>
             </div>
@@ -755,7 +755,9 @@ export default function DashboardPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[9px] uppercase font-bold opacity-30 block">Logged By</span>
+                  <span className="text-[9px] uppercase font-bold opacity-30 block">
+                    {selectedSign.is_competitor ? 'Reported By' : 'Placed By'}
+                  </span>
                   <span className="font-semibold mt-0.5 block">
                     {selectedSign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'}
                   </span>
@@ -1127,7 +1129,7 @@ export default function DashboardPage() {
                                 <span className="text-xs font-bold truncate">{sign.is_competitor ? sign.competitor_name : 'Melissa K. Brown'}</span>
                                 {sign.is_competitor && <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-rose-400" />}
                               </div>
-                              <p className="text-[10px] opacity-40 truncate">{sign.street_address ? `${sign.street_address} · ` : ''}{sign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'} · {relativeTime(sign.created_at)}</p>
+                              <p className="text-[10px] opacity-40 truncate">{sign.street_address ? `${sign.street_address} · ` : ''}{sign.is_competitor ? 'Reported' : 'Placed'} · {relativeTime(sign.created_at)}</p>
                             </div>
                           </div>
                           <span className={`shrink-0 text-[9px] font-extrabold px-2 py-0.5 rounded-md ${sign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
