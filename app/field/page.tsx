@@ -22,7 +22,7 @@ import {
 
 const SIGN_TYPES: { id: SignType; label: string; icon: string; size: string }[] = [
   { id: 'yard_sign', label: 'Yard Sign', icon: '🏡', size: 'Standard 24"x18"' },
-  { id: 'large_sign', label: 'Large 4x4', icon: '📐', size: 'Roadside 4\'x4\'' },
+  { id: 'large_sign', label: 'Large 4x4', icon: '🪧', size: 'Roadside 4\'x4\'' },
   { id: 'banner', label: 'Banner', icon: '🚩', size: 'Fence / Overpass' },
   { id: 'billboard', label: 'Billboard', icon: '🏢', size: 'High-Impact Arterial' },
 ];

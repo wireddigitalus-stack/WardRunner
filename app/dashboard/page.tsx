@@ -37,7 +37,7 @@ const BRISTOL_CENTER: [number, number] = [-82.1887, 36.5951];
 
 const SIGN_TYPE_META: Record<string, { emoji: string; label: string; short: string }> = {
   yard_sign:  { emoji: '🏡', label: 'Yard Sign',    short: 'Yard' },
-  large_sign: { emoji: '📐', label: 'Large 4×4',    short: '4×4' },
+  large_sign: { emoji: '🪧', label: 'Large 4×4',    short: '4×4' },
   banner:     { emoji: '🚩', label: 'Banner',       short: 'Ban' },
   billboard:  { emoji: '🏢', label: 'Billboard',    short: 'Bill' },
 };
@@ -748,7 +748,7 @@ export default function DashboardPage() {
                   <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className={`w-full h-10 px-3 rounded-xl border text-xs font-medium focus:outline-none transition ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-black/[0.03] border-black/10 text-slate-900'}`}>
                     <option value="all">All Types</option>
                     <option value="yard_sign">🏡 Yard Signs</option>
-                    <option value="large_sign">📐 Large 4×4</option>
+                    <option value="large_sign">🪧 Large 4×4</option>
                     <option value="banner">🚩 Banners</option>
                     <option value="billboard">🏢 Billboards</option>
                   </select>
