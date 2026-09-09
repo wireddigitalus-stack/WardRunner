@@ -5,11 +5,17 @@
 :root {
   --foreground-rgb: 15, 23, 42;
   --background-rgb: 248, 250, 252;
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .dark {
   --foreground-rgb: 248, 250, 252;
   --background-rgb: 9, 9, 11;
+  --glass-bg: rgba(24, 24, 27, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 body {
@@ -18,57 +24,51 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Touch targets optimization */
 button, input, select {
   touch-action: manipulation;
 }
 
-/* Custom Apple Maps Styled Controls */
+/* ============================================ */
+/* GLASSMORPHISM SYSTEM                         */
+/* ============================================ */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-heavy {
+  background: var(--glass-bg);
+  backdrop-filter: saturate(200%) blur(40px);
+  -webkit-backdrop-filter: saturate(200%) blur(40px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ============================================ */
+/* MAPLIBRE NATIVE OVERRIDES                    */
+/* ============================================ */
 .maplibregl-ctrl-group {
-  background: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border-radius: 16px !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: saturate(180%) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+  border-radius: 14px !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
   overflow: hidden !important;
 }
 
-.dark .maplibregl-ctrl-group {
-  background: rgba(24, 24, 27, 0.8) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5) !important;
-}
-
 .maplibregl-ctrl-group button {
-  width: 38px !important;
-  height: 38px !important;
+  width: 36px !important;
+  height: 36px !important;
 }
 
 .dark .maplibregl-ctrl-group button {
   filter: invert(1);
 }
 
-/* Apple Map Marker Pin Animations */
-@keyframes apple-drop {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.6);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(4px) scale(1.05);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-apple-drop {
-  animation: apple-drop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* MapLibre Popup Styling */
 .maplibregl-popup-content {
   border-radius: 20px !important;
   padding: 0 !important;
@@ -77,7 +77,103 @@ button, input, select {
   box-shadow: none !important;
 }
 
-.maplibregl-popup-tip {
-  display: none !important;
+.maplibregl-popup-tip { display: none !important; }
+
+.maplibregl-canvas { outline: none !important; }
+
+/* ============================================ */
+/* APPLE PIN DROP & PULSE ANIMATIONS            */
+/* ============================================ */
+@keyframes pin-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.4);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(5px) scale(1.08);
+  }
+  70% {
+    transform: translateY(-2px) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
 }
 
+@keyframes pin-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--pulse-color, rgba(16, 185, 129, 0.4)); }
+  50% { box-shadow: 0 0 0 12px var(--pulse-color, rgba(16, 185, 129, 0)); }
+}
+
+@keyframes ripple {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(20px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slide-in-right {
+  0% { opacity: 0; transform: translateX(100%); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes count-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pin-drop {
+  animation: pin-drop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-pin-pulse {
+  animation: pin-pulse 2s ease-in-out infinite;
+}
+
+.animate-ripple {
+  animation: ripple 1.5s ease-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease forwards;
+}
+
+.animate-count-up {
+  animation: count-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered children animation */
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 99px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.5);
+}
