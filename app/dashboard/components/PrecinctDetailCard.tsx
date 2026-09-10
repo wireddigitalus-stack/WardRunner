@@ -10,6 +10,7 @@ interface PrecinctDetailCardProps {
   signs: Sign[];
   onClose: () => void;
   onZoomToPrecinct: (precinct: PrecinctInfo) => void;
+  onAssignMission?: (precinct: PrecinctInfo) => void;
   isDark?: boolean;
 }
 
@@ -18,6 +19,7 @@ export default function PrecinctDetailCard({
   signs,
   onClose,
   onZoomToPrecinct,
+  onAssignMission,
   isDark = true,
 }: PrecinctDetailCardProps) {
   if (!precinct) return null;
@@ -175,9 +177,18 @@ export default function PrecinctDetailCard({
           >
             <Navigation className="w-3.5 h-3.5" /> Center Precinct
           </button>
+          {onAssignMission && (
+            <button
+              onClick={() => onAssignMission(precinct)}
+              className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-purple-300 bg-purple-500/20 border border-purple-500/30 hover:bg-purple-500/30 flex items-center gap-1.5 transition active:scale-95"
+              title="Assign a volunteer placement mission to this precinct"
+            >
+              <Users className="w-3.5 h-3.5 text-purple-400" /> Assign
+            </button>
+          )}
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 transition"
+            className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 transition"
           >
             Dismiss
           </button>

@@ -124,8 +124,18 @@ export default function DashboardPage() {
   const [inventoryStock, setInventoryStock] = useState<InventoryStock>(DEFAULT_INVENTORY_STOCK);
   const [editingStock, setEditingStock] = useState(false);
 
-  // Volunteer & PIN Directory Modal
+  // Volunteer & PIN Directory Modal & Dispatch Missions
   const [showVolunteerModal, setShowVolunteerModal] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState<'roster' | 'dispatch'>('roster');
+  const [modalInitialTarget, setModalInitialTarget] = useState<{
+    title: string;
+    street_address?: string;
+    lat: number;
+    lng: number;
+    signType?: SignType;
+    quantity?: number;
+    targetType?: 'intersection' | 'precinct' | 'scout_rec' | 'custom';
+  } | null>(null);
 
   // Voting Precincts & Turnout State
   const [showPrecincts, setShowPrecincts] = useState(true);
@@ -1051,6 +1061,25 @@ export default function DashboardPage() {
                 <Check className="w-4 h-4" /> {approvingRec ? 'Deploying…' : 'Approve & Deploy'}
               </button>
               <button
+                onClick={() => {
+                  setModalInitialTarget({
+                    title: selectedRec.street,
+                    street_address: recAddress || selectedRec.street,
+                    lat: selectedRec.lat,
+                    lng: selectedRec.lng,
+                    signType: selectedRecSignType,
+                    quantity: 1,
+                    targetType: 'scout_rec',
+                  });
+                  setModalInitialTab('dispatch');
+                  setShowVolunteerModal(true);
+                }}
+                className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-purple-300 border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+                title="Assign this Scout recommendation to a field volunteer"
+              >
+                <Users className="w-3.5 h-3.5 text-purple-400" /> Assign
+              </button>
+              <button
                 onClick={() => handleDeclineRec(selectedRec)}
                 className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold transition text-rose-400 border border-rose-500/20 hover:bg-rose-500/10 active:scale-95`}
               >
@@ -1492,9 +1521,14 @@ export default function DashboardPage() {
           ============================================================ */}
       <VolunteerManagerModal
         isOpen={showVolunteerModal}
-        onClose={() => setShowVolunteerModal(false)}
+        onClose={() => {
+          setShowVolunteerModal(false);
+          setModalInitialTarget(null);
+        }}
         signsCountByVolunteer={signsCountByVolunteer}
         isDark={isDark}
+        initialTab={modalInitialTab}
+        initialTarget={modalInitialTarget}
       />
 
       {/* ============================================================
@@ -1511,6 +1545,19 @@ export default function DashboardPage() {
             pitch: is3D ? 50 : 0,
             duration: 900,
           });
+        }}
+        onAssignMission={(p) => {
+          setModalInitialTarget({
+            title: p.name,
+            street_address: p.pollingAddress,
+            lat: p.center[1],
+            lng: p.center[0],
+            signType: 'yard_sign',
+            quantity: 5,
+            targetType: 'precinct',
+          });
+          setModalInitialTab('dispatch');
+          setShowVolunteerModal(true);
         }}
         isDark={isDark}
       />

@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { compressImage } from '@/lib/imageCompression';
-import { SignType, SignStatus, Sign, VolunteerSession } from '@/lib/types';
+import { SignType, SignStatus, Sign, VolunteerSession, VolunteerAssignment } from '@/lib/types';
+import { getStoredAssignments, markAssignmentComplete } from '@/lib/assignmentData';
 import {
   MapPin,
   Camera,
@@ -18,6 +19,9 @@ import {
   ChevronRight,
   ShieldAlert,
   Compass,
+  Target,
+  Send,
+  Check,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 
@@ -43,12 +47,17 @@ export default function FieldPage() {
   const [selectedType, setSelectedType] = useState<SignType>('yard_sign');
   const [isCompetitor, setIsCompetitor] = useState(false);
   const [competitorName, setCompetitorName] = useState('');
+  const [streetAddress, setStreetAddress] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Assigned Sign Placement Missions
+  const [missions, setMissions] = useState<VolunteerAssignment[]>([]);
+  const [activeMission, setActiveMission] = useState<VolunteerAssignment | null>(null);
 
   // GPS Coordinates State
   const [coords, setCoords] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
@@ -81,6 +90,43 @@ export default function FieldPage() {
     }
     fetchCurrentLocation();
   }, []);
+
+  // Load missions and listen for real-time dispatch updates
+  useEffect(() => {
+    const loadMissions = () => {
+      setMissions(getStoredAssignments());
+    };
+    loadMissions();
+    window.addEventListener('wardrunner_assignments_updated', loadMissions);
+    return () => window.removeEventListener('wardrunner_assignments_updated', loadMissions);
+  }, []);
+
+  const handleAcceptMission = (m: VolunteerAssignment) => {
+    setActiveMission(m);
+    setSelectedType(m.sign_type);
+    if (m.street_address) {
+      setStreetAddress(m.street_address);
+    }
+    setIsCompetitor(false);
+    const formElement = document.getElementById('placement-form');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Filter active missions dispatched to this volunteer or open to campaign volunteers
+  const myMissions = missions.filter((m) => {
+    if (!session) return false;
+    const sName = (session.volunteerName || '').toLowerCase().trim();
+    const vName = (m.volunteer_name || '').toLowerCase().trim();
+    return (
+      vName === sName ||
+      vName === 'campaign volunteer' ||
+      sName.includes(vName) ||
+      vName.includes(sName) ||
+      sName === 'campaign volunteer'
+    ) && m.status !== 'completed';
+  });
 
   // Poll GPS location every 15 seconds if active
   useEffect(() => {
@@ -277,6 +323,7 @@ export default function FieldPage() {
         is_competitor: isCompetitor,
         competitor_name: isCompetitor ? competitorName.trim() : null,
         photo_url: photoUrl,
+        street_address: streetAddress.trim() || undefined,
         status: 'placed' as SignStatus,
       };
 
@@ -299,14 +346,24 @@ export default function FieldPage() {
       const signLabel = SIGN_TYPES.find((t) => t.id === selectedType)?.label || 'Sign';
       const targetLabel = isCompetitor ? `Competitor (${competitorName})` : 'Melissa K. Brown';
 
-      setSuccessMessage(
-        isCompetitor
-          ? `Reported ${signLabel} for ${targetLabel} in ${elapsedSeconds}s! (±${coords.accuracy}m)`
-          : `Dropped ${signLabel} for ${targetLabel} in ${elapsedSeconds}s! (±${coords.accuracy}m)`
-      );
+      // Mark assigned mission completed if volunteer was fulfilling one
+      if (activeMission) {
+        markAssignmentComplete(activeMission.id);
+        const updated = getStoredAssignments();
+        setMissions(updated);
+        setSuccessMessage(`Dropped ${signLabel} for ${targetLabel}! Mission "${activeMission.title}" completed!`);
+        setActiveMission(null);
+      } else {
+        setSuccessMessage(
+          isCompetitor
+            ? `Reported ${signLabel} for ${targetLabel} in ${elapsedSeconds}s! (±${coords.accuracy}m)`
+            : `Dropped ${signLabel} for ${targetLabel} in ${elapsedSeconds}s! (±${coords.accuracy}m)`
+        );
+      }
 
       // Reset dynamic inputs while keeping volunteer ergonomics ready for next sign
       clearPhoto();
+      setStreetAddress('');
       if (isCompetitor) {
         setIsCompetitor(false);
         setCompetitorName('');
@@ -644,7 +701,131 @@ export default function FieldPage() {
       {/* MODE 1: PLACE SIGN WORKFLOW (Sub-10s Single-Hand Optimized)       */}
       {/* ================================================================= */}
       {activeTab === 'place' && (
-        <div className="px-4 py-2 space-y-4">
+        <div id="placement-form" className="px-4 py-2 space-y-4">
+          {/* Active Mission In-Progress Banner */}
+          {activeMission && (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/25 via-indigo-500/20 to-emerald-500/25 border border-purple-500/40 text-xs text-white shadow-xl animate-slide-up flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/30 border border-purple-400/50 flex items-center justify-center text-purple-300 shrink-0">
+                  <Target className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] font-black uppercase text-purple-300 tracking-wider block">
+                    Active Sign Mission
+                  </span>
+                  <p className="font-extrabold text-sm text-white truncate">{activeMission.title}</p>
+                  <p className="text-[10px] text-emerald-300">
+                    Pre-filled: {activeMission.quantity}× {activeMission.sign_type.replace('_', ' ')}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveMission(null)}
+                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 hover:bg-white/15 text-slate-300 transition shrink-0"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          {/* Assigned Sign Placement Missions Dispatch Card */}
+          {myMissions.length > 0 && !activeMission && (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-950/30 via-slate-900 to-slate-900 border border-purple-500/30 shadow-xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
+                    <Target className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-wider text-purple-200">
+                    Your Assigned Missions ({myMissions.length})
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  Dispatched
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {myMissions.map((m) => {
+                  const distMeters = coords ? calculateDistance(coords.latitude, coords.longitude, m.lat, m.lng) : null;
+                  const distText = distMeters != null
+                    ? distMeters < 800
+                      ? `${Math.round(distMeters)}m away`
+                      : `${(distMeters * 0.000621371).toFixed(1)} mi away`
+                    : null;
+
+                  return (
+                    <div
+                      key={m.id}
+                      className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${
+                              m.priority === 'critical'
+                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                : m.priority === 'high'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                            }`}>
+                              {m.priority}
+                            </span>
+                            <span className="text-xs font-bold text-white truncate">
+                              {m.title}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                            <span className="text-emerald-400 font-bold">
+                              {m.quantity}× {m.sign_type.replace('_', ' ')}
+                            </span>
+                            {distText && (
+                              <>
+                                <span>•</span>
+                                <span className="text-purple-300 font-mono font-bold">{distText}</span>
+                              </>
+                            )}
+                          </div>
+
+                          {m.notes && (
+                            <p className="text-[11px] text-slate-300 mt-1 pl-2 border-l border-purple-500/40 italic">
+                              "{m.notes}"
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col gap-1.5 shrink-0">
+                          <a
+                            href={`https://maps.apple.com/?daddr=${m.lat},${m.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-slate-200 flex items-center justify-center gap-1 border border-slate-700 active:scale-95 transition"
+                            title="Open GPS Navigation"
+                          >
+                            <Navigation className="w-3 h-3 text-sky-400" />
+                            <span>Navigate</span>
+                          </a>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAcceptMission(m)}
+                            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-500/25 flex items-center justify-center gap-1 active:scale-95 transition"
+                          >
+                            <MapPin className="w-3 h-3" />
+                            <span>Plant Here</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Target Ownership Switch: Brown Campaign vs Competitor Intel */}
           <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
             <div className="text-xs font-bold uppercase text-slate-400 mb-2 flex items-center justify-between">

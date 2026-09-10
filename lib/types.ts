@@ -55,3 +55,21 @@ export interface InventoryStock {
   billboard: number;
 }
 
+export interface VolunteerAssignment {
+  id: string;
+  volunteer_id?: string;
+  volunteer_name: string;
+  target_type: 'intersection' | 'precinct' | 'scout_rec' | 'custom';
+  title: string;
+  street_address?: string;
+  sign_type: SignType;
+  quantity: number;
+  lat: number;
+  lng: number;
+  priority: 'critical' | 'high' | 'medium';
+  notes?: string;
+  status: 'assigned' | 'in_progress' | 'completed';
+  created_at: string;
+  completed_at?: string;
+}
+
