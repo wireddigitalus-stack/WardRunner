@@ -62,18 +62,24 @@ export default function HomePage() {
             className="group p-6 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/50 hover:bg-slate-900 transition shadow-2xl relative overflow-hidden flex flex-col justify-between"
           >
             <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                <BarChart3 className="w-6 h-6" />
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                  PIN Gate (620620)
+                </span>
               </div>
               <h3 className="text-2xl font-bold text-white group-hover:text-blue-300 transition">
-                Manager Command
+                Field Command
               </h3>
               <p className="text-sm text-slate-400">
-                Built for Campaign Field Operations: Clustered map markers, competitor reconnaissance, Bristol AADT traffic corridors, and CSV/GeoJSON export.
+                Campaign Operations & Intelligence: Clustered map markers, competitor reconnaissance, Bristol AADT traffic corridors, and CSV/GeoJSON export.
               </p>
             </div>
             <div className="mt-6 flex items-center text-blue-400 font-bold text-sm gap-2">
-              Launch /dashboard <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+              Launch Field Command <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
             </div>
           </Link>
         </div>

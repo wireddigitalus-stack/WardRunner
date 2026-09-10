@@ -11,6 +11,7 @@ import PrecinctLeaderboard from './components/PrecinctLeaderboard';
 import PrecinctDetailCard from './components/PrecinctDetailCard';
 import MissionDetailCard from './components/MissionDetailCard';
 import MissionsDrawerTab from './components/MissionsDrawerTab';
+import CommandPinGate from './components/CommandPinGate';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
@@ -48,6 +49,7 @@ import {
   Plus,
   Minus,
   CircleDot,
+  Lock,
 } from 'lucide-react';
 
 /* ================================================================
@@ -86,6 +88,29 @@ const MAP_STYLES = {
    ================================================================ */
 export default function DashboardPage() {
   const theme = 'dark' as const;
+
+  // Security Gate Authentication (Master PIN: 620620)
+  const [isCommandAuthorized, setIsCommandAuthorized] = useState<boolean>(true);
+  const [checkedAuth, setCheckedAuth] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isAuth =
+        sessionStorage.getItem('wardrunner_field_command_auth') === 'true' ||
+        localStorage.getItem('wardrunner_field_command_auth') === 'true';
+      setIsCommandAuthorized(isAuth);
+      setCheckedAuth(true);
+    }
+  }, []);
+
+  const handleLockCommand = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('wardrunner_field_command_auth');
+      localStorage.removeItem('wardrunner_field_command_auth');
+    }
+    setIsCommandAuthorized(false);
+  }, []);
+
   const [signs, setSigns] = useState<Sign[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSign, setSelectedSign] = useState<Sign | null>(null);
@@ -1248,6 +1273,28 @@ export default function DashboardPage() {
   /* ================================================================
      RENDER
      ================================================================ */
+  if (checkedAuth && !isCommandAuthorized) {
+    return (
+      <CommandPinGate
+        onUnlock={() => setIsCommandAuthorized(true)}
+        masterPin="620620"
+      />
+    );
+  }
+
+  if (!checkedAuth) {
+    return (
+      <div className="h-screen w-screen bg-slate-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-black text-sm animate-pulse shadow-lg shadow-blue-500/20">
+            FC
+          </div>
+          <span className="text-xs font-mono text-slate-500 tracking-wider">Verifying Security Gate...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`h-screen w-screen overflow-hidden relative font-sans transition-colors duration-500 ${isDark ? 'dark bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-900'}`}>
 
@@ -1269,7 +1316,7 @@ export default function DashboardPage() {
             </div>
             <div className="hidden sm:block">
               <div className="flex items-center gap-2">
-                <h1 className="font-extrabold text-sm tracking-tight">WardRunner</h1>
+                <h1 className="font-extrabold text-sm tracking-tight">Field Command</h1>
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">LIVE</span>
               </div>
               <p className="text-[11px] opacity-50 leading-none mt-0.5">Melissa K. Brown • Bristol TN City Council</p>
@@ -1379,6 +1426,16 @@ export default function DashboardPage() {
             >
               <CircleDot className={`w-4 h-4 ${useDotMode ? 'text-cyan-400' : 'text-slate-400'}`} />
               <span className="hidden md:inline">{useDotMode ? 'Dots Active' : 'Street Dots'}</span>
+            </button>
+
+            {/* Lock Field Command Security Gate */}
+            <button
+              onClick={handleLockCommand}
+              className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 active:scale-95 group"
+              title="Lock Field Command Gate (Master PIN: 620620)"
+            >
+              <Lock className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-400 transition-colors" />
+              <span className="hidden md:inline">Lock</span>
             </button>
 
             {/* Drawer Toggle */}

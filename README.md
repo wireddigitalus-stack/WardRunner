@@ -30,7 +30,8 @@
   - Instant proximity sorting showing signs within sector radius (e.g. *45m away*, *120m away*).
   - One-tap "Mark Retrieved" button updating inventory and timestamps.
 
-### 2. Manager Command Dashboard (`/dashboard`)
+### 2. Field Command Dashboard (`/dashboard`)
+- **PIN-Protected Security Gate:** Requires Master PIN `620620` (or authorized campaign staff PIN).
 - **Interactive Geospatial Canvas:** Clustered sign visualization (Melissa Brown campaign signs in Emerald & Blue vs. competitor signs in Crimson).
 - **Bristol Traffic Corridor Overlays (AADT):**
   - Route 229 (Middle St / ESPN Corridor: 28,900 AADT)
@@ -71,21 +72,21 @@ Execute the SQL script located in [`supabase/migrations/20260909000000_wardrunne
 - Enable `postgis`.
 - Create `campaigns` and `signs` tables with GIST spatial indexes and auto-sync triggers.
 - Create the `sign-photos` storage bucket with public read/upload policies.
-- Seed the pilot campaign (*Melissa K. Brown for Bristol City Council*, PIN: `246810`).
+- Seed the pilot campaign (*Melissa K. Brown for Bristol City Council*, PIN: `620620`).
 
 ### 4. Install Dependencies & Run
 ```bash
 npm install
 npm run dev
 ```
-Open `http://localhost:3000` to navigate the portal, or visit `/field` for the mobile volunteer app and `/dashboard` for the operations center.
+Open `http://localhost:3000` to navigate the portal, or visit `/field` for the mobile volunteer app and `/dashboard` for the Field Command operations center.
 
 ---
 
 ## 📱 Mobile PWA Field Instructions
 1. Navigate to `/field` on mobile Safari or Chrome.
 2. Select **"Add to Home Screen"** to install as a standalone PWA.
-3. Enter PIN: `246810` and your name.
+3. Enter PIN: `620620` and your name.
 4. Tap **"DROP OUR SIGN HERE"** at each placement location.
 
 ---

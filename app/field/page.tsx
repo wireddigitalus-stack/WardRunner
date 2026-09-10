@@ -243,7 +243,7 @@ export default function FieldPage() {
 
       if (error || !data) {
         // Fallback for pilot campaign demo / local roster
-        const storedMasterPin = (typeof window !== 'undefined' && localStorage.getItem('wardrunner_campaign_pin')) || '246810';
+        const storedMasterPin = (typeof window !== 'undefined' && localStorage.getItem('wardrunner_campaign_pin')) || '620620';
         let matchedVolunteer: any = null;
         if (typeof window !== 'undefined') {
           try {
@@ -257,7 +257,7 @@ export default function FieldPage() {
           } catch (e) {}
         }
 
-        if (pinInput.trim() === '246810' || pinInput.trim() === storedMasterPin || matchedVolunteer) {
+        if (pinInput.trim() === '620620' || pinInput.trim() === '246810' || pinInput.trim() === storedMasterPin || matchedVolunteer) {
           const fallbackSession: VolunteerSession = {
             campaignId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
             campaignName: 'Melissa K. Brown for Bristol TN City Council',
@@ -541,14 +541,14 @@ export default function FieldPage() {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={6}
-                  placeholder="e.g. 246810"
+                  placeholder="e.g. 620620"
                   value={pinInput}
                   onChange={(e) => setPinInput(e.target.value)}
                   className="w-full h-14 px-4 text-center text-2xl font-mono tracking-widest bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-white placeholder:text-slate-600 transition"
                   autoFocus
                   required
                 />
-                <p className="text-[11px] text-slate-500 mt-1">Default pilot pin: 246810</p>
+                <p className="text-[11px] text-slate-500 mt-1">Campaign Master PIN: 620620</p>
               </div>
 
               <div>
