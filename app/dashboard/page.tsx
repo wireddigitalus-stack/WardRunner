@@ -149,6 +149,7 @@ export default function DashboardPage() {
   // Voting Precincts & Turnout State
   const [showPrecincts, setShowPrecincts] = useState(true);
   const [selectedPrecinct, setSelectedPrecinct] = useState<PrecinctInfo | null>(null);
+  const precinctMarkersRef = useRef<any[]>([]);
 
   // Drawer Active Tab ('signs' | 'inventory' | 'precincts' | 'missions')
   const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts' | 'missions'>('signs');
@@ -550,6 +551,85 @@ export default function DashboardPage() {
     ['precincts-fill', 'precincts-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', pVis));
   }, [showBoundary, showCorridors, showHeatmap, showPrecincts]);
 
+  /* ---------- Precinct Center Badges on Map ---------- */
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m) return;
+
+    (async () => {
+      const mgl = (await import('maplibre-gl')).default;
+      precinctMarkersRef.current.forEach(item => item.marker?.remove?.());
+      precinctMarkersRef.current = [];
+
+      if (!showPrecincts) return;
+
+      BRISTOL_PRECINCTS.forEach(p => {
+        const el = document.createElement('div');
+        el.className = 'cursor-pointer group';
+        const isSel = selectedPrecinct?.id === p.id;
+
+        el.innerHTML = `
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid ${isSel ? '#ffffff' : `${p.color}80`};
+            padding: 3px 8px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.5), ${isSel ? `0 0 14px ${p.color}` : 'none'};
+            transform: ${isSel ? 'scale(1.15)' : 'scale(1)'};
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: auto;
+          ">
+            <span style="
+              background: ${p.color};
+              color: white;
+              font-size: 9px;
+              font-weight: 900;
+              padding: 1px 5px;
+              border-radius: 9999px;
+              line-height: 1.2;
+            ">${p.code}</span>
+            <span style="
+              color: white;
+              font-size: 10.5px;
+              font-weight: 800;
+              white-space: nowrap;
+            ">${p.name.replace('Precinct ', '')}</span>
+            <span style="
+              color: ${p.color};
+              font-size: 9.5px;
+              font-weight: 800;
+            ">${p.historicTurnoutPct}%</span>
+          </div>
+        `;
+
+        el.addEventListener('mouseenter', () => {
+          const badge = el.firstElementChild as HTMLElement;
+          if (badge && !isSel) badge.style.transform = 'scale(1.12)';
+        });
+        el.addEventListener('mouseleave', () => {
+          const badge = el.firstElementChild as HTMLElement;
+          if (badge && !isSel) badge.style.transform = 'scale(1)';
+        });
+
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelectedSign(null);
+          setSelectedRec(null);
+          setSelectedMission(null);
+          setSelectedPrecinct(p);
+          m.flyTo({ center: p.center, zoom: 15.2, pitch: is3D ? 50 : 0, duration: 900 });
+        });
+
+        const marker = new mgl.Marker({ element: el, anchor: 'center' }).setLngLat(p.center).addTo(m);
+        precinctMarkersRef.current.push({ marker, id: p.id });
+      });
+    })();
+  }, [showPrecincts, selectedPrecinct, is3D]);
+
   /* ---------- Traffic Heatmap Layer ---------- */
   useEffect(() => {
     const m = mapRef.current;
@@ -792,56 +872,78 @@ export default function DashboardPage() {
           ? '0 4px 18px rgba(245,158,11,0.5)'
           : '0 4px 18px rgba(147,51,234,0.5)';
 
+        const shortLabel = mission.title.includes('3A') || mission.title.toLowerCase().includes('anderson')
+          ? '3A TARGET'
+          : mission.title.toLowerCase().includes('weaver')
+          ? 'WEAVER PKWY'
+          : mission.target_type === 'precinct'
+          ? 'PRECINCT'
+          : 'TARGET';
+
         el.innerHTML = `
           <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-            ${/* Concentric pulsing radar halo */''}
+            ${/* Concentric pulsing radar halo — nested so scale() never wipes out translateX(-50%) */''}
             <div style="
               position: absolute;
-              width: 58px;
-              height: 58px;
-              border-radius: 50%;
-              top: -7px;
+              top: 14px;
               left: 50%;
               transform: translateX(-50%);
-              background: ${rippleColor};
-              animation: ripple 2.2s infinite ease-out;
               pointer-events: none;
-            "></div>
+              z-index: 1;
+            ">
+              <div style="
+                width: 62px;
+                height: 62px;
+                border-radius: 50%;
+                background: ${rippleColor};
+                animation: ripple 2.2s infinite ease-out;
+              "></div>
+            </div>
 
-            ${/* Pin Head */''}
+            ${/* Prominent mission badge pill */''}
+            <div style="
+              background: rgba(15, 23, 42, 0.95);
+              color: white;
+              border: 1.5px solid ${isSel ? '#ffffff' : 'rgba(255, 255, 255, 0.4)'};
+              padding: 2px 7.5px;
+              border-radius: 9999px;
+              font-size: 9.5px;
+              font-weight: 900;
+              letter-spacing: 0.5px;
+              white-space: nowrap;
+              box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+              margin-bottom: 3.5px;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              z-index: 12;
+            ">
+              <span style="color: ${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'}; font-size: 9px;">🎯</span>
+              <span style="color: white; font-weight: 900;">${shortLabel}</span>
+              <span style="color: rgba(255,255,255,0.4);">·</span>
+              <span style="color: #38bdf8; font-family: monospace; font-weight: 900;">${mission.quantity}×</span>
+            </div>
+
+            ${/* Pin Head with vector Target Reticle icon */''}
             <div class="mission-pin-head" style="
               position: relative;
-              width: 44px;
-              height: 44px;
-              border-radius: 14px;
+              width: 46px;
+              height: 46px;
+              border-radius: 15px;
               background: ${gradient};
               display: flex;
               align-items: center;
               justify-content: center;
-              box-shadow: ${isSel ? '0 0 0 3.5px #ffffff, 0 0 18px rgba(168,85,247,0.9)' : glow};
+              box-shadow: ${isSel ? '0 0 0 3.5px #ffffff, 0 0 20px rgba(168,85,247,0.9)' : glow};
               border: 2.5px solid white;
               transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+              z-index: 10;
             ">
-              <span style="font-size: 21px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🎯</span>
-
-              ${/* Quantity badge on top corner */''}
-              <div style="
-                position: absolute;
-                top: -6px;
-                right: -6px;
-                background: #0f172a;
-                color: #38bdf8;
-                font-size: 9px;
-                font-weight: 900;
-                padding: 1.5px 5.5px;
-                border-radius: 9999px;
-                border: 1.5px solid white;
-                text-transform: uppercase;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-                letter-spacing: 0.5px;
-              ">
-                ${mission.quantity}×
-              </div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2.2" fill="white"></circle>
+              </svg>
             </div>
 
             ${/* Downward pointer needle to coordinate */''}
@@ -853,6 +955,7 @@ export default function DashboardPage() {
               border-top: 8px solid ${pointerColor};
               margin-top: -1px;
               filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+              z-index: 10;
             "></div>
 
             ${/* Ground shadow dot */''}
@@ -863,6 +966,7 @@ export default function DashboardPage() {
               border-radius: 50%;
               margin-top: 2px;
               filter: blur(1px);
+              z-index: 10;
             "></div>
 
             ${/* Crisp hover tooltip */''}
