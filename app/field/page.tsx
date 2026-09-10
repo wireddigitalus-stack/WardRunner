@@ -22,6 +22,7 @@ import {
   Target,
   Send,
   Check,
+  Sparkles,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 
@@ -40,10 +41,8 @@ export default function FieldPage() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  // Mode: Place vs Retrieve
+  // Field Placement State
   const [activeTab, setActiveTab] = useState<'place' | 'retrieve'>('place');
-
-  // Sign Placement State
   const [selectedType, setSelectedType] = useState<SignType>('yard_sign');
   const [isCompetitor, setIsCompetitor] = useState(false);
   const [competitorName, setCompetitorName] = useState('');
@@ -54,6 +53,50 @@ export default function FieldPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Noticeable Sign Dropped Success State for Giant Action Button
+  const [justDroppedSuccess, setJustDroppedSuccess] = useState<{
+    signLabel: string;
+    targetLabel: string;
+    isCompetitor: boolean;
+    elapsedSeconds: string;
+    accuracy?: number;
+  } | null>(null);
+
+  // Play subtle celebratory chime on successful sign drop
+  const playSuccessChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, now); // D5
+      osc1.frequency.setValueAtTime(880.00, now + 0.10); // A5
+      
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(1174.66, now + 0.10); // D6
+      
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+      
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc1.start(now);
+      osc2.start(now + 0.10);
+      osc1.stop(now + 0.55);
+      osc2.stop(now + 0.55);
+    } catch {
+      // AudioContext might be blocked or unsupported; safe ignore
+    }
+  };
 
   // Assigned Sign Placement Missions
   const [missions, setMissions] = useState<VolunteerAssignment[]>([]);
@@ -336,15 +379,32 @@ export default function FieldPage() {
       // Trigger Haptic Feedback on mobile devices if supported
       if (typeof window !== 'undefined' && 'vibrate' in navigator) {
         try {
-          navigator.vibrate([100, 50, 100]);
+          navigator.vibrate([120, 60, 180]);
         } catch (e) {
           // ignore if disabled
         }
       }
 
+      // Play soft celebratory chime
+      playSuccessChime();
+
       const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
       const signLabel = SIGN_TYPES.find((t) => t.id === selectedType)?.label || 'Sign';
       const targetLabel = isCompetitor ? `Competitor (${competitorName})` : 'Melissa K. Brown';
+
+      // Set noticeable button success state
+      setJustDroppedSuccess({
+        signLabel,
+        targetLabel,
+        isCompetitor,
+        elapsedSeconds,
+        accuracy: coords.accuracy,
+      });
+
+      // Reset button success state after 4 seconds
+      setTimeout(() => {
+        setJustDroppedSuccess(null);
+      }, 4000);
 
       // Mark assigned mission completed if volunteer was fulfilling one
       if (activeMission) {
@@ -985,27 +1045,57 @@ export default function FieldPage() {
               type="button"
               disabled={isSubmitting || gpsStatus === 'locating'}
               onClick={handleDropSign}
-              className={`w-full py-5 rounded-2xl font-black text-xl tracking-wide shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition ${
-                isCompetitor
+              className={`w-full py-5 rounded-2xl font-black text-xl tracking-wide shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-300 relative overflow-hidden ${
+                justDroppedSuccess
+                  ? 'bg-gradient-to-r from-emerald-400 via-green-400 to-teal-300 text-slate-950 shadow-emerald-400/80 ring-4 ring-emerald-300/80 animate-drop-pop animate-success-glow scale-[1.02]'
+                  : isCompetitor
                   ? 'bg-gradient-to-r from-rose-600 to-rose-500 text-white shadow-rose-600/30 hover:from-rose-500 hover:to-rose-400'
                   : 'bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-300'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
+              {justDroppedSuccess && (
+                <div className="absolute inset-0 bg-white/20 animate-pulse pointer-events-none" />
+              )}
+
               {isSubmitting ? (
                 <>
                   <RefreshCw className="w-6 h-6 animate-spin" />
-                  UPLOADING SIGN...
+                  <span>UPLOADING SIGN...</span>
                 </>
+              ) : justDroppedSuccess ? (
+                <div className="flex flex-col items-center justify-center py-0.5 animate-fade-in">
+                  <div className="flex items-center gap-2 text-2xl font-black tracking-wider text-slate-950">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-950 stroke-[3] animate-bounce" />
+                    <span>SIGN DROPPED! ✓</span>
+                    <Sparkles className="w-6 h-6 text-amber-900 fill-amber-300 animate-pulse" />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-950/90 mt-0.5">
+                    {justDroppedSuccess.isCompetitor
+                      ? `Competitor Logged · Saved to Map`
+                      : `${justDroppedSuccess.signLabel} Planted · Logged in ${justDroppedSuccess.elapsedSeconds}s (±${justDroppedSuccess.accuracy}m)`}
+                  </span>
+                </div>
               ) : (
                 <>
                   <MapPin className="w-6 h-6" />
-                  {isCompetitor ? 'LOG COMPETITOR SIGN' : 'DROP OUR SIGN HERE'}
+                  <span>{isCompetitor ? 'LOG COMPETITOR SIGN' : 'DROP OUR SIGN HERE'}</span>
                 </>
               )}
             </button>
-            <p className="text-[11px] text-center text-slate-500 mt-2">
-              Auto-timestamps and logs GPS coordinates in sub-10 seconds.
-            </p>
+
+            {/* Sub-label feedback under button */}
+            <div className="flex items-center justify-center gap-1.5 mt-2 text-center min-h-[18px]">
+              {justDroppedSuccess ? (
+                <span className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1.5 animate-fade-in">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  Successfully pinned to campaign map! Ready for next stop.
+                </span>
+              ) : (
+                <p className="text-[11px] text-slate-500">
+                  Auto-timestamps and logs GPS coordinates in sub-10 seconds.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
