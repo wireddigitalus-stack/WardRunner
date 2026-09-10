@@ -13,6 +13,7 @@ import MissionDetailCard from './components/MissionDetailCard';
 import MissionsDrawerTab from './components/MissionsDrawerTab';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
+import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
 import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
 import DictateButton from '@/app/components/DictateButton';
@@ -79,20 +80,6 @@ const MAP_STYLES = {
   light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
   dark:  'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
 };
-
-/* ================================================================
-   SEED DATA (used until Supabase returns rows)
-   ================================================================ */
-const SEED_SIGNS: Sign[] = [
-  { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Campaign Volunteer', street_address: '620 State Street', sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
-  { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6010, longitude: -82.1780, placed_by_name: 'Campaign Volunteer', street_address: '1430 Lee Highway', sign_type: 'banner', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
-  { id: '3', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5880, longitude: -82.1861, placed_by_name: 'Campaign Volunteer', street_address: '920 Volunteer Parkway', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 12).toISOString() },
-  { id: '4', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5975, longitude: -82.1830, placed_by_name: 'Opponent Volunteer', street_address: '412 State Street', sign_type: 'yard_sign', is_competitor: true, competitor_name: 'Bob Reynolds', status: 'placed', created_at: new Date(Date.now() - 3600000 * 8).toISOString() },
-  { id: '5', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6085, longitude: -82.1720, placed_by_name: 'Campaign Volunteer', street_address: '2105 Lee Highway', sign_type: 'billboard', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 24).toISOString() },
-  { id: '6', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5840, longitude: -82.1810, placed_by_name: 'Campaign Volunteer', street_address: '1750 Bluff City Highway', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 4).toISOString() },
-  { id: '7', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6030, longitude: -82.1920, placed_by_name: 'Campaign Volunteer', street_address: '1100 West State Street', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 1).toISOString() },
-  { id: '8', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5860, longitude: -82.1750, placed_by_name: 'Opponent Volunteer', street_address: '1820 Bluff City Highway', sign_type: 'large_sign', is_competitor: true, competitor_name: 'Common Sense Slate', status: 'placed', created_at: new Date(Date.now() - 3600000 * 6).toISOString() },
-];
 
 /* ================================================================
    COMPONENT
@@ -220,14 +207,47 @@ export default function DashboardPage() {
       setTrafficStations(td.stations);
       setTrafficIntersections(td.intersections);
     }).catch(console.warn);
+
+    // Real-time synchronization across local events & browser tabs
+    const handleSignsSync = () => {
+      setSigns(getStoredSigns());
+    };
+    window.addEventListener('wardrunner_signs_updated', handleSignsSync);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'wardrunner_signs_data' || e.key === 'wardrunner_signs_ping') {
+        handleSignsSync();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('wardrunner_signs_updated', handleSignsSync);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   const fetchSigns = async () => {
     setLoading(true);
+    // Initialize immediately from persistent stored signs
+    const localSigns = getStoredSigns();
+    setSigns(localSigns);
+
     try {
-      const { data } = await supabase.from('signs').select('*').order('created_at', { ascending: false });
-      setSigns(data && data.length > 0 ? data : SEED_SIGNS);
-    } catch { setSigns(SEED_SIGNS); } finally { setLoading(false); }
+      const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your-publishable-key');
+      if (!isPlaceholder) {
+        const { data, error } = await supabase.from('signs').select('*').order('created_at', { ascending: false });
+        if (data && data.length > 0 && !error) {
+          const localIds = new Set(data.map((d: any) => d.id));
+          const onlyLocal = localSigns.filter(s => !localIds.has(s.id));
+          const merged = [...onlyLocal, ...data];
+          setSigns(merged);
+        }
+      }
+    } catch (err) {
+      console.warn('Remote fetch signs fallback:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Search Target Pin Marker
@@ -370,13 +390,11 @@ export default function DashboardPage() {
     };
 
     try {
-      await supabase.from('signs').insert([newSign]);
+      await addPlacedSign(newSign);
     } catch (err) {
-      console.warn('Supabase insert fallback:', err);
+      console.warn('Fallback adding placed sign:', err);
+      setSigns(prev => [newSign, ...prev]);
     }
-
-    // Immediately update campaign signs state
-    setSigns(prev => [newSign, ...prev]);
 
     // Remove this recommendation from scout recs
     setScoutRecs(prev => prev.filter(r => r.rank !== rec.rank));

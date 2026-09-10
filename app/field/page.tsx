@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { compressImage } from '@/lib/imageCompression';
 import { SignType, SignStatus, Sign, VolunteerSession, VolunteerAssignment } from '@/lib/types';
 import { getStoredAssignments, markAssignmentComplete } from '@/lib/assignmentData';
+import { addPlacedSign, getStoredSigns, markSignRetrieved } from '@/lib/signData';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
 import {
   MapPin,
@@ -371,11 +372,8 @@ export default function FieldPage() {
         status: 'placed' as SignStatus,
       };
 
-      const { error: insertError } = await supabase.from('signs').insert(payload);
-
-      if (insertError) {
-        console.warn('Supabase insert error (falling back to mock state):', insertError);
-      }
+      // Save to local storage and sync to Supabase in background
+      await addPlacedSign(payload);
 
       // Trigger Haptic Feedback on mobile devices if supported
       if (typeof window !== 'undefined' && 'vibrate' in navigator) {
@@ -462,16 +460,9 @@ export default function FieldPage() {
     if (!session) return;
     setIsLoadingNearby(true);
     try {
-      const { data, error } = await supabase
-        .from('signs')
-        .select('*')
-        .eq('campaign_id', session.campaignId)
-        .eq('status', 'placed')
-        .order('created_at', { ascending: false })
-        .limit(40);
-
-      if (data && coords) {
-        const enriched = data.map((sign) => ({
+      const allSigns = getStoredSigns().filter((s) => s.status === 'placed');
+      if (coords && allSigns.length > 0) {
+        const enriched = allSigns.map((sign) => ({
           ...sign,
           distance_meters: calculateDistance(
             coords.latitude,
@@ -482,36 +473,8 @@ export default function FieldPage() {
         }));
         enriched.sort((a, b) => (a.distance_meters || 0) - (b.distance_meters || 0));
         setNearbySigns(enriched);
-      } else if (data) {
-        setNearbySigns(data);
       } else {
-        // Mock fallback if DB empty
-        setNearbySigns([
-          {
-            id: 'mock-1',
-            campaign_id: session.campaignId,
-            latitude: (coords?.latitude || 41.673) + 0.0004,
-            longitude: (coords?.longitude || -72.946) + 0.0005,
-            placed_by_name: 'Campaign Volunteer',
-            sign_type: 'large_sign',
-            is_competitor: false,
-            status: 'placed',
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-            distance_meters: 65,
-          },
-          {
-            id: 'mock-2',
-            campaign_id: session.campaignId,
-            latitude: (coords?.latitude || 41.673) - 0.0012,
-            longitude: (coords?.longitude || -72.946) + 0.0008,
-            placed_by_name: 'Sarah Volunteer',
-            sign_type: 'yard_sign',
-            is_competitor: false,
-            status: 'placed',
-            created_at: new Date(Date.now() - 7200000).toISOString(),
-            distance_meters: 140,
-          },
-        ]);
+        setNearbySigns(allSigns);
       }
     } catch (err) {
       console.error(err);
@@ -524,21 +487,8 @@ export default function FieldPage() {
   const handleMarkRetrieved = async (signId: string) => {
     setRetrievingId(signId);
     try {
-      const { error } = await supabase
-        .from('signs')
-        .update({
-          status: 'retrieved',
-          retrieved_at: new Date().toISOString(),
-        })
-        .eq('id', signId);
-
-      if (!error) {
-        setNearbySigns((prev) => prev.filter((s) => s.id !== signId));
-      } else {
-        // Filter out in local state for immediate optimistic UI
-        setNearbySigns((prev) => prev.filter((s) => s.id !== signId));
-      }
-
+      await markSignRetrieved(signId);
+      setNearbySigns((prev) => prev.filter((s) => s.id !== signId));
       setSuccessMessage('Sign marked as RETRIEVED.');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
