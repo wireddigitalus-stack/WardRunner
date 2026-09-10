@@ -29,6 +29,7 @@ interface SmartScoutProps {
   onShowOnMap: (recs: Recommendation[]) => void;
   onFlyTo: (lat: number, lng: number) => void;
   onSelectRec: (rec: Recommendation) => void;
+  searchBar?: React.ReactNode;
 }
 
 export default function SmartScout({
@@ -41,6 +42,7 @@ export default function SmartScout({
   onShowOnMap,
   onFlyTo,
   onSelectRec,
+  searchBar,
 }: SmartScoutProps) {
   const [expanded, setExpanded] = useState(false);
   const [tab, setTab] = useState<'recs' | 'chat'>('recs');
@@ -110,7 +112,7 @@ export default function SmartScout({
       {/* ============================================
           LEFT RAIL: MAP LEGEND & SCOUT CARD (level with right nav)
           ============================================ */}
-      <div className="absolute bottom-4 sm:bottom-auto sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-24px)] sm:w-[340px] flex flex-col gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
+      <div className="absolute top-[68px] sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-24px)] sm:w-[340px] flex flex-col gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
 
         {/* --- Map Legend (Desktop Left Rail) --- */}
         <div className="hidden sm:block pointer-events-auto">
@@ -135,6 +137,13 @@ export default function SmartScout({
             </div>
           </div>
         </div>
+
+        {/* --- Fast Map Search Bar (Directly Under Map Legend) --- */}
+        {searchBar && (
+          <div className="pointer-events-auto w-full">
+            {searchBar}
+          </div>
+        )}
 
         {/* --- Scout Bar --- */}
         <div

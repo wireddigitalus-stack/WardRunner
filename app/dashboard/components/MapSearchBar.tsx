@@ -207,12 +207,12 @@ export default function MapSearchBar({
   };
 
   return (
-    <div ref={containerRef} className="relative pointer-events-auto z-30">
+    <div ref={containerRef} className="relative pointer-events-auto z-30 w-full">
       {/* Search Capsule Input */}
       <div
         className={`glass flex items-center gap-2 px-3 py-2 rounded-2xl transition-all duration-200 shadow-xl ${
           isOpen ? 'ring-2 ring-emerald-400/50 !border-emerald-400/60' : 'hover:border-white/20'
-        } ${isDark ? 'bg-black/60 text-white' : 'bg-white/80 text-slate-900'}`}
+        } ${isDark ? 'bg-black/60 text-white' : 'bg-white/80 text-slate-900'} w-full`}
       >
         <Search className="w-4 h-4 text-emerald-400 shrink-0 ml-1" />
 
@@ -231,7 +231,7 @@ export default function MapSearchBar({
           spellCheck={true}
           autoCorrect="on"
           autoCapitalize="sentences"
-          className="w-48 sm:w-72 bg-transparent text-xs sm:text-sm font-medium focus:outline-none placeholder:text-slate-400 placeholder:text-xs text-white"
+          className="flex-1 min-w-0 bg-transparent text-xs sm:text-sm font-medium focus:outline-none placeholder:text-slate-400 placeholder:text-xs text-white"
         />
 
         {/* Clear Query Button */}

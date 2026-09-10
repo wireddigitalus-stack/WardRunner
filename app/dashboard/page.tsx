@@ -850,19 +850,6 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* ============================================================
-          FAST MAP SEARCH CAPSULE (Floating under header)
-          ============================================================ */}
-      <div className="absolute top-[68px] sm:top-[72px] left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-        <MapSearchBar
-          signs={signs}
-          onSelectLocation={handleSearchSelectLocation}
-          onSelectSign={(sign) => {
-            setSelectedSign(sign);
-          }}
-          isDark={isDark}
-        />
-      </div>
 
       {/* ============================================================
           RIGHT-RAIL MAP CONTROLS (Apple Maps style)
@@ -1437,6 +1424,16 @@ export default function DashboardPage() {
         isDark={isDark}
         recs={scoutRecs}
         setRecs={setScoutRecs}
+        searchBar={
+          <MapSearchBar
+            signs={signs}
+            onSelectLocation={handleSearchSelectLocation}
+            onSelectSign={(sign) => {
+              setSelectedSign(sign);
+            }}
+            isDark={isDark}
+          />
+        }
         onSelectRec={(rec) => {
           setSelectedSign(null);
           setSelectedRec(rec);
