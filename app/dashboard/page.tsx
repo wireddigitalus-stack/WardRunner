@@ -773,7 +773,8 @@ export default function DashboardPage() {
         const isBig  = ['large_sign', 'banner', 'billboard'].includes(sign.sign_type);
         const isSel  = selectedSign?.id === sign.id;
         el.className = `sign-map-marker ${isSel ? 'is-selected' : ''}`;
-        el.style.cssText = `cursor:pointer; z-index:${isSel ? 500 : 100}; position:relative;`;
+        el.style.cursor = 'pointer';
+        el.style.zIndex = isSel ? '500' : '100';
 
         // High-contrast solid colors — no subtle gradients, maximum readability
         const bgColor = isComp ? '#e11d48' : isBig ? '#2563eb' : '#059669';
@@ -858,8 +859,8 @@ export default function DashboardPage() {
           `;
         } else {
           el.innerHTML = `
-            <div style="position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer;width:48px;">
-              <div class="relative flex flex-col items-center group w-full">
+            <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;width:48px;">
+              <div class="flex flex-col items-center group w-full">
 
                 ${/* === THE PIN HEAD === */''}
                 <div class="sign-pin-head" style="
@@ -873,14 +874,13 @@ export default function DashboardPage() {
                   border: 3px solid rgba(255,255,255,0.95);
                   box-shadow: 0 4px 16px ${glowColor}, 0 2px 4px rgba(0,0,0,0.2);
                   position: relative;
-                  z-index: ${isSel ? 30 : 10};
                   transform-origin: center bottom;
                   transform: ${isSel ? 'scale(1.18)' : 'scale(1)'};
                   transition: transform 0.15s ease;
                 ">
                   ${/* Concentric Radar Ring Centered Directly Inside Pin Head */''}
-                  ${!isComp && !isSel ? `<div class="animate-radar" style="width: 44px; height: 44px; background: ${glowColor};"></div>` : ''}
-                  ${isSel ? `<div class="animate-radar" style="width: 48px; height: 48px; border: 2.5px solid #ffffff; background: ${glowColor};"></div>` : ''}
+                  ${!isComp && !isSel ? `<div class="animate-radar pointer-events-none" style="width: 44px; height: 44px; background: ${glowColor}; z-index: -1;"></div>` : ''}
+                  ${isSel ? `<div class="animate-radar pointer-events-none" style="width: 48px; height: 48px; border: 2.5px solid #ffffff; background: ${glowColor}; z-index: -1;"></div>` : ''}
 
                   <span style="
                     color: white;
@@ -890,7 +890,6 @@ export default function DashboardPage() {
                     text-shadow: 0 1px 3px rgba(0,0,0,0.4);
                     line-height: 1;
                     position: relative;
-                    z-index: 5;
                   ">${pinLabel}</span>
                 </div>
 
@@ -902,8 +901,6 @@ export default function DashboardPage() {
                   border-top: 8px solid ${bgColorDark};
                   margin-top: -1px;
                   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
-                  position: relative;
-                  z-index: 10;
                 "></div>
 
                 ${/* Hover tooltip — big text for readability */''}
@@ -987,8 +984,9 @@ export default function DashboardPage() {
       activeAssignments.forEach(mission => {
         const el = document.createElement('div');
         const isSel = selectedMission?.id === mission.id;
-        el.className = `mission-map-marker cursor-pointer group relative ${isSel ? 'is-selected' : ''}`;
-        el.style.cssText = `cursor:pointer; z-index:${isSel ? 600 : 150}; position:relative;`;
+        el.className = `mission-map-marker group ${isSel ? 'is-selected' : ''}`;
+        el.style.cursor = 'pointer';
+        el.style.zIndex = isSel ? '600' : '150';
 
         const isCritical = mission.priority === 'critical';
         const isHigh = mission.priority === 'high';
@@ -1083,7 +1081,7 @@ export default function DashboardPage() {
           `;
         } else {
           el.innerHTML = `
-            <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;">
               ${/* Prominent mission badge pill */''}
               <div style="
                 background: rgba(15, 23, 42, 0.95);
@@ -1100,7 +1098,6 @@ export default function DashboardPage() {
                 display: flex;
                 align-items: center;
                 gap: 4px;
-                z-index: 12;
               ">
                 <span style="color: ${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'}; font-size: 9px;">🎯</span>
                 <span style="color: white; font-weight: 900;">${shortLabel}</span>
@@ -1121,7 +1118,6 @@ export default function DashboardPage() {
                 box-shadow: ${isSel ? '0 0 0 3.5px #ffffff, 0 0 20px rgba(168,85,247,0.9)' : glow};
                 border: 2.5px solid white;
                 transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-                z-index: 10;
               ">
                 ${/* Radar ripple locked concentric to pin head */''}
                 <div class="animate-radar pointer-events-none" style="
@@ -1147,7 +1143,6 @@ export default function DashboardPage() {
                 border-top: 8px solid ${pointerColor};
                 margin-top: -1px;
                 filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
-                z-index: 10;
               "></div>
 
               ${/* Crisp hover tooltip */''}
@@ -2180,8 +2175,9 @@ export default function DashboardPage() {
           // Drop gold preview pins with click handlers
           recs.forEach((rec, i) => {
             const el = document.createElement('div');
-            el.className = 'scout-map-marker group relative';
-            el.style.cssText = 'cursor:pointer; z-index:200; position:relative;';
+            el.className = 'scout-map-marker group';
+            el.style.cursor = 'pointer';
+            el.style.zIndex = '200';
             el.addEventListener('mouseenter', () => {
               el.style.zIndex = '9999';
               const pin = el.querySelector('.scout-pin-head') as HTMLElement;
