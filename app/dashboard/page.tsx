@@ -45,6 +45,7 @@ import {
   Package,
   Plus,
   Minus,
+  CircleDot,
 } from 'lucide-react';
 
 /* ================================================================
@@ -150,6 +151,9 @@ export default function DashboardPage() {
   const [showPrecincts, setShowPrecincts] = useState(true);
   const [selectedPrecinct, setSelectedPrecinct] = useState<PrecinctInfo | null>(null);
   const precinctMarkersRef = useRef<any[]>([]);
+
+  // Street-Level Precision Micro Dot Mode
+  const [useDotMode, setUseDotMode] = useState(false);
 
   // Drawer Active Tab ('signs' | 'inventory' | 'precincts' | 'missions')
   const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts' | 'missions'>('signs');
@@ -568,7 +572,29 @@ export default function DashboardPage() {
         el.className = 'cursor-pointer group';
         const isSel = selectedPrecinct?.id === p.id;
 
-        el.innerHTML = `
+        el.innerHTML = useDotMode ? `
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.92);
+            border: 2px solid ${p.color};
+            box-shadow: 0 0 10px ${p.color}80, 0 2px 6px rgba(0,0,0,0.5);
+            transform: ${isSel ? 'scale(1.25)' : 'scale(1)'};
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: auto;
+          ">
+            <span style="
+              color: white;
+              font-size: 8.5px;
+              font-weight: 900;
+              line-height: 1;
+            ">${p.code}</span>
+          </div>
+        ` : `
           <div style="
             display: flex;
             align-items: center;
@@ -608,7 +634,7 @@ export default function DashboardPage() {
 
         el.addEventListener('mouseenter', () => {
           const badge = el.firstElementChild as HTMLElement;
-          if (badge && !isSel) badge.style.transform = 'scale(1.12)';
+          if (badge && !isSel) badge.style.transform = 'scale(1.15)';
         });
         el.addEventListener('mouseleave', () => {
           const badge = el.firstElementChild as HTMLElement;
@@ -628,7 +654,7 @@ export default function DashboardPage() {
         precinctMarkersRef.current.push({ marker, id: p.id });
       });
     })();
-  }, [showPrecincts, selectedPrecinct, is3D]);
+  }, [showPrecincts, selectedPrecinct, is3D, useDotMode]);
 
   /* ---------- Traffic Heatmap Layer ---------- */
   useEffect(() => {
@@ -728,113 +754,179 @@ export default function DashboardPage() {
         const tooltipName = isComp ? (sign.competitor_name || 'Opponent') : 'M. Brown';
         const tooltipType = SIGN_TYPE_META[sign.sign_type]?.label || 'Sign';
 
-        el.innerHTML = `
-          <div class="animate-pin-drop" style="animation-delay:${Math.min(i * 35, 500)}ms">
-            <div class="relative flex flex-col items-center group">
+        if (useDotMode) {
+          el.innerHTML = `
+            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              ${/* If selected: glowing active pulse ring */''}
+              ${isSel ? `
+                <div style="
+                  position: absolute;
+                  width: 28px;
+                  height: 28px;
+                  border-radius: 50%;
+                  border: 2px solid #ffffff;
+                  box-shadow: 0 0 14px ${bgColor};
+                  animation: pin-pulse 1.8s infinite;
+                  pointer-events: none;
+                "></div>
+              ` : ''}
 
-              ${/* Pulse ring for campaign signs */''}
-              ${!isComp && !isSel ? `<div class="absolute w-14 h-14 rounded-full animate-ripple pointer-events-none" style="background:${glowColor};top:-3px;left:-3px;"></div>` : ''}
-
-              ${/* Selection glow ring */''}
-              ${isSel ? `<div class="absolute -inset-[5px] rounded-2xl animate-pin-pulse" style="--pulse-color:${glowColor};box-shadow:0 0 0 4px ${glowColor}"></div>` : ''}
-
-              ${/* === THE PIN === */''}
-              <div style="
-                width: 48px;
-                height: 48px;
-                background: linear-gradient(135deg, ${bgColor}, ${bgColorDark});
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 3px solid rgba(255,255,255,0.95);
-                box-shadow: 0 4px 16px ${glowColor}, 0 2px 4px rgba(0,0,0,0.2);
-                transition: transform 0.2s ease;
-                transform: ${isSel ? 'scale(1.25)' : 'scale(1)'};
-                position: relative;
-                z-index: ${isSel ? 30 : 10};
-              ">
-                <span style="
-                  color: white;
-                  font-size: 13px;
-                  font-weight: 900;
-                  letter-spacing: 0.5px;
-                  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-                  line-height: 1;
-                ">${pinLabel}</span>
-              </div>
-
-              ${/* Pin pointer triangle */''}
-              <div style="
-                width: 0; height: 0;
-                border-left: 7px solid transparent;
-                border-right: 7px solid transparent;
-                border-top: 8px solid ${bgColorDark};
-                margin-top: -2px;
-                filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
-              "></div>
-
-              ${/* Ground shadow dot */''}
-              <div style="
-                width: 8px; height: 4px;
-                background: rgba(0,0,0,0.15);
+              ${/* Street-Level Precision Micro Dot */''}
+              <div class="street-dot" style="
+                width: ${isSel ? '18px' : '14px'};
+                height: ${isSel ? '18px' : '14px'};
                 border-radius: 50%;
-                margin-top: 2px;
-                filter: blur(1px);
+                background: ${bgColor};
+                border: 2px solid white;
+                box-shadow: 0 0 10px ${glowColor}, 0 2px 5px rgba(0,0,0,0.6);
+                transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+                z-index: ${isSel ? 25 : 10};
               "></div>
 
-              ${/* Hover tooltip — big text for readability */''}
+              ${/* Hover Tooltip */''}
               <div class="
                 hidden group-hover:flex
                 absolute bottom-full left-1/2 -translate-x-1/2 mb-2
                 flex-col items-center pointer-events-none z-50
               ">
                 <div style="
-                  background: rgba(0,0,0,0.88);
+                  background: rgba(15,23,42,0.94);
                   backdrop-filter: blur(12px);
                   border-radius: 12px;
-                  padding: 8px 14px;
+                  padding: 7px 12px;
                   white-space: nowrap;
-                  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-                  border: 1px solid rgba(255,255,255,0.1);
+                  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+                  border: 1px solid rgba(255,255,255,0.12);
+                  text-align: center;
                 ">
-                  <div style="color:white;font-size:13px;font-weight:800;line-height:1.3;">${tooltipName}</div>
-                  <div style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:600;margin-top:2px;">${tooltipType} · ${sign.is_competitor ? 'Reported by Opponent Volunteer' : 'Placed by Campaign Volunteer'}</div>
+                  <div style="display:flex;align-items:center;gap:5px;justify-content:center;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:${bgColor};display:inline-block;"></span>
+                    <span style="color:white;font-size:12px;font-weight:800;line-height:1.2;">${tooltipName}</span>
+                  </div>
+                  <div style="color:rgba(255,255,255,0.6);font-size:10px;font-weight:600;margin-top:2px;">
+                    ${tooltipType} · ${sign.is_competitor ? 'Opponent Sighting' : 'Official Campaign'}
+                  </div>
+                  ${sign.street_address ? `<div style="color:#38bdf8;font-size:10px;margin-top:2px;">${sign.street_address}</div>` : ''}
                 </div>
                 <div style="
                   width:0;height:0;
                   border-left:6px solid transparent;
                   border-right:6px solid transparent;
-                  border-top:6px solid rgba(0,0,0,0.88);
+                  border-top:6px solid rgba(15,23,42,0.94);
                   margin-top:-1px;
                 "></div>
               </div>
-
             </div>
-          </div>
-        `;
+          `;
+        } else {
+          el.innerHTML = `
+            <div class="animate-pin-drop" style="animation-delay:${Math.min(i * 35, 500)}ms">
+              <div class="relative flex flex-col items-center group">
+
+                ${/* Pulse ring for campaign signs */''}
+                ${!isComp && !isSel ? `<div class="absolute w-14 h-14 rounded-full animate-ripple pointer-events-none" style="background:${glowColor};top:-3px;left:-3px;"></div>` : ''}
+
+                ${/* Selection glow ring */''}
+                ${isSel ? `<div class="absolute -inset-[5px] rounded-2xl animate-pin-pulse" style="--pulse-color:${glowColor};box-shadow:0 0 0 4px ${glowColor}"></div>` : ''}
+
+                ${/* === THE PIN === */''}
+                <div class="sign-pin-head" style="
+                  width: 48px;
+                  height: 48px;
+                  background: linear-gradient(135deg, ${bgColor}, ${bgColorDark});
+                  border-radius: 16px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  border: 3px solid rgba(255,255,255,0.95);
+                  box-shadow: 0 4px 16px ${glowColor}, 0 2px 4px rgba(0,0,0,0.2);
+                  transition: transform 0.2s ease;
+                  transform: ${isSel ? 'scale(1.25)' : 'scale(1)'};
+                  position: relative;
+                  z-index: ${isSel ? 30 : 10};
+                ">
+                  <span style="
+                    color: white;
+                    font-size: 13px;
+                    font-weight: 900;
+                    letter-spacing: 0.5px;
+                    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+                    line-height: 1;
+                  ">${pinLabel}</span>
+                </div>
+
+                ${/* Pin pointer triangle */''}
+                <div style="
+                  width: 0; height: 0;
+                  border-left: 7px solid transparent;
+                  border-right: 7px solid transparent;
+                  border-top: 8px solid ${bgColorDark};
+                  margin-top: -2px;
+                  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+                "></div>
+
+                ${/* Ground shadow dot */''}
+                <div style="
+                  width: 8px; height: 4px;
+                  background: rgba(0,0,0,0.15);
+                  border-radius: 50%;
+                  margin-top: 2px;
+                  filter: blur(1px);
+                "></div>
+
+                ${/* Hover tooltip — big text for readability */''}
+                <div class="
+                  hidden group-hover:flex
+                  absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                  flex-col items-center pointer-events-none z-50
+                ">
+                  <div style="
+                    background: rgba(0,0,0,0.88);
+                    backdrop-filter: blur(12px);
+                    border-radius: 12px;
+                    padding: 8px 14px;
+                    white-space: nowrap;
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+                    border: 1px solid rgba(255,255,255,0.1);
+                  ">
+                    <div style="color:white;font-size:13px;font-weight:800;line-height:1.3;">${tooltipName}</div>
+                    <div style="color:rgba(255,255,255,0.55);font-size:11px;font-weight:600;margin-top:2px;">${tooltipType} · ${sign.is_competitor ? 'Reported by Opponent Volunteer' : 'Placed by Campaign Volunteer'}</div>
+                  </div>
+                  <div style="
+                    width:0;height:0;
+                    border-left:6px solid transparent;
+                    border-right:6px solid transparent;
+                    border-top:6px solid rgba(0,0,0,0.88);
+                    margin-top:-1px;
+                  "></div>
+                </div>
+
+              </div>
+            </div>
+          `;
+        }
 
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           setSelectedSign(sign);
-          m.flyTo({ center: [Number(sign.longitude), Number(sign.latitude)], zoom: 15.8, pitch: is3D ? 55 : 0, duration: 800 });
+          m.flyTo({ center: [Number(sign.longitude), Number(sign.latitude)], zoom: 16.5, pitch: is3D ? 55 : 0, duration: 800 });
         });
 
         // Hover scale
         el.addEventListener('mouseenter', () => {
-          const pin = el.querySelector('div[style*="width: 48px"]') as HTMLElement;
-          if (pin && !isSel) pin.style.transform = 'scale(1.15)';
+          const pin = (el.querySelector('.sign-pin-head') || el.querySelector('.street-dot')) as HTMLElement;
+          if (pin && !isSel) pin.style.transform = useDotMode ? 'scale(1.4)' : 'scale(1.15)';
         });
         el.addEventListener('mouseleave', () => {
-          const pin = el.querySelector('div[style*="width: 48px"]') as HTMLElement;
+          const pin = (el.querySelector('.sign-pin-head') || el.querySelector('.street-dot')) as HTMLElement;
           if (pin && !isSel) pin.style.transform = 'scale(1)';
         });
 
-        const marker = new mgl.Marker({ element: el }).setLngLat([Number(sign.longitude), Number(sign.latitude)]).addTo(m);
+        const marker = new mgl.Marker({ element: el, anchor: useDotMode ? 'center' : 'bottom' }).setLngLat([Number(sign.longitude), Number(sign.latitude)]).addTo(m);
         markersRef.current.push(marker);
       });
     })();
-  }, [filtered, selectedSign, is3D]);
+  }, [filtered, selectedSign, is3D, useDotMode]);
 
   // Render Dispatched Sign Missions on Map
   useEffect(() => {
@@ -880,132 +972,203 @@ export default function DashboardPage() {
           ? 'PRECINCT'
           : 'TARGET';
 
-        el.innerHTML = `
-          <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-            ${/* Concentric pulsing radar halo — nested so scale() never wipes out translateX(-50%) */''}
-            <div style="
-              position: absolute;
-              top: 14px;
-              left: 50%;
-              transform: translateX(-50%);
-              pointer-events: none;
-              z-index: 1;
-            ">
+        if (useDotMode) {
+          el.innerHTML = `
+            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              ${/* If selected or critical: mini pulsing radar */''}
               <div style="
-                width: 62px;
-                height: 62px;
+                position: absolute;
+                width: 32px;
+                height: 32px;
                 border-radius: 50%;
                 background: ${rippleColor};
-                animation: ripple 2.2s infinite ease-out;
+                animation: ripple 2s infinite ease-out;
+                pointer-events: none;
               "></div>
-            </div>
 
-            ${/* Prominent mission badge pill */''}
-            <div style="
-              background: rgba(15, 23, 42, 0.95);
-              color: white;
-              border: 1.5px solid ${isSel ? '#ffffff' : 'rgba(255, 255, 255, 0.4)'};
-              padding: 2px 7.5px;
-              border-radius: 9999px;
-              font-size: 9.5px;
-              font-weight: 900;
-              letter-spacing: 0.5px;
-              white-space: nowrap;
-              box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-              margin-bottom: 3.5px;
-              display: flex;
-              align-items: center;
-              gap: 4px;
-              z-index: 12;
-            ">
-              <span style="color: ${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'}; font-size: 9px;">🎯</span>
-              <span style="color: white; font-weight: 900;">${shortLabel}</span>
-              <span style="color: rgba(255,255,255,0.4);">·</span>
-              <span style="color: #38bdf8; font-family: monospace; font-weight: 900;">${mission.quantity}×</span>
-            </div>
-
-            ${/* Pin Head with vector Target Reticle icon */''}
-            <div class="mission-pin-head" style="
-              position: relative;
-              width: 46px;
-              height: 46px;
-              border-radius: 15px;
-              background: ${gradient};
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: ${isSel ? '0 0 0 3.5px #ffffff, 0 0 20px rgba(168,85,247,0.9)' : glow};
-              border: 2.5px solid white;
-              transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-              z-index: 10;
-            ">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
-                <circle cx="12" cy="12" r="10"></circle>
-                <circle cx="12" cy="12" r="6"></circle>
-                <circle cx="12" cy="12" r="2.2" fill="white"></circle>
-              </svg>
-            </div>
-
-            ${/* Downward pointer needle to coordinate */''}
-            <div style="
-              width: 0;
-              height: 0;
-              border-left: 7px solid transparent;
-              border-right: 7px solid transparent;
-              border-top: 8px solid ${pointerColor};
-              margin-top: -1px;
-              filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
-              z-index: 10;
-            "></div>
-
-            ${/* Ground shadow dot */''}
-            <div style="
-              width: 10px;
-              height: 4px;
-              background: rgba(0,0,0,0.25);
-              border-radius: 50%;
-              margin-top: 2px;
-              filter: blur(1px);
-              z-index: 10;
-            "></div>
-
-            ${/* Crisp hover tooltip */''}
-            <div class="
-              hidden group-hover:flex
-              absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5
-              flex-col items-center pointer-events-none z-50
-            ">
-              <div style="
-                background: rgba(15,23,42,0.94);
-                backdrop-filter: blur(14px);
-                border-radius: 12px;
-                padding: 8px 12px;
-                white-space: nowrap;
-                box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-                border: 1px solid rgba(255,255,255,0.12);
-                text-align: center;
+              ${/* Street-level mission target dot */''}
+              <div class="mission-street-dot" style="
+                position: relative;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: ${gradient};
+                border: 2px solid white;
+                box-shadow: 0 0 12px ${glow}, 0 2px 6px rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+                z-index: 10;
               ">
-                <div style="display:flex;align-items:center;gap:5px;justify-content:center;">
-                  <span style="font-size:12px;">🎯</span>
-                  <span style="color:white;font-size:12px;font-weight:800;line-height:1.2;">${mission.title}</span>
-                </div>
-                <div style="color:${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'};font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">
-                  ${mission.priority} Priority · ${mission.quantity}× ${mission.sign_type.replace('_', ' ')}
-                </div>
-                <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:600;margin-top:2px;">
-                  Assigned to: ${mission.volunteer_name}
-                </div>
+                <div style="width: 6px; height: 6px; border-radius: 50%; background: white; box-shadow: 0 0 4px rgba(0,0,0,0.3);"></div>
               </div>
-              <div style="
-                width:0;height:0;
-                border-left:6px solid transparent;
-                border-right:6px solid transparent;
-                border-top:6px solid rgba(15,23,42,0.94);
-                margin-top:-1px;
-              "></div>
+
+              ${/* Hover Tooltip */''}
+              <div class="
+                hidden group-hover:flex
+                absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                flex-col items-center pointer-events-none z-50
+              ">
+                <div style="
+                  background: rgba(15,23,42,0.94);
+                  backdrop-filter: blur(14px);
+                  border-radius: 12px;
+                  padding: 8px 12px;
+                  white-space: nowrap;
+                  box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+                  border: 1px solid rgba(255,255,255,0.12);
+                  text-align: center;
+                ">
+                  <div style="display:flex;align-items:center;gap:5px;justify-content:center;">
+                    <span style="font-size:12px;">🎯</span>
+                    <span style="color:white;font-size:12px;font-weight:800;line-height:1.2;">${mission.title}</span>
+                  </div>
+                  <div style="color:${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'};font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">
+                    ${mission.priority} Priority · ${mission.quantity}× ${mission.sign_type.replace('_', ' ')}
+                  </div>
+                  <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:600;margin-top:2px;">
+                    Assigned to: ${mission.volunteer_name}
+                  </div>
+                </div>
+                <div style="
+                  width:0;height:0;
+                  border-left:6px solid transparent;
+                  border-right:6px solid transparent;
+                  border-top:6px solid rgba(15,23,42,0.94);
+                  margin-top:-1px;
+                "></div>
+              </div>
             </div>
-          </div>
-        `;
+          `;
+        } else {
+          el.innerHTML = `
+            <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+              ${/* Concentric pulsing radar halo — nested so scale() never wipes out translateX(-50%) */''}
+              <div style="
+                position: absolute;
+                top: 14px;
+                left: 50%;
+                transform: translateX(-50%);
+                pointer-events: none;
+                z-index: 1;
+              ">
+                <div style="
+                  width: 62px;
+                  height: 62px;
+                  border-radius: 50%;
+                  background: ${rippleColor};
+                  animation: ripple 2.2s infinite ease-out;
+                "></div>
+              </div>
+
+              ${/* Prominent mission badge pill */''}
+              <div style="
+                background: rgba(15, 23, 42, 0.95);
+                color: white;
+                border: 1.5px solid ${isSel ? '#ffffff' : 'rgba(255, 255, 255, 0.4)'};
+                padding: 2px 7.5px;
+                border-radius: 9999px;
+                font-size: 9.5px;
+                font-weight: 900;
+                letter-spacing: 0.5px;
+                white-space: nowrap;
+                box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+                margin-bottom: 3.5px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                z-index: 12;
+              ">
+                <span style="color: ${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'}; font-size: 9px;">🎯</span>
+                <span style="color: white; font-weight: 900;">${shortLabel}</span>
+                <span style="color: rgba(255,255,255,0.4);">·</span>
+                <span style="color: #38bdf8; font-family: monospace; font-weight: 900;">${mission.quantity}×</span>
+              </div>
+
+              ${/* Pin Head with vector Target Reticle icon */''}
+              <div class="mission-pin-head" style="
+                position: relative;
+                width: 46px;
+                height: 46px;
+                border-radius: 15px;
+                background: ${gradient};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: ${isSel ? '0 0 0 3.5px #ffffff, 0 0 20px rgba(168,85,247,0.9)' : glow};
+                border: 2.5px solid white;
+                transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+                z-index: 10;
+              ">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="6"></circle>
+                  <circle cx="12" cy="12" r="2.2" fill="white"></circle>
+                </svg>
+              </div>
+
+              ${/* Downward pointer needle to coordinate */''}
+              <div style="
+                width: 0;
+                height: 0;
+                border-left: 7px solid transparent;
+                border-right: 7px solid transparent;
+                border-top: 8px solid ${pointerColor};
+                margin-top: -1px;
+                filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+                z-index: 10;
+              "></div>
+
+              ${/* Ground shadow dot */''}
+              <div style="
+                width: 10px;
+                height: 4px;
+                background: rgba(0,0,0,0.25);
+                border-radius: 50%;
+                margin-top: 2px;
+                filter: blur(1px);
+                z-index: 10;
+              "></div>
+
+              ${/* Crisp hover tooltip */''}
+              <div class="
+                hidden group-hover:flex
+                absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5
+                flex-col items-center pointer-events-none z-50
+              ">
+                <div style="
+                  background: rgba(15,23,42,0.94);
+                  backdrop-filter: blur(14px);
+                  border-radius: 12px;
+                  padding: 8px 12px;
+                  white-space: nowrap;
+                  box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+                  border: 1px solid rgba(255,255,255,0.12);
+                  text-align: center;
+                ">
+                  <div style="display:flex;align-items:center;gap:5px;justify-content:center;">
+                    <span style="font-size:12px;">🎯</span>
+                    <span style="color:white;font-size:12px;font-weight:800;line-height:1.2;">${mission.title}</span>
+                  </div>
+                  <div style="color:${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'};font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">
+                    ${mission.priority} Priority · ${mission.quantity}× ${mission.sign_type.replace('_', ' ')}
+                  </div>
+                  <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:600;margin-top:2px;">
+                    Assigned to: ${mission.volunteer_name}
+                  </div>
+                </div>
+                <div style="
+                  width:0;height:0;
+                  border-left:6px solid transparent;
+                  border-right:6px solid transparent;
+                  border-top:6px solid rgba(15,23,42,0.94);
+                  margin-top:-1px;
+                "></div>
+              </div>
+            </div>
+          `;
+        }
 
         el.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1013,24 +1176,24 @@ export default function DashboardPage() {
           setSelectedSign(null);
           setSelectedRec(null);
           setSelectedPrecinct(null);
-          m.flyTo({ center: [mission.lng, mission.lat], zoom: 16.2, pitch: is3D ? 55 : 0, duration: 800 });
+          m.flyTo({ center: [mission.lng, mission.lat], zoom: 16.5, pitch: is3D ? 55 : 0, duration: 800 });
         });
 
         // Hover scale
         el.addEventListener('mouseenter', () => {
-          const pin = el.querySelector('.mission-pin-head') as HTMLElement;
-          if (pin && !isSel) pin.style.transform = 'scale(1.15)';
+          const pin = (el.querySelector('.mission-pin-head') || el.querySelector('.mission-street-dot')) as HTMLElement;
+          if (pin && !isSel) pin.style.transform = useDotMode ? 'scale(1.3)' : 'scale(1.15)';
         });
         el.addEventListener('mouseleave', () => {
-          const pin = el.querySelector('.mission-pin-head') as HTMLElement;
+          const pin = (el.querySelector('.mission-pin-head') || el.querySelector('.mission-street-dot')) as HTMLElement;
           if (pin && !isSel) pin.style.transform = 'scale(1)';
         });
 
-        const marker = new mgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([mission.lng, mission.lat]).addTo(m);
+        const marker = new mgl.Marker({ element: el, anchor: useDotMode ? 'center' : 'bottom' }).setLngLat([mission.lng, mission.lat]).addTo(m);
         missionMarkersRef.current.push({ marker, id: mission.id });
       });
     })();
-  }, [assignments, selectedMission, is3D]);
+  }, [assignments, selectedMission, is3D, useDotMode]);
 
   /* ---------- Actions ---------- */
   const toggle3D = useCallback(() => {
@@ -1191,6 +1354,20 @@ export default function DashboardPage() {
               <span className="hidden md:inline">Volunteers</span>
             </button>
 
+            {/* Street-Level Dot View Quick Toggle */}
+            <button
+              onClick={() => setUseDotMode(!useDotMode)}
+              className={`glass rounded-2xl px-3 py-2 flex items-center gap-1.5 transition-all text-xs font-bold active:scale-95 ${
+                useDotMode
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-lg shadow-cyan-500/20'
+                  : 'hover:scale-105 border border-white/10 text-slate-300 hover:text-white'
+              }`}
+              title={useDotMode ? "Switch to standard pins" : "Filter off large icons to view street-level color coded dots"}
+            >
+              <CircleDot className={`w-4 h-4 ${useDotMode ? 'text-cyan-400' : 'text-slate-400'}`} />
+              <span className="hidden md:inline">{useDotMode ? 'Dots Active' : 'Street Dots'}</span>
+            </button>
+
             {/* Drawer Toggle */}
             <button
               onClick={() => setDrawerOpen(!drawerOpen)}
@@ -1202,6 +1379,21 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* Street-Level Dot Mode Active Floating Banner Pill */}
+      {useDotMode && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto animate-slide-up">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 backdrop-blur-md border border-cyan-500/40 text-cyan-200 text-xs font-semibold shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400" />
+            <span>Street-Level Color Coded Dots Active</span>
+            <button
+              onClick={() => setUseDotMode(false)}
+              className="ml-1 text-[11px] text-slate-400 hover:text-white underline font-bold transition"
+            >
+              Reset to Pins
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ============================================================
           RIGHT-RAIL MAP CONTROLS (Apple Maps style)
@@ -1234,6 +1426,14 @@ export default function DashboardPage() {
           </button>
           <button onClick={() => setShowHeatmap(!showHeatmap)} title="Traffic Heatmap" className={`p-2 rounded-xl transition-all ${showHeatmap ? 'bg-rose-500/15 text-rose-400' : 'text-zinc-400 hover:text-zinc-200'}`}>
             <Flame className="w-4 h-4" />
+          </button>
+          <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+          <button
+            onClick={() => setUseDotMode(!useDotMode)}
+            title={useDotMode ? "Switch to Standard Pin View" : "Street-Level Color Coded Dots (fine street view)"}
+            className={`p-2 rounded-xl transition-all ${useDotMode ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-lg shadow-cyan-500/25' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
+            <CircleDot className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -1733,6 +1933,38 @@ export default function DashboardPage() {
                         size="sm"
                         title="Push to dictate search filter"
                       />
+                    </div>
+                  </div>
+
+                  {/* Map Marker Display Mode Segment */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-2 flex items-center justify-between">
+                      <span>Map Marker Mode</span>
+                      <span className="text-[9px] font-medium text-cyan-400/90">{useDotMode ? '● Street Dots Active' : '📍 Pins Active'}</span>
+                    </label>
+                    <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl ${isDark ? 'bg-white/5' : 'bg-black/[0.03]'}`}>
+                      <button
+                        onClick={() => setUseDotMode(false)}
+                        className={`py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                          !useDotMode
+                            ? isDark ? 'bg-zinc-800 text-white shadow' : 'bg-white text-slate-900 shadow'
+                            : 'opacity-50 hover:opacity-80'
+                        }`}
+                      >
+                        <MapPin className="w-3.5 h-3.5" />
+                        Pins
+                      </button>
+                      <button
+                        onClick={() => setUseDotMode(true)}
+                        className={`py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                          useDotMode
+                            ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/25'
+                            : 'opacity-50 hover:opacity-80'
+                        }`}
+                      >
+                        <CircleDot className="w-3.5 h-3.5" />
+                        Street Dots
+                      </button>
                     </div>
                   </div>
 
