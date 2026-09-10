@@ -569,126 +569,75 @@ export default function DashboardPage() {
 
       BRISTOL_PRECINCTS.forEach(p => {
         const el = document.createElement('div');
-        el.className = 'cursor-pointer group';
         const isSel = selectedPrecinct?.id === p.id;
+        el.className = 'precinct-ghost-watermark';
+        el.style.pointerEvents = 'none';
+        el.style.userSelect = 'none';
+        el.style.zIndex = '1';
 
-        el.innerHTML = useDotMode ? `
-          <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+        // Large ghosted typography watermark directly in the middle of each precinct's color overlay
+        el.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            pointer-events: none;
+            user-select: none;
+            transform: ${isSel ? 'scale(1.08)' : 'scale(1)'};
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+          ">
+            ${/* Ghosted Precinct Code (e.g. 3A, 2A, 1B) in large bold font */''}
+            <div style="
+              font-size: 54px;
+              font-weight: 900;
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              letter-spacing: -0.03em;
+              line-height: 0.85;
+              color: ${p.color};
+              opacity: ${isSel ? 0.70 : useDotMode ? 0.28 : 0.36};
+              text-shadow: 0 0 28px ${p.color}80, 0 2px 10px rgba(0,0,0,0.9);
+            ">
+              ${p.code}
+            </div>
+
+            ${/* Ghosted Precinct Name (e.g. ANDERSON, AVOCA, SLATER CENTER) */''}
+            <div style="
+              font-size: 13px;
+              font-weight: 800;
+              letter-spacing: 0.22em;
+              text-transform: uppercase;
+              color: white;
+              opacity: ${isSel ? 0.90 : useDotMode ? 0.40 : 0.50};
+              margin-top: 5px;
+              text-shadow: 0 2px 8px rgba(0,0,0,0.95), 0 0 16px rgba(0,0,0,0.8);
+              white-space: nowrap;
+            ">
+              ${p.name.replace('Precinct ', '').replace(/^[0-9][A-Z]\s*–\s*/, '')}
+            </div>
+
+            ${/* Ghosted Turnout & Polling Location */''}
             <div style="
               display: flex;
               align-items: center;
-              justify-content: center;
-              width: 22px;
-              height: 22px;
-              border-radius: 50%;
-              background: rgba(15, 23, 42, 0.92);
-              border: 2px solid ${p.color};
-              box-shadow: 0 0 10px ${p.color}80, 0 2px 6px rgba(0,0,0,0.5);
-              transform: ${isSel ? 'scale(1.25)' : 'scale(1)'};
-              transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-              pointer-events: auto;
-            ">
-              <span style="
-                color: white;
-                font-size: 8.5px;
-                font-weight: 900;
-                line-height: 1;
-              ">${p.code}</span>
-            </div>
-
-            ${/* Precinct Dot Hover Tooltip */''}
-            <div class="
-              hidden group-hover:flex
-              absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5
-              flex-col items-center pointer-events-none z-50
-            ">
-              <div style="
-                background: rgba(15,23,42,0.95);
-                backdrop-filter: blur(14px);
-                border-radius: 12px;
-                padding: 8px 12px;
-                white-space: nowrap;
-                box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-                border: 1px solid rgba(255,255,255,0.12);
-                text-align: center;
-              ">
-                <div style="display:flex;align-items:center;gap:5px;justify-content:center;">
-                  <span style="font-size:12px;">🗳️</span>
-                  <span style="color:white;font-size:12px;font-weight:800;line-height:1.2;">${p.name}</span>
-                </div>
-                <div style="color:${p.color};font-size:10px;font-weight:800;margin-top:2px;">
-                  ${p.historicTurnoutPct}% Historic Turnout · ${p.priority}
-                </div>
-                <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:600;margin-top:2px;">
-                  Polling: ${p.pollingPlace} (${p.pollingAddress})
-                </div>
-              </div>
-              <div style="
-                width:0;height:0;
-                border-left:6px solid transparent;
-                border-right:6px solid transparent;
-                border-top:6px solid rgba(15,23,42,0.94);
-                margin-top:-1px;
-              "></div>
-            </div>
-          </div>
-        ` : `
-          <div style="
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(10px);
-            border: 1.5px solid ${isSel ? '#ffffff' : `${p.color}80`};
-            padding: 3px 8px;
-            border-radius: 9999px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.5), ${isSel ? `0 0 14px ${p.color}` : 'none'};
-            transform: ${isSel ? 'scale(1.15)' : 'scale(1)'};
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            pointer-events: auto;
-          ">
-            <span style="
-              background: ${p.color};
-              color: white;
-              font-size: 9px;
-              font-weight: 900;
-              padding: 1px 5px;
-              border-radius: 9999px;
-              line-height: 1.2;
-            ">${p.code}</span>
-            <span style="
-              color: white;
+              gap: 6px;
+              margin-top: 3px;
               font-size: 10.5px;
-              font-weight: 800;
-              white-space: nowrap;
-            ">${p.name.replace('Precinct ', '')}</span>
-            <span style="
+              font-weight: 700;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
               color: ${p.color};
-              font-size: 9.5px;
-              font-weight: 800;
-            ">${p.historicTurnoutPct}%</span>
+              opacity: ${isSel ? 0.95 : useDotMode ? 0.45 : 0.55};
+              text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+              white-space: nowrap;
+            ">
+              <span>${p.historicTurnoutPct}% Turnout</span>
+              <span style="opacity: 0.5;">·</span>
+              <span style="color: rgba(255,255,255,0.8);">${p.pollingPlace}</span>
+            </div>
           </div>
         `;
-
-        el.addEventListener('mouseenter', () => {
-          el.style.zIndex = '9999';
-          const badge = (el.querySelector('div > div') || el.firstElementChild) as HTMLElement;
-          if (badge && !isSel) badge.style.transform = useDotMode ? 'scale(1.2)' : 'scale(1.15)';
-        });
-        el.addEventListener('mouseleave', () => {
-          el.style.zIndex = '';
-          const badge = (el.querySelector('div > div') || el.firstElementChild) as HTMLElement;
-          if (badge && !isSel) badge.style.transform = 'scale(1)';
-        });
-
-        el.addEventListener('click', (e) => {
-          e.stopPropagation();
-          setSelectedSign(null);
-          setSelectedRec(null);
-          setSelectedMission(null);
-          setSelectedPrecinct(p);
-          m.flyTo({ center: p.center, zoom: 15.2, pitch: is3D ? 50 : 0, duration: 900 });
-        });
 
         const marker = new mgl.Marker({ element: el, anchor: 'center' }).setLngLat(p.center).addTo(m);
         precinctMarkersRef.current.push({ marker, id: p.id });
