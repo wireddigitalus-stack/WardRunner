@@ -573,26 +573,64 @@ export default function DashboardPage() {
         const isSel = selectedPrecinct?.id === p.id;
 
         el.innerHTML = useDotMode ? `
-          <div style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: rgba(15, 23, 42, 0.92);
-            border: 2px solid ${p.color};
-            box-shadow: 0 0 10px ${p.color}80, 0 2px 6px rgba(0,0,0,0.5);
-            transform: ${isSel ? 'scale(1.25)' : 'scale(1)'};
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            pointer-events: auto;
-          ">
-            <span style="
-              color: white;
-              font-size: 8.5px;
-              font-weight: 900;
-              line-height: 1;
-            ">${p.code}</span>
+          <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 22px;
+              height: 22px;
+              border-radius: 50%;
+              background: rgba(15, 23, 42, 0.92);
+              border: 2px solid ${p.color};
+              box-shadow: 0 0 10px ${p.color}80, 0 2px 6px rgba(0,0,0,0.5);
+              transform: ${isSel ? 'scale(1.25)' : 'scale(1)'};
+              transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+              pointer-events: auto;
+            ">
+              <span style="
+                color: white;
+                font-size: 8.5px;
+                font-weight: 900;
+                line-height: 1;
+              ">${p.code}</span>
+            </div>
+
+            ${/* Precinct Dot Hover Tooltip */''}
+            <div class="
+              hidden group-hover:flex
+              absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5
+              flex-col items-center pointer-events-none z-50
+            ">
+              <div style="
+                background: rgba(15,23,42,0.95);
+                backdrop-filter: blur(14px);
+                border-radius: 12px;
+                padding: 8px 12px;
+                white-space: nowrap;
+                box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+                border: 1px solid rgba(255,255,255,0.12);
+                text-align: center;
+              ">
+                <div style="display:flex;align-items:center;gap:5px;justify-content:center;">
+                  <span style="font-size:12px;">🗳️</span>
+                  <span style="color:white;font-size:12px;font-weight:800;line-height:1.2;">${p.name}</span>
+                </div>
+                <div style="color:${p.color};font-size:10px;font-weight:800;margin-top:2px;">
+                  ${p.historicTurnoutPct}% Historic Turnout · ${p.priority}
+                </div>
+                <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:600;margin-top:2px;">
+                  Polling: ${p.pollingPlace} (${p.pollingAddress})
+                </div>
+              </div>
+              <div style="
+                width:0;height:0;
+                border-left:6px solid transparent;
+                border-right:6px solid transparent;
+                border-top:6px solid rgba(15,23,42,0.94);
+                margin-top:-1px;
+              "></div>
+            </div>
           </div>
         ` : `
           <div style="
@@ -633,11 +671,13 @@ export default function DashboardPage() {
         `;
 
         el.addEventListener('mouseenter', () => {
-          const badge = el.firstElementChild as HTMLElement;
-          if (badge && !isSel) badge.style.transform = 'scale(1.15)';
+          el.style.zIndex = '9999';
+          const badge = (el.querySelector('div > div') || el.firstElementChild) as HTMLElement;
+          if (badge && !isSel) badge.style.transform = useDotMode ? 'scale(1.2)' : 'scale(1.15)';
         });
         el.addEventListener('mouseleave', () => {
-          const badge = el.firstElementChild as HTMLElement;
+          el.style.zIndex = '';
+          const badge = (el.querySelector('div > div') || el.firstElementChild) as HTMLElement;
           if (badge && !isSel) badge.style.transform = 'scale(1)';
         });
 
@@ -912,12 +952,14 @@ export default function DashboardPage() {
           m.flyTo({ center: [Number(sign.longitude), Number(sign.latitude)], zoom: 16.5, pitch: is3D ? 55 : 0, duration: 800 });
         });
 
-        // Hover scale
+        // Hover scale & elevate z-index
         el.addEventListener('mouseenter', () => {
+          el.style.zIndex = '9999';
           const pin = (el.querySelector('.sign-pin-head') || el.querySelector('.street-dot')) as HTMLElement;
           if (pin && !isSel) pin.style.transform = useDotMode ? 'scale(1.4)' : 'scale(1.15)';
         });
         el.addEventListener('mouseleave', () => {
+          el.style.zIndex = '';
           const pin = (el.querySelector('.sign-pin-head') || el.querySelector('.street-dot')) as HTMLElement;
           if (pin && !isSel) pin.style.transform = 'scale(1)';
         });
@@ -1179,12 +1221,14 @@ export default function DashboardPage() {
           m.flyTo({ center: [mission.lng, mission.lat], zoom: 16.5, pitch: is3D ? 55 : 0, duration: 800 });
         });
 
-        // Hover scale
+        // Hover scale & elevate z-index
         el.addEventListener('mouseenter', () => {
+          el.style.zIndex = '9999';
           const pin = (el.querySelector('.mission-pin-head') || el.querySelector('.mission-street-dot')) as HTMLElement;
           if (pin && !isSel) pin.style.transform = useDotMode ? 'scale(1.3)' : 'scale(1.15)';
         });
         el.addEventListener('mouseleave', () => {
+          el.style.zIndex = '';
           const pin = (el.querySelector('.mission-pin-head') || el.querySelector('.mission-street-dot')) as HTMLElement;
           if (pin && !isSel) pin.style.transform = 'scale(1)';
         });

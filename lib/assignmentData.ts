@@ -82,10 +82,10 @@ export const TARGET_PRESETS: TargetPreset[] = [
   {
     id: 'prec-3a',
     type: 'precinct',
-    title: 'Precinct 3A – Anderson School',
-    subtitle: 'Key mobilization upside · West Bristol neighborhood grid',
-    lat: 36.5866,
-    lng: -82.1963,
+    title: 'Precinct 3A – Anderson Neighborhood Grid',
+    subtitle: '1100 Anderson St · 9th & 11th St residential lawns',
+    lat: 36.5888,
+    lng: -82.1982,
     recommendedSign: 'yard_sign',
   },
   {
@@ -129,11 +129,11 @@ export const SEED_ASSIGNMENTS: VolunteerAssignment[] = [
     volunteer_name: 'Marcus Taylor',
     target_type: 'precinct',
     title: 'Precinct 3A – Anderson Neighborhood Grid',
-    street_address: '901 9th St, Bristol, TN',
+    street_address: '1100 Anderson St, Bristol, TN',
     sign_type: 'yard_sign',
     quantity: 5,
-    lat: 36.5866,
-    lng: -82.1963,
+    lat: 36.5888,
+    lng: -82.1982,
     priority: 'high',
     notes: 'Target residential front lawns along 9th and 11th Street approaching Anderson Elementary.',
     status: 'assigned',
@@ -144,11 +144,11 @@ export const SEED_ASSIGNMENTS: VolunteerAssignment[] = [
     volunteer_name: 'Campaign Volunteer',
     target_type: 'intersection',
     title: 'State St & Piedmont Ave',
-    street_address: '620 State Street, Bristol, TN',
+    street_address: 'State St & Piedmont Ave, Bristol, TN',
     sign_type: 'large_sign',
     quantity: 1,
-    lat: 36.5951,
-    lng: -82.1887,
+    lat: 36.5955,
+    lng: -82.1895,
     priority: 'high',
     notes: 'Place 4×4 sign near high-visibility pedestrian crosswalk on the TN side.',
     status: 'completed',
@@ -180,17 +180,30 @@ export function getStoredAssignments(): VolunteerAssignment[] {
           };
         }
       }
-      // Fix Precinct 3A - Anderson legacy coordinates
+      // Fix Precinct 3A - Anderson Neighborhood Grid to residential grid intersection (1100 Anderson St)
+      // to ensure it does not overlap the Precinct 3A polling center (901 9th St)
       if (item.id === 'assign-2' || item.title?.includes('Anderson')) {
-        if (item.lng === -82.2180 || (item.street_address?.includes('9th St') && item.lng < -82.20)) {
+        if (item.lat === 36.5866 || item.lng === -82.1963 || item.lng < -82.20 || item.street_address?.includes('901 9th')) {
           migrated = true;
           return {
             ...item,
-            street_address: '901 9th St, Bristol, TN',
-            lat: 36.5866,
-            lng: -82.1963,
+            title: 'Precinct 3A – Anderson Neighborhood Grid',
+            street_address: '1100 Anderson St, Bristol, TN',
+            lat: 36.5888,
+            lng: -82.1982,
+            notes: 'Target residential front lawns along 9th and 11th Street approaching Anderson Elementary.',
           };
         }
+      }
+      // Fix State St & Piedmont Ave to not collide with sign #1 at 620 State St
+      if (item.id === 'assign-3' || (item.title?.includes('Piedmont') && item.lat === 36.5951 && item.lng === -82.1887)) {
+        migrated = true;
+        return {
+          ...item,
+          street_address: 'State St & Piedmont Ave, Bristol, TN',
+          lat: 36.5955,
+          lng: -82.1895,
+        };
       }
       return item;
     });
