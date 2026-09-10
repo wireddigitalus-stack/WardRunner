@@ -4,6 +4,7 @@ import React from 'react';
 import { Vote, Users, TrendingUp, X, Navigation, ShieldCheck, MapPin, Sparkles, AlertCircle } from 'lucide-react';
 import { PrecinctInfo, calculatePrecinctStats } from '@/lib/precinctData';
 import { Sign } from '@/lib/types';
+import { getAppleMapsUrl } from '@/lib/mapUrls';
 
 interface PrecinctDetailCardProps {
   precinct: PrecinctInfo | null;
@@ -131,11 +132,17 @@ export default function PrecinctDetailCard({
             </div>
           </div>
           <a
-            href={`https://maps.apple.com/?daddr=${encodeURIComponent(precinct.pollingAddress)}`}
+            href={getAppleMapsUrl({
+              address: precinct.pollingAddress,
+              lat: precinct.center[1],
+              lng: precinct.center[0],
+              title: precinct.pollingPlace,
+              mode: 'view',
+            })}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition shrink-0"
-            title="Get Directions"
+            title="Open Polling Place in Apple Maps"
           >
             <Navigation className="w-3.5 h-3.5" />
           </a>

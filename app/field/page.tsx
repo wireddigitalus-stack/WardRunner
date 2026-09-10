@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { compressImage } from '@/lib/imageCompression';
 import { SignType, SignStatus, Sign, VolunteerSession, VolunteerAssignment } from '@/lib/types';
 import { getStoredAssignments, markAssignmentComplete } from '@/lib/assignmentData';
+import { getAppleMapsUrl } from '@/lib/mapUrls';
 import {
   MapPin,
   Camera,
@@ -859,11 +860,17 @@ export default function FieldPage() {
                         {/* Action Buttons */}
                         <div className="flex flex-col gap-1.5 shrink-0">
                           <a
-                            href={`https://maps.apple.com/?daddr=${m.lat},${m.lng}`}
+                            href={getAppleMapsUrl({
+                              address: m.street_address,
+                              lat: m.lat,
+                              lng: m.lng,
+                              title: m.title,
+                              mode: 'directions',
+                            })}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-slate-200 flex items-center justify-center gap-1 border border-slate-700 active:scale-95 transition"
-                            title="Open GPS Navigation"
+                            title="Open Address in Apple Maps Navigation"
                           >
                             <Navigation className="w-3 h-3 text-sky-400" />
                             <span>Navigate</span>

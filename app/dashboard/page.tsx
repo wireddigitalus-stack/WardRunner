@@ -14,6 +14,7 @@ import MissionsDrawerTab from './components/MissionsDrawerTab';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment } from '@/lib/types';
+import { getAppleMapsUrl } from '@/lib/mapUrls';
 import DictateButton from '@/app/components/DictateButton';
 import {
   Vote,
@@ -1492,12 +1493,20 @@ export default function DashboardPage() {
 
             <div className="mt-4 flex gap-2">
               <a
-                href={`https://maps.apple.com/?daddr=${selectedSign.latitude},${selectedSign.longitude}`}
+                href={getAppleMapsUrl({
+                  address: selectedSign.street_address,
+                  lat: Number(selectedSign.latitude),
+                  lng: Number(selectedSign.longitude),
+                  title: selectedSign.is_competitor
+                    ? `${selectedSign.competitor_name || 'Competitor'} Sign`
+                    : 'Brown Campaign Sign',
+                  mode: 'view',
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-[0.97] transition-all"
               >
-                <Navigation className="w-3.5 h-3.5" /> Directions
+                <Navigation className="w-3.5 h-3.5" /> View in Apple Maps
               </a>
               <button onClick={() => setSelectedSign(null)} className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}>
                 Dismiss
@@ -1622,11 +1631,17 @@ export default function DashboardPage() {
                 Decline
               </button>
               <a
-                href={`https://maps.apple.com/?daddr=${selectedRec.lat},${selectedRec.lng}`}
+                href={getAppleMapsUrl({
+                  address: recAddress || selectedRec.street,
+                  lat: selectedRec.lat,
+                  lng: selectedRec.lng,
+                  title: selectedRec.street,
+                  mode: 'view',
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}
-                title="Directions in Apple Maps"
+                title="Open Address in Apple Maps"
               >
                 <Navigation className="w-3.5 h-3.5" />
               </a>

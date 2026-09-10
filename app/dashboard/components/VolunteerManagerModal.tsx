@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 import type { SignType, VolunteerAssignment } from '@/lib/types';
+import { getAppleMapsUrl } from '@/lib/mapUrls';
 import {
   TARGET_PRESETS,
   TargetPreset,
@@ -1014,11 +1015,17 @@ export default function VolunteerManagerModal({
                             {/* Actions */}
                             <div className="flex items-center gap-1.5 shrink-0">
                               <a
-                                href={`https://maps.apple.com/?daddr=${a.lat},${a.lng}`}
+                                href={getAppleMapsUrl({
+                                  address: a.street_address,
+                                  lat: a.lat,
+                                  lng: a.lng,
+                                  title: a.title,
+                                  mode: 'view',
+                                })}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition"
-                                title="Open GPS Location in Maps"
+                                title="Open Address in Apple Maps"
                               >
                                 <Navigation className="w-3.5 h-3.5" />
                               </a>

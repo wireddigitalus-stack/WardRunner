@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
 import { Target, Users, Navigation, CheckCircle2, X, AlertCircle, Clock, MapPin } from 'lucide-react';
 import type { VolunteerAssignment } from '@/lib/types';
+import { getAppleMapsUrl } from '@/lib/mapUrls';
 
 interface MissionDetailCardProps {
   mission: VolunteerAssignment | null;
@@ -121,14 +121,20 @@ export default function MissionDetailCard({
           </button>
 
           <a
-            href={`https://maps.apple.com/?daddr=${mission.lat},${mission.lng}`}
+            href={getAppleMapsUrl({
+              address: mission.street_address,
+              lat: mission.lat,
+              lng: mission.lng,
+              title: mission.title,
+              mode: 'view',
+            })}
             target="_blank"
             rel="noopener noreferrer"
             className="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition active:scale-95"
-            title="Open turn-by-turn driving directions"
+            title="Open Address in Apple Maps"
           >
             <Navigation className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden sm:inline">Directions</span>
+            <span className="hidden sm:inline">Open in Maps</span>
           </a>
 
           <button
