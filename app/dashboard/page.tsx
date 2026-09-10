@@ -298,14 +298,22 @@ export default function DashboardPage() {
       el.className = 'search-target-marker';
       el.style.zIndex = '300';
       el.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;pointer-events:none;">
-          <div style="background:rgba(16,185,129,0.95);color:white;padding:5px 12px;border-radius:9999px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 4px 16px rgba(16,185,129,0.5);border:1.5px solid rgba(255,255,255,0.4);margin-bottom:3px;">
+        <div style="position:relative;display:flex;flex-direction:column;align-items:center;pointer-events:none;">
+          <div style="position:absolute;bottom:18px;background:rgba(16,185,129,0.95);color:white;padding:4px 10px;border-radius:9999px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 4px 16px rgba(16,185,129,0.5);border:1.5px solid rgba(255,255,255,0.4);">
             📍 ${title || 'Target Location'}
           </div>
-          <div style="width:16px;height:16px;background:#10b981;border:2.5px solid white;border-radius:50%;box-shadow:0 0 14px #10b981;"></div>
+          <div style="position:relative;display:flex;align-items:center;justify-content:center;width:24px;height:24px;">
+            <div class="animate-radar pointer-events-none" style="width:40px;height:40px;background:rgba(16,185,129,0.4);z-index:1;"></div>
+            <div style="position:relative;width:14px;height:14px;background:#10b981;border:2.5px solid white;border-radius:50%;box-shadow:0 0 14px #10b981;z-index:2;"></div>
+          </div>
         </div>
       `;
-      const marker = new mgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(mapRef.current);
+      const marker = new mgl.Marker({
+        element: el,
+        anchor: 'center',
+        pitchAlignment: 'viewport',
+        rotationAlignment: 'viewport',
+      }).setLngLat([lng, lat]).addTo(mapRef.current);
       searchMarkerRef.current = marker;
 
       setTimeout(() => {
@@ -677,7 +685,12 @@ export default function DashboardPage() {
           </div>
         `;
 
-        const marker = new mgl.Marker({ element: el, anchor: 'center' }).setLngLat(p.center).addTo(m);
+        const marker = new mgl.Marker({
+          element: el,
+          anchor: 'center',
+          pitchAlignment: 'viewport',
+          rotationAlignment: 'viewport',
+        }).setLngLat(p.center).addTo(m);
         precinctMarkersRef.current.push({ marker, id: p.id });
       });
     })();
@@ -784,31 +797,28 @@ export default function DashboardPage() {
 
         if (useDotMode) {
           el.innerHTML = `
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              ${/* If selected: glowing active pulse ring */''}
+            <div style="position:relative;width:${isSel ? 22 : 16}px;height:${isSel ? 22 : 16}px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              ${/* If selected: glowing active radar pulse */''}
               ${isSel ? `
-                <div style="
-                  position: absolute;
+                <div class="animate-radar" style="
                   width: 28px;
                   height: 28px;
-                  border-radius: 50%;
+                  background: ${glowColor};
                   border: 2px solid #ffffff;
-                  box-shadow: 0 0 14px ${bgColor};
-                  animation: pin-pulse 1.8s infinite;
-                  pointer-events: none;
                 "></div>
               ` : ''}
 
               ${/* Street-Level Precision Micro Dot */''}
               <div class="street-dot" style="
-                width: ${isSel ? '18px' : '14px'};
-                height: ${isSel ? '18px' : '14px'};
+                width: 100%;
+                height: 100%;
                 border-radius: 50%;
                 background: ${bgColor};
                 border: 2px solid white;
                 box-shadow: 0 0 10px ${glowColor}, 0 2px 5px rgba(0,0,0,0.6);
                 transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-                z-index: ${isSel ? 25 : 10};
+                position: relative;
+                z-index: 10;
               "></div>
 
               ${/* Hover Tooltip */''}
@@ -848,16 +858,10 @@ export default function DashboardPage() {
           `;
         } else {
           el.innerHTML = `
-            <div class="animate-pin-drop" style="animation-delay:${Math.min(i * 35, 500)}ms">
-              <div class="relative flex flex-col items-center group">
+            <div style="position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer;width:48px;">
+              <div class="relative flex flex-col items-center group w-full">
 
-                ${/* Pulse ring for campaign signs */''}
-                ${!isComp && !isSel ? `<div class="absolute w-14 h-14 rounded-full animate-ripple pointer-events-none" style="background:${glowColor};top:-3px;left:-3px;"></div>` : ''}
-
-                ${/* Selection glow ring */''}
-                ${isSel ? `<div class="absolute -inset-[5px] rounded-2xl animate-pin-pulse" style="--pulse-color:${glowColor};box-shadow:0 0 0 4px ${glowColor}"></div>` : ''}
-
-                ${/* === THE PIN === */''}
+                ${/* === THE PIN HEAD === */''}
                 <div class="sign-pin-head" style="
                   width: 48px;
                   height: 48px;
@@ -868,11 +872,16 @@ export default function DashboardPage() {
                   justify-content: center;
                   border: 3px solid rgba(255,255,255,0.95);
                   box-shadow: 0 4px 16px ${glowColor}, 0 2px 4px rgba(0,0,0,0.2);
-                  transition: transform 0.2s ease;
-                  transform: ${isSel ? 'scale(1.25)' : 'scale(1)'};
                   position: relative;
                   z-index: ${isSel ? 30 : 10};
+                  transform-origin: center bottom;
+                  transform: ${isSel ? 'scale(1.18)' : 'scale(1)'};
+                  transition: transform 0.15s ease;
                 ">
+                  ${/* Concentric Radar Ring Centered Directly Inside Pin Head */''}
+                  ${!isComp && !isSel ? `<div class="animate-radar" style="width: 44px; height: 44px; background: ${glowColor};"></div>` : ''}
+                  ${isSel ? `<div class="animate-radar" style="width: 48px; height: 48px; border: 2.5px solid #ffffff; background: ${glowColor};"></div>` : ''}
+
                   <span style="
                     color: white;
                     font-size: 13px;
@@ -880,26 +889,21 @@ export default function DashboardPage() {
                     letter-spacing: 0.5px;
                     text-shadow: 0 1px 3px rgba(0,0,0,0.4);
                     line-height: 1;
+                    position: relative;
+                    z-index: 5;
                   ">${pinLabel}</span>
                 </div>
 
-                ${/* Pin pointer triangle */''}
+                ${/* Pin pointer triangle touching ground coordinate */''}
                 <div style="
                   width: 0; height: 0;
                   border-left: 7px solid transparent;
                   border-right: 7px solid transparent;
                   border-top: 8px solid ${bgColorDark};
-                  margin-top: -2px;
-                  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
-                "></div>
-
-                ${/* Ground shadow dot */''}
-                <div style="
-                  width: 8px; height: 4px;
-                  background: rgba(0,0,0,0.15);
-                  border-radius: 50%;
-                  margin-top: 2px;
-                  filter: blur(1px);
+                  margin-top: -1px;
+                  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+                  position: relative;
+                  z-index: 10;
                 "></div>
 
                 ${/* Hover tooltip — big text for readability */''}
@@ -940,11 +944,14 @@ export default function DashboardPage() {
           m.flyTo({ center: [Number(sign.longitude), Number(sign.latitude)], zoom: 16.5, pitch: is3D ? 55 : 0, duration: 800 });
         });
 
-        // Hover scale & elevate z-index
+        // Hover scale & elevate z-index with bottom transform-origin
         el.addEventListener('mouseenter', () => {
           el.style.zIndex = '9999';
           const pin = (el.querySelector('.sign-pin-head') || el.querySelector('.street-dot')) as HTMLElement;
-          if (pin && !isSel) pin.style.transform = useDotMode ? 'scale(1.4)' : 'scale(1.15)';
+          if (pin && !isSel) {
+            pin.style.transformOrigin = useDotMode ? 'center center' : 'center bottom';
+            pin.style.transform = useDotMode ? 'scale(1.4)' : 'scale(1.15)';
+          }
         });
         el.addEventListener('mouseleave', () => {
           el.style.zIndex = isSel ? '500' : '100';
@@ -952,7 +959,12 @@ export default function DashboardPage() {
           if (pin && !isSel) pin.style.transform = 'scale(1)';
         });
 
-        const marker = new mgl.Marker({ element: el, anchor: useDotMode ? 'center' : 'bottom' }).setLngLat([Number(sign.longitude), Number(sign.latitude)]).addTo(m);
+        const marker = new mgl.Marker({
+          element: el,
+          anchor: useDotMode ? 'center' : 'bottom',
+          pitchAlignment: 'viewport',
+          rotationAlignment: 'viewport',
+        }).setLngLat([Number(sign.longitude), Number(sign.latitude)]).addTo(m);
         markersRef.current.push(marker);
       });
     })();
@@ -1005,16 +1017,13 @@ export default function DashboardPage() {
 
         if (useDotMode) {
           el.innerHTML = `
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              ${/* If selected or critical: mini pulsing radar */''}
-              <div style="
-                position: absolute;
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
+            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;width:24px;height:24px;">
+              ${/* Centered radar ring */''}
+              <div class="animate-radar pointer-events-none" style="
+                width: 38px;
+                height: 38px;
                 background: ${rippleColor};
-                animation: ripple 2s infinite ease-out;
-                pointer-events: none;
+                z-index: 1;
               "></div>
 
               ${/* Street-level mission target dot */''}
@@ -1075,24 +1084,6 @@ export default function DashboardPage() {
         } else {
           el.innerHTML = `
             <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-              ${/* Concentric pulsing radar halo — nested so scale() never wipes out translateX(-50%) */''}
-              <div style="
-                position: absolute;
-                top: 14px;
-                left: 50%;
-                transform: translateX(-50%);
-                pointer-events: none;
-                z-index: 1;
-              ">
-                <div style="
-                  width: 62px;
-                  height: 62px;
-                  border-radius: 50%;
-                  background: ${rippleColor};
-                  animation: ripple 2.2s infinite ease-out;
-                "></div>
-              </div>
-
               ${/* Prominent mission badge pill */''}
               <div style="
                 background: rgba(15, 23, 42, 0.95);
@@ -1132,6 +1123,14 @@ export default function DashboardPage() {
                 transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
                 z-index: 10;
               ">
+                ${/* Radar ripple locked concentric to pin head */''}
+                <div class="animate-radar pointer-events-none" style="
+                  width: 60px;
+                  height: 60px;
+                  background: ${rippleColor};
+                  z-index: -1;
+                "></div>
+
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
                   <circle cx="12" cy="12" r="10"></circle>
                   <circle cx="12" cy="12" r="6"></circle>
@@ -1139,7 +1138,7 @@ export default function DashboardPage() {
                 </svg>
               </div>
 
-              ${/* Downward pointer needle to coordinate */''}
+              ${/* Downward pointer needle to coordinate (bottom edge is the exact needle tip) */''}
               <div style="
                 width: 0;
                 height: 0;
@@ -1148,17 +1147,6 @@ export default function DashboardPage() {
                 border-top: 8px solid ${pointerColor};
                 margin-top: -1px;
                 filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
-                z-index: 10;
-              "></div>
-
-              ${/* Ground shadow dot */''}
-              <div style="
-                width: 10px;
-                height: 4px;
-                background: rgba(0,0,0,0.25);
-                border-radius: 50%;
-                margin-top: 2px;
-                filter: blur(1px);
                 z-index: 10;
               "></div>
 
@@ -1214,7 +1202,10 @@ export default function DashboardPage() {
         el.addEventListener('mouseenter', () => {
           el.style.zIndex = '9999';
           const pin = (el.querySelector('.mission-pin-head') || el.querySelector('.mission-street-dot')) as HTMLElement;
-          if (pin && !isSel) pin.style.transform = useDotMode ? 'scale(1.3)' : 'scale(1.15)';
+          if (pin && !isSel) {
+            pin.style.transform = useDotMode ? 'scale(1.3)' : 'scale(1.15)';
+            pin.style.transformOrigin = useDotMode ? 'center center' : 'center bottom';
+          }
         });
         el.addEventListener('mouseleave', () => {
           el.style.zIndex = isSel ? '600' : '150';
@@ -1222,7 +1213,12 @@ export default function DashboardPage() {
           if (pin && !isSel) pin.style.transform = 'scale(1)';
         });
 
-        const marker = new mgl.Marker({ element: el, anchor: useDotMode ? 'center' : 'bottom' }).setLngLat([mission.lng, mission.lat]).addTo(m);
+        const marker = new mgl.Marker({
+          element: el,
+          anchor: useDotMode ? 'center' : 'bottom',
+          pitchAlignment: 'viewport',
+          rotationAlignment: 'viewport',
+        }).setLngLat([mission.lng, mission.lat]).addTo(m);
         missionMarkersRef.current.push({ marker, id: mission.id });
       });
     })();
@@ -2184,19 +2180,47 @@ export default function DashboardPage() {
           // Drop gold preview pins with click handlers
           recs.forEach((rec, i) => {
             const el = document.createElement('div');
-            el.className = 'scout-map-marker cursor-pointer hover:scale-110 active:scale-95 transition-transform';
+            el.className = 'scout-map-marker group relative';
             el.style.cssText = 'cursor:pointer; z-index:200; position:relative;';
-            el.addEventListener('mouseenter', () => { el.style.zIndex = '9999'; });
-            el.addEventListener('mouseleave', () => { el.style.zIndex = '200'; });
+            el.addEventListener('mouseenter', () => {
+              el.style.zIndex = '9999';
+              const pin = el.querySelector('.scout-pin-head') as HTMLElement;
+              if (pin) {
+                pin.style.transform = 'scale(1.15)';
+                pin.style.transformOrigin = 'center bottom';
+              }
+            });
+            el.addEventListener('mouseleave', () => {
+              el.style.zIndex = '200';
+              const pin = el.querySelector('.scout-pin-head') as HTMLElement;
+              if (pin) pin.style.transform = 'scale(1)';
+            });
             el.innerHTML = `
               <div class="animate-pin-drop" style="animation-delay:${i * 100}ms">
                 <div class="relative flex flex-col items-center">
-                  <div class="absolute w-16 h-16 rounded-full animate-ripple pointer-events-none" style="background:rgba(245,158,11,0.3);top:-4px;left:-4px;"></div>
-                  <div style="width:48px;height:48px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:16px;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,0.95);box-shadow:0 4px 20px rgba(245,158,11,0.5),0 2px 4px rgba(0,0,0,0.2);">
+                  <div class="scout-pin-head" style="
+                    position: relative;
+                    width: 46px;
+                    height: 46px;
+                    background: linear-gradient(135deg,#f59e0b,#d97706);
+                    border-radius: 15px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 2.5px solid rgba(255,255,255,0.95);
+                    box-shadow: 0 4px 20px rgba(245,158,11,0.5),0 2px 4px rgba(0,0,0,0.2);
+                    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    z-index: 10;
+                  ">
+                    <div class="animate-radar pointer-events-none" style="
+                      width: 58px;
+                      height: 58px;
+                      background: rgba(245,158,11,0.35);
+                      z-index: -1;
+                    "></div>
                     <span style="color:white;font-size:16px;font-weight:900;text-shadow:0 1px 3px rgba(0,0,0,0.4);">★</span>
                   </div>
-                  <div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:8px solid #d97706;margin-top:-2px;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.15));"></div>
-                  <div style="width:8px;height:4px;background:rgba(0,0,0,0.15);border-radius:50%;margin-top:2px;filter:blur(1px);"></div>
+                  <div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:8px solid #d97706;margin-top:-1px;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.15));z-index:10;"></div>
                 </div>
               </div>`;
 
@@ -2208,7 +2232,12 @@ export default function DashboardPage() {
               m.flyTo({ center: [rec.lng, rec.lat], zoom: 16, pitch: is3D ? 55 : 0, duration: 800 });
             });
 
-            const marker = new mgl.Marker({ element: el }).setLngLat([rec.lng, rec.lat]).addTo(m);
+            const marker = new mgl.Marker({
+              element: el,
+              anchor: 'bottom',
+              pitchAlignment: 'viewport',
+              rotationAlignment: 'viewport',
+            }).setLngLat([rec.lng, rec.lat]).addTo(m);
             scoutMarkersRef.current.push({ marker, rank: rec.rank });
           });
 

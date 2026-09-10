@@ -209,6 +209,40 @@ button, input, select {
 }
 
 /* ============================================================
+   MAPLIBRE MARKER STABILITY: PREVENT DRIFT & JITTER ON ZOOM
+   ============================================================ */
+.maplibregl-marker {
+  transition: none !important;
+  will-change: transform;
+}
+
+.maplibregl-marker * {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+@keyframes marker-radar {
+  0% {
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0;
+  }
+}
+
+.animate-radar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: marker-radar 2.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+}
+
+/* ============================================================
    MAP LAYER STACKING: GUARANTEE ICONS ARE ABOVE PRECINCTS
    ============================================================ */
 .precinct-ghost-watermark {
