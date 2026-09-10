@@ -1312,38 +1312,6 @@ export default function DashboardPage() {
               <span className="text-[11px] font-medium opacity-60">Inventory</span>
               <span className="text-sm font-black text-amber-400 animate-count-up">{inventoryStats.totalPlaced}/{inventoryStats.totalStock}</span>
             </div>
-            {/* Quick Link next to Inventory */}
-            <button
-              onClick={() => {
-                setModalInitialTab('roster');
-                setModalInitialTarget(null);
-                setShowVolunteerModal(true);
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-purple-500/15 border border-purple-500/20 bg-purple-500/10 text-purple-300 transition active:scale-95 group"
-              title="Manage Volunteers & Access PINs"
-            >
-              <Users className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
-              <span className="text-[11px] font-bold">Volunteers</span>
-            </button>
-
-            {/* Quick Link to Sign Missions & Dispatch */}
-            <button
-              onClick={() => {
-                setModalInitialTab('dispatch');
-                setModalInitialTarget(null);
-                setShowVolunteerModal(true);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-purple-500/20 border border-purple-500/30 bg-purple-500/15 text-purple-300 transition active:scale-95 group shadow-sm"
-              title="Sign Placement Missions & Field Dispatch"
-            >
-              <Target className="w-3.5 h-3.5 text-purple-400 group-hover:rotate-45 transition-transform" />
-              <span className="text-[11px] font-bold">Missions</span>
-              {activeMissionsCount > 0 && (
-                <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-purple-500/40 text-purple-100 border border-purple-400/40 font-mono animate-pulse">
-                  {activeMissionsCount}
-                </span>
-              )}
-            </button>
             <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
               <span className="w-2 h-2 rounded-full bg-rose-400 shadow-md shadow-rose-400/40" />
               <span className="text-[11px] font-medium opacity-60">Competitor</span>
