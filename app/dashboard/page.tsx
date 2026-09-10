@@ -775,41 +775,130 @@ export default function DashboardPage() {
         el.className = 'cursor-pointer group relative';
         const isSel = selectedMission?.id === mission.id;
 
-        el.innerHTML = `
-          <div style="position:relative;display:flex;align-items:center;justify-content:center;">
-            <div style="position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(168,85,247,0.3);top:-2px;left:-2px;animation:ripple 2s infinite ease-out;pointer-events:none;"></div>
-            ${isSel ? `<div style="position:absolute;inset:-4px;border-radius:18px;border:3px solid #a855f7;box-shadow:0 0 12px #a855f7;"></div>` : ''}
+        const isCritical = mission.priority === 'critical';
+        const isHigh = mission.priority === 'high';
 
+        const gradient = isCritical
+          ? 'linear-gradient(135deg, #f43f5e, #be123c)'
+          : isHigh
+          ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+          : 'linear-gradient(135deg, #9333ea, #4f46e5)';
+
+        const pointerColor = isCritical ? '#be123c' : isHigh ? '#d97706' : '#4f46e5';
+        const rippleColor = isCritical ? 'rgba(244,63,94,0.35)' : isHigh ? 'rgba(245,158,11,0.35)' : 'rgba(168,85,247,0.35)';
+        const glow = isCritical
+          ? '0 4px 18px rgba(244,63,94,0.6)'
+          : isHigh
+          ? '0 4px 18px rgba(245,158,11,0.5)'
+          : '0 4px 18px rgba(147,51,234,0.5)';
+
+        el.innerHTML = `
+          <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+            ${/* Concentric pulsing radar halo */''}
             <div style="
+              position: absolute;
+              width: 58px;
+              height: 58px;
+              border-radius: 50%;
+              top: -7px;
+              left: 50%;
+              transform: translateX(-50%);
+              background: ${rippleColor};
+              animation: ripple 2.2s infinite ease-out;
+              pointer-events: none;
+            "></div>
+
+            ${/* Pin Head */''}
+            <div class="mission-pin-head" style="
+              position: relative;
               width: 44px;
               height: 44px;
               border-radius: 14px;
-              background: linear-gradient(135deg, #9333ea, #4f46e5);
+              background: ${gradient};
               display: flex;
               align-items: center;
               justify-content: center;
-              box-shadow: 0 4px 16px rgba(147,51,234,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
-              border: 2px solid white;
+              box-shadow: ${isSel ? '0 0 0 3.5px #ffffff, 0 0 18px rgba(168,85,247,0.9)' : glow};
+              border: 2.5px solid white;
               transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             ">
-              <span style="font-size: 20px; line-height: 1;">🎯</span>
+              <span style="font-size: 21px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🎯</span>
+
+              ${/* Quantity badge on top corner */''}
+              <div style="
+                position: absolute;
+                top: -6px;
+                right: -6px;
+                background: #0f172a;
+                color: #38bdf8;
+                font-size: 9px;
+                font-weight: 900;
+                padding: 1.5px 5.5px;
+                border-radius: 9999px;
+                border: 1.5px solid white;
+                text-transform: uppercase;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+                letter-spacing: 0.5px;
+              ">
+                ${mission.quantity}×
+              </div>
             </div>
 
+            ${/* Downward pointer needle to coordinate */''}
             <div style="
-              position: absolute;
-              bottom: -5px;
-              right: -5px;
-              background: ${mission.priority === 'critical' ? '#f43f5e' : '#f59e0b'};
-              color: white;
-              font-size: 8px;
-              font-weight: 900;
-              padding: 1px 4px;
-              border-radius: 6px;
-              border: 1px solid white;
-              text-transform: uppercase;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              width: 0;
+              height: 0;
+              border-left: 7px solid transparent;
+              border-right: 7px solid transparent;
+              border-top: 8px solid ${pointerColor};
+              margin-top: -1px;
+              filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+            "></div>
+
+            ${/* Ground shadow dot */''}
+            <div style="
+              width: 10px;
+              height: 4px;
+              background: rgba(0,0,0,0.25);
+              border-radius: 50%;
+              margin-top: 2px;
+              filter: blur(1px);
+            "></div>
+
+            ${/* Crisp hover tooltip */''}
+            <div class="
+              hidden group-hover:flex
+              absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5
+              flex-col items-center pointer-events-none z-50
             ">
-              ${mission.quantity}×
+              <div style="
+                background: rgba(15,23,42,0.94);
+                backdrop-filter: blur(14px);
+                border-radius: 12px;
+                padding: 8px 12px;
+                white-space: nowrap;
+                box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+                border: 1px solid rgba(255,255,255,0.12);
+                text-align: center;
+              ">
+                <div style="display:flex;align-items:center;gap:5px;justify-content:center;">
+                  <span style="font-size:12px;">🎯</span>
+                  <span style="color:white;font-size:12px;font-weight:800;line-height:1.2;">${mission.title}</span>
+                </div>
+                <div style="color:${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'};font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">
+                  ${mission.priority} Priority · ${mission.quantity}× ${mission.sign_type.replace('_', ' ')}
+                </div>
+                <div style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:600;margin-top:2px;">
+                  Assigned to: ${mission.volunteer_name}
+                </div>
+              </div>
+              <div style="
+                width:0;height:0;
+                border-left:6px solid transparent;
+                border-right:6px solid transparent;
+                border-top:6px solid rgba(15,23,42,0.94);
+                margin-top:-1px;
+              "></div>
             </div>
           </div>
         `;
@@ -820,10 +909,20 @@ export default function DashboardPage() {
           setSelectedSign(null);
           setSelectedRec(null);
           setSelectedPrecinct(null);
-          m.flyTo({ center: [mission.lng, mission.lat], zoom: 15.8, pitch: is3D ? 55 : 0, duration: 800 });
+          m.flyTo({ center: [mission.lng, mission.lat], zoom: 16.2, pitch: is3D ? 55 : 0, duration: 800 });
         });
 
-        const marker = new mgl.Marker({ element: el }).setLngLat([mission.lng, mission.lat]).addTo(m);
+        // Hover scale
+        el.addEventListener('mouseenter', () => {
+          const pin = el.querySelector('.mission-pin-head') as HTMLElement;
+          if (pin && !isSel) pin.style.transform = 'scale(1.15)';
+        });
+        el.addEventListener('mouseleave', () => {
+          const pin = el.querySelector('.mission-pin-head') as HTMLElement;
+          if (pin && !isSel) pin.style.transform = 'scale(1)';
+        });
+
+        const marker = new mgl.Marker({ element: el, anchor: 'bottom' }).setLngLat([mission.lng, mission.lat]).addTo(m);
         missionMarkersRef.current.push({ marker, id: mission.id });
       });
     })();

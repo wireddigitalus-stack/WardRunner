@@ -180,7 +180,7 @@ export function intersectionsToGeoJSON(intersections: Intersection[]): any {
 function getFallbackStations(): TrafficStation[] {
   return [
     { id: 'F1', route: 'US-11W (Volunteer Pkwy)', location: 'Near The Pinnacle', aadt: 24800, truckPct: 8, lat: 36.5920, lng: -82.2020 },
-    { id: 'F2', route: 'US-11W (Volunteer Pkwy)', location: 'At Weaver Pike', aadt: 21400, truckPct: 7, lat: 36.5870, lng: -82.1856 },
+    { id: 'F2', route: 'US-11W (Volunteer Pkwy)', location: 'At Weaver Pike', aadt: 21400, truckPct: 7, lat: 36.5831, lng: -82.1859 },
     { id: 'F3', route: 'US-11W (Volunteer Pkwy)', location: 'South of Gate City Hwy', aadt: 18500, truckPct: 6, lat: 36.5780, lng: -82.1880 },
     { id: 'F4', route: 'US-11E/19 (State St)', location: 'Commercial strip', aadt: 21400, truckPct: 5, lat: 36.5960, lng: -82.2100 },
     { id: 'F5', route: 'US-11E/19 (State St)', location: 'Downtown core', aadt: 11200, truckPct: 3, lat: 36.5955, lng: -82.1890 },
@@ -189,7 +189,7 @@ function getFallbackStations(): TrafficStation[] {
     { id: 'F8', route: 'US-11/19 (Lee Hwy)', location: 'Mid-corridor', aadt: 13800, truckPct: 8, lat: 36.6030, lng: -82.1820 },
     { id: 'F9', route: 'SR-37 (Bluff City Hwy)', location: 'South Bristol', aadt: 12800, truckPct: 6, lat: 36.5750, lng: -82.1800 },
     { id: 'F10', route: 'SR-37 (Bluff City Hwy)', location: 'Near Bluff City', aadt: 10200, truckPct: 5, lat: 36.5650, lng: -82.1750 },
-    { id: 'F11', route: 'Weaver Pike', location: 'At Volunteer Pkwy', aadt: 8500, truckPct: 4, lat: 36.5890, lng: -82.2050 },
+    { id: 'F11', route: 'Weaver Pike', location: 'At Volunteer Pkwy', aadt: 8500, truckPct: 4, lat: 36.5831, lng: -82.1859 },
     { id: 'F12', route: 'King College Rd', location: 'Near King University', aadt: 6200, truckPct: 2, lat: 36.5700, lng: -82.1650 },
   ];
 }

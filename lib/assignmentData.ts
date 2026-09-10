@@ -19,8 +19,8 @@ export const TARGET_PRESETS: TargetPreset[] = [
     type: 'intersection',
     title: 'Volunteer Pkwy & Weaver Pike',
     subtitle: 'High-density intersection · 21,400 AADT',
-    lat: 36.5870,
-    lng: -82.1856,
+    lat: 36.5831,
+    lng: -82.1859,
     recommendedSign: 'yard_sign',
   },
   {
@@ -84,8 +84,8 @@ export const TARGET_PRESETS: TargetPreset[] = [
     type: 'precinct',
     title: 'Precinct 3A – Anderson School',
     subtitle: 'Key mobilization upside · West Bristol neighborhood grid',
-    lat: 36.5960,
-    lng: -82.2180,
+    lat: 36.5866,
+    lng: -82.1963,
     recommendedSign: 'yard_sign',
   },
   {
@@ -114,13 +114,13 @@ export const SEED_ASSIGNMENTS: VolunteerAssignment[] = [
     volunteer_name: 'Sarah Jenkins',
     target_type: 'intersection',
     title: 'Volunteer Pkwy & Weaver Pike',
-    street_address: '1000 Volunteer Pkwy, Bristol, TN',
+    street_address: '713 Volunteer Pkwy, Bristol, TN',
     sign_type: 'yard_sign',
     quantity: 2,
-    lat: 36.5870,
-    lng: -82.1856,
+    lat: 36.5831,
+    lng: -82.1859,
     priority: 'critical',
-    notes: 'Secure corner visibility near the service station intersection. Ensure signs are 15ft off curb.',
+    notes: 'Secure corner visibility at Parkway Executive Plaza / Weaver Pike turn. Ensure signs are 15ft off curb.',
     status: 'assigned',
     created_at: new Date(Date.now() - 3600000 * 3).toISOString(),
   },
@@ -132,8 +132,8 @@ export const SEED_ASSIGNMENTS: VolunteerAssignment[] = [
     street_address: '901 9th St, Bristol, TN',
     sign_type: 'yard_sign',
     quantity: 5,
-    lat: 36.5960,
-    lng: -82.2180,
+    lat: 36.5866,
+    lng: -82.1963,
     priority: 'high',
     notes: 'Target residential front lawns along 9th and 11th Street approaching Anderson Elementary.',
     status: 'assigned',
@@ -165,7 +165,40 @@ export function getStoredAssignments(): VolunteerAssignment[] {
       localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(SEED_ASSIGNMENTS));
       return SEED_ASSIGNMENTS;
     }
-    return JSON.parse(raw);
+    const parsed: VolunteerAssignment[] = JSON.parse(raw);
+    let migrated = false;
+    const updated = parsed.map(item => {
+      // Fix Volunteer Pkwy & Weaver Pike legacy coordinates
+      if (item.id === 'assign-1' || item.title?.includes('Weaver Pike')) {
+        if (item.lat === 36.5870 || item.lng === -82.1856 || item.street_address?.includes('1000 Volunteer')) {
+          migrated = true;
+          return {
+            ...item,
+            street_address: '713 Volunteer Pkwy, Bristol, TN',
+            lat: 36.5831,
+            lng: -82.1859,
+          };
+        }
+      }
+      // Fix Precinct 3A - Anderson legacy coordinates
+      if (item.id === 'assign-2' || item.title?.includes('Anderson')) {
+        if (item.lng === -82.2180 || (item.street_address?.includes('9th St') && item.lng < -82.20)) {
+          migrated = true;
+          return {
+            ...item,
+            street_address: '901 9th St, Bristol, TN',
+            lat: 36.5866,
+            lng: -82.1963,
+          };
+        }
+      }
+      return item;
+    });
+
+    if (migrated) {
+      localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(updated));
+    }
+    return updated;
   } catch {
     return SEED_ASSIGNMENTS;
   }

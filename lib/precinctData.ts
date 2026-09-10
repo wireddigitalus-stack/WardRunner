@@ -115,11 +115,11 @@ export const BRISTOL_PRECINCTS: PrecinctInfo[] = [
     presidentialTurnoutPct: 56.3,
     historicalVotesCast: 708,
     earlyVotingRatio: 46.5,
-    center: [-82.2180, 36.5960],
+    center: [-82.1963, 36.5866],
     color: '#f59e0b', // Amber (Mobilization target)
     priority: 'Mobilization Target',
-    corridorFocus: 'West State Street (US-11E) & 24th St',
-    description: 'Western commercial gateway and neighborhood grid. Highest upside for targeted turnout mobilization and yard sign presence.',
+    corridorFocus: '9th & 11th Street / West State Street',
+    description: 'Western commercial gateway and neighborhood grid around Anderson Elementary. Highest upside for targeted turnout mobilization and yard sign presence.',
   },
 ];
 
@@ -254,13 +254,13 @@ export const BRISTOL_PRECINCTS_GEOJSON = {
         type: 'Polygon',
         coordinates: [
           [
-            [-82.2040, 36.5910],
-            [-82.2020, 36.5960],
+            [-82.1940, 36.5910],
+            [-82.1920, 36.5960],
             [-82.1760, 36.5970],
             [-82.1760, 36.5860],
-            [-82.1950, 36.5850],
-            [-82.2150, 36.5820],
-            [-82.2040, 36.5910],
+            [-82.1850, 36.5850],
+            [-82.1940, 36.5850],
+            [-82.1940, 36.5910],
           ],
         ],
       },
@@ -283,9 +283,10 @@ export const BRISTOL_PRECINCTS_GEOJSON = {
         coordinates: [
           [
             [-82.2500, 36.5920],
-            [-82.2020, 36.5960],
-            [-82.2040, 36.5910],
-            [-82.2150, 36.5820],
+            [-82.1920, 36.5960],
+            [-82.1940, 36.5910],
+            [-82.1940, 36.5850],
+            [-82.2050, 36.5820],
             [-82.2380, 36.5750],
             [-82.2500, 36.5850],
             [-82.2500, 36.5920],
