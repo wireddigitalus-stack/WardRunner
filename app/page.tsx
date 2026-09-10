@@ -28,8 +28,11 @@ export default function HomePage() {
             Pilot Campaign: Melissa K. Brown for Bristol TN City Council
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-            Yard sign intelligence for campaigns that refuse to overpay.
+            Play it Smart with Yard Sign Intelligence
           </h2>
+          <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400 bg-clip-text text-transparent">
+            The Science of visibility.
+          </p>
           <p className="text-slate-400 text-base md:text-lg max-w-2xl">
             Down-ballot races cannot afford $1,000+/mo legacy voter databases. WardRunner delivers a sub-10-second mobile tool for volunteers and complete visibility over territory coverage and competitor placements.
           </p>
