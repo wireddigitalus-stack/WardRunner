@@ -26,7 +26,7 @@ interface MapSearchBarProps {
 // Major Bristol landmarks and high-traffic corridors for instant fuzzy lookup
 const BRISTOL_KEY_LOCATIONS = [
   { title: 'State Street (Downtown)', subtitle: 'US-11E · 21,500 AADT · Core Arterial', lat: 36.5951, lng: -82.1887 },
-  { title: 'Volunteer Parkway', subtitle: 'US-11W · 28,400 AADT · Main Commercial Corridor', lat: 36.5880, lng: -82.1950 },
+  { title: 'Volunteer Parkway', subtitle: 'US-11W · 28,400 AADT · Main Commercial Corridor', lat: 36.5880, lng: -82.1860 },
   { title: 'Lee Highway & Exit 7', subtitle: 'US-11/19 · 19,200 AADT · Northbound Arterial', lat: 36.6085, lng: -82.1720 },
   { title: 'Bluff City Highway', subtitle: 'TN-37 · 14,800 AADT · Southbound Commuter', lat: 36.5840, lng: -82.1810 },
   { title: 'West State Street & 24th', subtitle: 'West Bristol Commercial Gateway', lat: 36.6030, lng: -82.1920 },

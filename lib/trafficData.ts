@@ -180,7 +180,7 @@ export function intersectionsToGeoJSON(intersections: Intersection[]): any {
 function getFallbackStations(): TrafficStation[] {
   return [
     { id: 'F1', route: 'US-11W (Volunteer Pkwy)', location: 'Near The Pinnacle', aadt: 24800, truckPct: 8, lat: 36.5920, lng: -82.2020 },
-    { id: 'F2', route: 'US-11W (Volunteer Pkwy)', location: 'At Weaver Pike', aadt: 21400, truckPct: 7, lat: 36.5870, lng: -82.1950 },
+    { id: 'F2', route: 'US-11W (Volunteer Pkwy)', location: 'At Weaver Pike', aadt: 21400, truckPct: 7, lat: 36.5870, lng: -82.1856 },
     { id: 'F3', route: 'US-11W (Volunteer Pkwy)', location: 'South of Gate City Hwy', aadt: 18500, truckPct: 6, lat: 36.5780, lng: -82.1880 },
     { id: 'F4', route: 'US-11E/19 (State St)', location: 'Commercial strip', aadt: 21400, truckPct: 5, lat: 36.5960, lng: -82.2100 },
     { id: 'F5', route: 'US-11E/19 (State St)', location: 'Downtown core', aadt: 11200, truckPct: 3, lat: 36.5955, lng: -82.1890 },
@@ -198,7 +198,7 @@ function getFallbackIntersections(): Intersection[] {
   return [
     { id: 'I1', lat: 36.5955, lng: -82.1890, type: 'traffic_signals' },
     { id: 'I2', lat: 36.5920, lng: -82.2020, type: 'traffic_signals' },
-    { id: 'I3', lat: 36.5870, lng: -82.1950, type: 'traffic_signals' },
+    { id: 'I3', lat: 36.5870, lng: -82.1856, type: 'traffic_signals' },
     { id: 'I4', lat: 36.5960, lng: -82.2100, type: 'traffic_signals' },
     { id: 'I5', lat: 36.6030, lng: -82.1820, type: 'traffic_signals' },
     { id: 'I6', lat: 36.5780, lng: -82.1880, type: 'traffic_signals' },
