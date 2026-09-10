@@ -469,6 +469,7 @@ export default function DashboardPage() {
 
       map.on('load', () => {
         if (!alive) return;
+        try { map.resize(); } catch {}
 
         /* --- AADT corridor glow lines (Real Road Geometry) --- */
         map.addSource('corridors', {
@@ -584,6 +585,16 @@ export default function DashboardPage() {
 
     return () => { alive = false; mapRef.current?.remove(); mapRef.current = null; };
   }, [theme]);
+
+  // Ensure map canvas is resized and fully painted upon unlocking the security gate
+  useEffect(() => {
+    if (isCommandAuthorized && mapRef.current) {
+      try { mapRef.current.resize(); } catch {}
+      const t1 = setTimeout(() => { try { mapRef.current?.resize?.(); } catch {} }, 100);
+      const t2 = setTimeout(() => { try { mapRef.current?.resize?.(); } catch {} }, 400);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [isCommandAuthorized]);
 
   /* ---------- Layer Visibility ---------- */
   useEffect(() => {
@@ -1273,30 +1284,21 @@ export default function DashboardPage() {
   /* ================================================================
      RENDER
      ================================================================ */
-  if (checkedAuth && !isCommandAuthorized) {
-    return (
-      <CommandPinGate
-        onUnlock={() => setIsCommandAuthorized(true)}
-        masterPin="620620"
-      />
-    );
-  }
-
-  if (!checkedAuth) {
-    return (
-      <div className="h-screen w-screen bg-slate-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-black text-sm animate-pulse shadow-lg shadow-blue-500/20">
-            FC
-          </div>
-          <span className="text-xs font-mono text-slate-500 tracking-wider">Verifying Security Gate...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={`h-screen w-screen overflow-hidden relative font-sans transition-colors duration-500 ${isDark ? 'dark bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-900'}`}>
+
+      {/* Security Gate Overlay (Master PIN: 620620) */}
+      {(!checkedAuth || !isCommandAuthorized) && (
+        <CommandPinGate
+          onUnlock={() => {
+            setIsCommandAuthorized(true);
+            setTimeout(() => {
+              mapRef.current?.resize?.();
+            }, 100);
+          }}
+          masterPin="620620"
+        />
+      )}
 
       {/* ============================================================
           FULL-BLEED MAP CANVAS
