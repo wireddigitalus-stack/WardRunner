@@ -207,3 +207,48 @@ button, input, select {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(128, 128, 128, 0.5);
 }
+
+/* ============================================================
+   MAP LAYER STACKING: GUARANTEE ICONS ARE ABOVE PRECINCTS
+   ============================================================ */
+.precinct-ghost-watermark {
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+
+.precinct-ghost-watermark * {
+  pointer-events: none !important;
+}
+
+.sign-map-marker {
+  z-index: 100 !important;
+  pointer-events: auto !important;
+}
+
+.sign-map-marker:hover,
+.sign-map-marker.is-selected {
+  z-index: 9999 !important;
+}
+
+.mission-map-marker {
+  z-index: 150 !important;
+  pointer-events: auto !important;
+}
+
+.mission-map-marker:hover,
+.mission-map-marker.is-selected {
+  z-index: 9999 !important;
+}
+
+.scout-map-marker {
+  z-index: 200 !important;
+  pointer-events: auto !important;
+}
+
+.scout-map-marker:hover {
+  z-index: 9999 !important;
+}
+
+.search-target-marker {
+  z-index: 300 !important;
+}

@@ -295,6 +295,8 @@ export default function DashboardPage() {
     const mgl = (window as any).maplibregl;
     if (mgl) {
       const el = document.createElement('div');
+      el.className = 'search-target-marker';
+      el.style.zIndex = '300';
       el.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;pointer-events:none;">
           <div style="background:rgba(16,185,129,0.95);color:white;padding:5px 12px;border-radius:9999px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 4px 16px rgba(16,185,129,0.5);border:1.5px solid rgba(255,255,255,0.4);margin-bottom:3px;">
@@ -534,33 +536,13 @@ export default function DashboardPage() {
           },
         });
 
-        // Precinct hover tooltip and click
+        // Precinct hover cursor and click to inspect
         try {
-          const precinctPopup = new mgl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
-          map.on('mouseenter', 'precincts-fill', (e: any) => {
+          map.on('mouseenter', 'precincts-fill', () => {
             map.getCanvas().style.cursor = 'pointer';
-            const f = e.features?.[0];
-            if (!f) return;
-            const p = f.properties;
-            precinctPopup.setLngLat(e.lngLat)
-              .setHTML(`<div style="background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);border-radius:12px;padding:8px 12px;border:1px solid rgba(255,255,255,0.15);box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span style="background:${p.color}30;color:${p.color};font-weight:900;font-size:10px;padding:2px 6px;border-radius:6px;border:1px solid ${p.color}60;">${p.code}</span>
-                  <span style="color:white;font-size:12px;font-weight:800;">${p.name.replace('Precinct ', '')}</span>
-                </div>
-                <div style="color:rgba(255,255,255,0.7);font-size:10px;margin-top:4px;">
-                  📍 ${p.pollingPlace}
-                </div>
-                <div style="display:flex;gap:10px;margin-top:6px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.1);font-size:10px;">
-                  <span style="color:#38bdf8;font-weight:700;">${Number(p.registered).toLocaleString()} voters</span>
-                  <span style="color:#10b981;font-weight:700;">${p.turnout}% muni turnout</span>
-                </div>
-              </div>`)
-              .addTo(map);
           });
           map.on('mouseleave', 'precincts-fill', () => {
             map.getCanvas().style.cursor = '';
-            precinctPopup.remove();
           });
           map.on('click', 'precincts-fill', (e: any) => {
             const f = e.features?.[0];
@@ -774,10 +756,11 @@ export default function DashboardPage() {
 
       filtered.forEach((sign, i) => {
         const el = document.createElement('div');
-        el.style.cssText = 'cursor:pointer;';
         const isComp = sign.is_competitor;
         const isBig  = ['large_sign', 'banner', 'billboard'].includes(sign.sign_type);
         const isSel  = selectedSign?.id === sign.id;
+        el.className = `sign-map-marker ${isSel ? 'is-selected' : ''}`;
+        el.style.cssText = `cursor:pointer; z-index:${isSel ? 500 : 100}; position:relative;`;
 
         // High-contrast solid colors — no subtle gradients, maximum readability
         const bgColor = isComp ? '#e11d48' : isBig ? '#2563eb' : '#059669';
@@ -964,7 +947,7 @@ export default function DashboardPage() {
           if (pin && !isSel) pin.style.transform = useDotMode ? 'scale(1.4)' : 'scale(1.15)';
         });
         el.addEventListener('mouseleave', () => {
-          el.style.zIndex = '';
+          el.style.zIndex = isSel ? '500' : '100';
           const pin = (el.querySelector('.sign-pin-head') || el.querySelector('.street-dot')) as HTMLElement;
           if (pin && !isSel) pin.style.transform = 'scale(1)';
         });
@@ -991,8 +974,9 @@ export default function DashboardPage() {
 
       activeAssignments.forEach(mission => {
         const el = document.createElement('div');
-        el.className = 'cursor-pointer group relative';
         const isSel = selectedMission?.id === mission.id;
+        el.className = `mission-map-marker cursor-pointer group relative ${isSel ? 'is-selected' : ''}`;
+        el.style.cssText = `cursor:pointer; z-index:${isSel ? 600 : 150}; position:relative;`;
 
         const isCritical = mission.priority === 'critical';
         const isHigh = mission.priority === 'high';
@@ -1233,7 +1217,7 @@ export default function DashboardPage() {
           if (pin && !isSel) pin.style.transform = useDotMode ? 'scale(1.3)' : 'scale(1.15)';
         });
         el.addEventListener('mouseleave', () => {
-          el.style.zIndex = '';
+          el.style.zIndex = isSel ? '600' : '150';
           const pin = (el.querySelector('.mission-pin-head') || el.querySelector('.mission-street-dot')) as HTMLElement;
           if (pin && !isSel) pin.style.transform = 'scale(1)';
         });
@@ -2200,7 +2184,10 @@ export default function DashboardPage() {
           // Drop gold preview pins with click handlers
           recs.forEach((rec, i) => {
             const el = document.createElement('div');
-            el.className = 'cursor-pointer hover:scale-110 active:scale-95 transition-transform';
+            el.className = 'scout-map-marker cursor-pointer hover:scale-110 active:scale-95 transition-transform';
+            el.style.cssText = 'cursor:pointer; z-index:200; position:relative;';
+            el.addEventListener('mouseenter', () => { el.style.zIndex = '9999'; });
+            el.addEventListener('mouseleave', () => { el.style.zIndex = '200'; });
             el.innerHTML = `
               <div class="animate-pin-drop" style="animation-delay:${i * 100}ms">
                 <div class="relative flex flex-col items-center">
