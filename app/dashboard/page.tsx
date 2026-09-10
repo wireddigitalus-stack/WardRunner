@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Sign, SignType, Recommendation, InventoryStock } from '@/lib/types';
 import { getTrafficData, stationsToGeoJSON, intersectionsToGeoJSON, TrafficStation, Intersection } from '@/lib/trafficData';
 import realCorridors from '@/lib/realCorridors.json';
 import SmartScout from './components/SmartScout';
@@ -10,11 +9,16 @@ import VolunteerManagerModal from './components/VolunteerManagerModal';
 import MapSearchBar from './components/MapSearchBar';
 import PrecinctLeaderboard from './components/PrecinctLeaderboard';
 import PrecinctDetailCard from './components/PrecinctDetailCard';
+import MissionDetailCard from './components/MissionDetailCard';
+import MissionsDrawerTab from './components/MissionsDrawerTab';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
+import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
+import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment } from '@/lib/types';
 import DictateButton from '@/app/components/DictateButton';
 import {
   Vote,
   Users,
+  Target,
   Download,
   Layers,
   TrendingUp,
@@ -137,19 +141,31 @@ export default function DashboardPage() {
     targetType?: 'intersection' | 'precinct' | 'scout_rec' | 'custom';
   } | null>(null);
 
+  // Dispatched Sign Missions State
+  const [assignments, setAssignments] = useState<VolunteerAssignment[]>([]);
+  const [selectedMission, setSelectedMission] = useState<VolunteerAssignment | null>(null);
+  const missionMarkersRef = useRef<any[]>([]);
+
   // Voting Precincts & Turnout State
   const [showPrecincts, setShowPrecincts] = useState(true);
   const [selectedPrecinct, setSelectedPrecinct] = useState<PrecinctInfo | null>(null);
 
-  // Drawer Active Tab ('signs' | 'inventory' | 'precincts')
-  const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts'>('signs');
+  // Drawer Active Tab ('signs' | 'inventory' | 'precincts' | 'missions')
+  const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts' | 'missions'>('signs');
 
-  // Load saved inventory stock from localStorage
+  // Load saved inventory stock and dispatched assignments from localStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('wardrunner_inventory_stock');
       if (saved) setInventoryStock(JSON.parse(saved));
     } catch {}
+
+    const loadAssigns = () => {
+      setAssignments(getStoredAssignments());
+    };
+    loadAssigns();
+    window.addEventListener('wardrunner_assignments_updated', loadAssigns);
+    return () => window.removeEventListener('wardrunner_assignments_updated', loadAssigns);
   }, []);
 
   const updateStockQuantity = (type: keyof InventoryStock, delta: number) => {
@@ -270,6 +286,10 @@ export default function DashboardPage() {
     highImpact: signs.filter(s => !s.is_competitor && ['large_sign', 'banner', 'billboard'].includes(s.sign_type)).length,
     total:      signs.length,
   }), [signs]);
+
+  const activeMissionsCount = useMemo(() => {
+    return assignments.filter(a => a.status !== 'completed').length;
+  }, [assignments]);
 
   /* ---------- Inventory Supply Calculations ---------- */
   const inventoryStats = useMemo(() => {
@@ -736,6 +756,79 @@ export default function DashboardPage() {
     })();
   }, [filtered, selectedSign, is3D]);
 
+  // Render Dispatched Sign Missions on Map
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m) return;
+
+    (async () => {
+      const mgl = (await import('maplibre-gl')).default;
+
+      // Clear old mission markers
+      missionMarkersRef.current.forEach(item => item.marker?.remove?.());
+      missionMarkersRef.current = [];
+
+      const activeAssignments = assignments.filter(a => a.status !== 'completed');
+
+      activeAssignments.forEach(mission => {
+        const el = document.createElement('div');
+        el.className = 'cursor-pointer group relative';
+        const isSel = selectedMission?.id === mission.id;
+
+        el.innerHTML = `
+          <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+            <div style="position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(168,85,247,0.3);top:-2px;left:-2px;animation:ripple 2s infinite ease-out;pointer-events:none;"></div>
+            ${isSel ? `<div style="position:absolute;inset:-4px;border-radius:18px;border:3px solid #a855f7;box-shadow:0 0 12px #a855f7;"></div>` : ''}
+
+            <div style="
+              width: 44px;
+              height: 44px;
+              border-radius: 14px;
+              background: linear-gradient(135deg, #9333ea, #4f46e5);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 4px 16px rgba(147,51,234,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+              border: 2px solid white;
+              transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            ">
+              <span style="font-size: 20px; line-height: 1;">🎯</span>
+            </div>
+
+            <div style="
+              position: absolute;
+              bottom: -5px;
+              right: -5px;
+              background: ${mission.priority === 'critical' ? '#f43f5e' : '#f59e0b'};
+              color: white;
+              font-size: 8px;
+              font-weight: 900;
+              padding: 1px 4px;
+              border-radius: 6px;
+              border: 1px solid white;
+              text-transform: uppercase;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            ">
+              ${mission.quantity}×
+            </div>
+          </div>
+        `;
+
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelectedMission(mission);
+          setSelectedSign(null);
+          setSelectedRec(null);
+          setSelectedPrecinct(null);
+          m.flyTo({ center: [mission.lng, mission.lat], zoom: 15.8, pitch: is3D ? 55 : 0, duration: 800 });
+        });
+
+        const marker = new mgl.Marker({ element: el }).setLngLat([mission.lng, mission.lat]).addTo(m);
+        missionMarkersRef.current.push({ marker, id: mission.id });
+      });
+    })();
+  }, [assignments, selectedMission, is3D]);
+
   /* ---------- Actions ---------- */
   const toggle3D = useCallback(() => {
     const m = mapRef.current; if (!m) return;
@@ -818,12 +911,35 @@ export default function DashboardPage() {
             </div>
             {/* Quick Link next to Inventory */}
             <button
-              onClick={() => setShowVolunteerModal(true)}
+              onClick={() => {
+                setModalInitialTab('roster');
+                setModalInitialTarget(null);
+                setShowVolunteerModal(true);
+              }}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-purple-500/15 border border-purple-500/20 bg-purple-500/10 text-purple-300 transition active:scale-95 group"
               title="Manage Volunteers & Access PINs"
             >
               <Users className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
-              <span className="text-[11px] font-bold">Volunteers & PINs</span>
+              <span className="text-[11px] font-bold">Volunteers</span>
+            </button>
+
+            {/* Quick Link to Sign Missions & Dispatch */}
+            <button
+              onClick={() => {
+                setModalInitialTab('dispatch');
+                setModalInitialTarget(null);
+                setShowVolunteerModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-purple-500/20 border border-purple-500/30 bg-purple-500/15 text-purple-300 transition active:scale-95 group shadow-sm"
+              title="Sign Placement Missions & Field Dispatch"
+            >
+              <Target className="w-3.5 h-3.5 text-purple-400 group-hover:rotate-45 transition-transform" />
+              <span className="text-[11px] font-bold">Missions</span>
+              {activeMissionsCount > 0 && (
+                <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-purple-500/40 text-purple-100 border border-purple-400/40 font-mono animate-pulse">
+                  {activeMissionsCount}
+                </span>
+              )}
             </button>
             <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
               <span className="w-2 h-2 rounded-full bg-rose-400 shadow-md shadow-rose-400/40" />
@@ -839,14 +955,37 @@ export default function DashboardPage() {
 
           {/* — Right Controls — */}
           <div className="pointer-events-auto flex items-center gap-2 animate-slide-up" style={{ animationDelay: '160ms' }}>
+            {/* Quick Access to Sign Missions on all screen sizes */}
+            <button
+              onClick={() => {
+                setModalInitialTab('dispatch');
+                setModalInitialTarget(null);
+                setShowVolunteerModal(true);
+              }}
+              className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 shadow-lg shadow-purple-500/10 active:scale-95"
+              title="Sign Placement Missions & Field Dispatch"
+            >
+              <Target className="w-4 h-4 text-purple-400" />
+              <span className="hidden sm:inline">Missions</span>
+              {activeMissionsCount > 0 && (
+                <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-purple-500/40 text-purple-100 border border-purple-400/40">
+                  {activeMissionsCount}
+                </span>
+              )}
+            </button>
+
             {/* Quick Access to Volunteers Modal on all screen sizes */}
             <button
-              onClick={() => setShowVolunteerModal(true)}
-              className="glass rounded-2xl px-3.5 py-2 flex items-center gap-2 hover:scale-105 transition-all text-xs font-bold border border-purple-500/25 hover:border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 shadow-lg shadow-purple-500/10 active:scale-95"
+              onClick={() => {
+                setModalInitialTab('roster');
+                setModalInitialTarget(null);
+                setShowVolunteerModal(true);
+              }}
+              className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-white/20 text-slate-300 hover:text-white active:scale-95"
               title="Manage Volunteers & Field PINs"
             >
               <Users className="w-4 h-4 text-purple-400" />
-              <span className="hidden sm:inline">Volunteers</span>
+              <span className="hidden md:inline">Volunteers</span>
             </button>
 
             {/* Drawer Toggle */}
@@ -1126,10 +1265,10 @@ export default function DashboardPage() {
             </div>
 
             {/* Drawer Tabs */}
-            <div className={`grid grid-cols-3 gap-1 p-2 border-b shrink-0 ${isDark ? 'border-white/[0.06] bg-black/20' : 'border-black/[0.06] bg-black/[0.02]'}`}>
+            <div className={`grid grid-cols-4 gap-1 p-2 border-b shrink-0 ${isDark ? 'border-white/[0.06] bg-black/20' : 'border-black/[0.06] bg-black/[0.02]'}`}>
               <button
                 onClick={() => setDrawerTab('signs')}
-                className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
                   drawerTab === 'signs'
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm'
                     : 'text-slate-400 hover:text-white'
@@ -1141,7 +1280,7 @@ export default function DashboardPage() {
 
               <button
                 onClick={() => setDrawerTab('precincts')}
-                className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
                   drawerTab === 'precincts'
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm'
                     : 'text-slate-400 hover:text-white'
@@ -1152,15 +1291,32 @@ export default function DashboardPage() {
               </button>
 
               <button
+                onClick={() => setDrawerTab('missions')}
+                className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
+                  drawerTab === 'missions'
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Target className="w-3.5 h-3.5 text-purple-400" />
+                <span>Missions</span>
+                {activeMissionsCount > 0 && (
+                  <span className="text-[9px] px-1 py-0.2 rounded-full bg-purple-500/40 text-purple-100 font-mono font-bold">
+                    {activeMissionsCount}
+                  </span>
+                )}
+              </button>
+
+              <button
                 onClick={() => setDrawerTab('inventory')}
-                className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
                   drawerTab === 'inventory'
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Package className="w-3.5 h-3.5" />
-                <span>Inventory</span>
+                <span>Stock</span>
               </button>
             </div>
 
@@ -1180,6 +1336,46 @@ export default function DashboardPage() {
                       pitch: is3D ? 50 : 0,
                       duration: 900,
                     });
+                  }}
+                  isDark={isDark}
+                />
+              )}
+
+              {drawerTab === 'missions' && (
+                <MissionsDrawerTab
+                  assignments={assignments}
+                  onOpenDispatch={() => {
+                    setModalInitialTab('dispatch');
+                    setModalInitialTarget(null);
+                    setShowVolunteerModal(true);
+                  }}
+                  onSelectMission={(m) => {
+                    setSelectedMission(m);
+                    setSelectedSign(null);
+                    setSelectedRec(null);
+                    setSelectedPrecinct(null);
+                    setDrawerOpen(false);
+                    mapRef.current?.flyTo({
+                      center: [m.lng, m.lat],
+                      zoom: 15.8,
+                      pitch: is3D ? 55 : 0,
+                      duration: 800,
+                    });
+                  }}
+                  onToggleComplete={(id) => {
+                    const updated = assignments.map(a => {
+                      if (a.id === id) {
+                        const isCompleted = a.status === 'completed';
+                        return {
+                          ...a,
+                          status: (isCompleted ? 'assigned' : 'completed') as any,
+                          completed_at: isCompleted ? undefined : new Date().toISOString(),
+                        };
+                      }
+                      return a;
+                    });
+                    setAssignments(updated);
+                    saveStoredAssignments(updated);
                   }}
                   isDark={isDark}
                 />
@@ -1558,6 +1754,36 @@ export default function DashboardPage() {
           });
           setModalInitialTab('dispatch');
           setShowVolunteerModal(true);
+        }}
+        isDark={isDark}
+      />
+
+      {/* ============================================================
+          SELECTED MISSION — DETAIL CARD (Bottom Center slide-up)
+          ============================================================ */}
+      <MissionDetailCard
+        mission={selectedMission}
+        onClose={() => setSelectedMission(null)}
+        onToggleComplete={(id) => {
+          const updated = assignments.map(a => {
+            if (a.id === id) {
+              const isCompleted = a.status === 'completed';
+              return {
+                ...a,
+                status: (isCompleted ? 'assigned' : 'completed') as any,
+                completed_at: isCompleted ? undefined : new Date().toISOString(),
+              };
+            }
+            return a;
+          });
+          setAssignments(updated);
+          saveStoredAssignments(updated);
+          if (selectedMission?.id === id) {
+            setSelectedMission(prev => prev ? { ...prev, status: prev.status === 'completed' ? 'assigned' : 'completed' } : null);
+          }
+        }}
+        onFlyTo={(lat, lng) => {
+          mapRef.current?.flyTo({ center: [lng, lat], zoom: 16, pitch: is3D ? 55 : 0, duration: 800 });
         }}
         isDark={isDark}
       />
