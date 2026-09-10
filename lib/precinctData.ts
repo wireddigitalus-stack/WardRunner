@@ -30,7 +30,7 @@ export const BRISTOL_PRECINCTS: PrecinctInfo[] = [
     presidentialTurnoutPct: 71.8,
     historicalVotesCast: 1597,
     earlyVotingRatio: 62.4,
-    center: [-82.1640, 36.5980],
+    center: [-82.1550, 36.5910],
     color: '#10b981', // Emerald (Highest Municipal Turnout)
     priority: 'Stronghold',
     corridorFocus: 'King College Rd & US-11/19',
@@ -47,7 +47,7 @@ export const BRISTOL_PRECINCTS: PrecinctInfo[] = [
     presidentialTurnoutPct: 68.9,
     historicalVotesCast: 1604,
     earlyVotingRatio: 58.1,
-    center: [-82.1950, 36.5680],
+    center: [-82.1950, 36.5660],
     color: '#059669', // Emerald
     priority: 'High Impact',
     corridorFocus: 'Volunteer Pkwy (US-11W) & Bluff City Hwy',
@@ -64,7 +64,7 @@ export const BRISTOL_PRECINCTS: PrecinctInfo[] = [
     presidentialTurnoutPct: 65.2,
     historicalVotesCast: 976,
     earlyVotingRatio: 54.0,
-    center: [-82.1450, 36.5500],
+    center: [-82.1380, 36.5500],
     color: '#38bdf8', // Sky
     priority: 'Swing Zone',
     corridorFocus: 'Weaver Pike & South Holston Lake Approach',
@@ -81,7 +81,7 @@ export const BRISTOL_PRECINCTS: PrecinctInfo[] = [
     presidentialTurnoutPct: 64.0,
     historicalVotesCast: 1147,
     earlyVotingRatio: 52.8,
-    center: [-82.2450, 36.5620],
+    center: [-82.2450, 36.5600],
     color: '#8b5cf6', // Purple
     priority: 'Swing Zone',
     corridorFocus: 'Highway 126 & Airport Bypass',
@@ -98,7 +98,7 @@ export const BRISTOL_PRECINCTS: PrecinctInfo[] = [
     presidentialTurnoutPct: 61.4,
     historicalVotesCast: 978,
     earlyVotingRatio: 49.3,
-    center: [-82.1887, 36.5920],
+    center: [-82.1850, 36.5910],
     color: '#0284c7', // Sky blue
     priority: 'High Impact',
     corridorFocus: 'State Street Historic Core & MLK Jr Blvd',
@@ -115,7 +115,7 @@ export const BRISTOL_PRECINCTS: PrecinctInfo[] = [
     presidentialTurnoutPct: 56.3,
     historicalVotesCast: 708,
     earlyVotingRatio: 46.5,
-    center: [-82.1963, 36.5866],
+    center: [-82.2220, 36.5855],
     color: '#f59e0b', // Amber (Mobilization target)
     priority: 'Mobilization Target',
     corridorFocus: '9th & 11th Street / West State Street',

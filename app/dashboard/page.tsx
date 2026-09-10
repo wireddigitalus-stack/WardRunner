@@ -575,7 +575,7 @@ export default function DashboardPage() {
         el.style.userSelect = 'none';
         el.style.zIndex = '1';
 
-        // Large ghosted typography watermark directly in the middle of each precinct's color overlay
+        // Compact ghosted typography watermark directly in the middle of each precinct's color overlay
         el.innerHTML = `
           <div style="
             display: flex;
@@ -585,56 +585,57 @@ export default function DashboardPage() {
             text-align: center;
             pointer-events: none;
             user-select: none;
-            transform: ${isSel ? 'scale(1.08)' : 'scale(1)'};
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(2px);
+            border: 1px solid ${p.color}25;
+            max-width: 120px;
+            transform: ${isSel ? 'scale(1.1)' : 'scale(1)'};
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
           ">
-            ${/* Ghosted Precinct Code (e.g. 3A, 2A, 1B) in large bold font */''}
+            ${/* Compact Ghosted Precinct Code (e.g. 3A, 2A, 1B) */''}
             <div style="
-              font-size: 54px;
+              font-size: 22px;
               font-weight: 900;
               font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              letter-spacing: -0.03em;
-              line-height: 0.85;
+              letter-spacing: -0.02em;
+              line-height: 1;
               color: ${p.color};
-              opacity: ${isSel ? 0.70 : useDotMode ? 0.28 : 0.36};
-              text-shadow: 0 0 28px ${p.color}80, 0 2px 10px rgba(0,0,0,0.9);
+              opacity: ${isSel ? 0.95 : 0.75};
+              text-shadow: 0 0 12px ${p.color}60, 0 1px 4px rgba(0,0,0,0.9);
             ">
               ${p.code}
             </div>
 
-            ${/* Ghosted Precinct Name (e.g. ANDERSON, AVOCA, SLATER CENTER) */''}
+            ${/* Compact Ghosted Precinct Name */''}
             <div style="
-              font-size: 13px;
+              font-size: 9px;
               font-weight: 800;
-              letter-spacing: 0.22em;
+              letter-spacing: 0.12em;
               text-transform: uppercase;
               color: white;
-              opacity: ${isSel ? 0.90 : useDotMode ? 0.40 : 0.50};
-              margin-top: 5px;
-              text-shadow: 0 2px 8px rgba(0,0,0,0.95), 0 0 16px rgba(0,0,0,0.8);
+              opacity: ${isSel ? 0.95 : 0.70};
+              margin-top: 2px;
+              text-shadow: 0 1px 4px rgba(0,0,0,0.95);
               white-space: nowrap;
             ">
               ${p.name.replace('Precinct ', '').replace(/^[0-9][A-Z]\s*–\s*/, '')}
             </div>
 
-            ${/* Ghosted Turnout & Polling Location */''}
+            ${/* Compact Turnout */''}
             <div style="
-              display: flex;
-              align-items: center;
-              gap: 6px;
-              margin-top: 3px;
-              font-size: 10.5px;
+              font-size: 8px;
               font-weight: 700;
-              letter-spacing: 0.08em;
+              letter-spacing: 0.05em;
               text-transform: uppercase;
               color: ${p.color};
-              opacity: ${isSel ? 0.95 : useDotMode ? 0.45 : 0.55};
-              text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+              opacity: ${isSel ? 0.95 : 0.75};
+              margin-top: 1px;
+              text-shadow: 0 1px 3px rgba(0,0,0,0.95);
               white-space: nowrap;
             ">
-              <span>${p.historicTurnoutPct}% Turnout</span>
-              <span style="opacity: 0.5;">·</span>
-              <span style="color: rgba(255,255,255,0.8);">${p.pollingPlace}</span>
+              ${p.historicTurnoutPct}% Turnout
             </div>
           </div>
         `;
