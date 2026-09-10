@@ -28,7 +28,8 @@ export default function HomePage() {
             Pilot Campaign: Melissa K. Brown for Bristol TN City Council
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-            Play it Smart with<br />Yard Sign Intelligence
+            <span className="block">Play it Smart with</span>
+            <span className="block">Yard Sign Intelligence</span>
           </h2>
           <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400 bg-clip-text text-transparent">
             The Science of visibility.
