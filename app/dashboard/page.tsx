@@ -172,6 +172,7 @@ export default function DashboardPage() {
   const [showPrecincts, setShowPrecincts] = useState(true);
   const [selectedPrecinct, setSelectedPrecinct] = useState<PrecinctInfo | null>(null);
   const precinctMarkersRef = useRef<any[]>([]);
+  const [mapReady, setMapReady] = useState(false);
 
   // Signs Layer Toggle (Defaults to off per user preference)
   const [showSignsLayer, setShowSignsLayer] = useState(false);
@@ -703,6 +704,47 @@ export default function DashboardPage() {
             }
           });
         } catch {}
+
+        // Immediate creation of precinct letter watermarks (1A, 2A, 2B, 3A...) so they appear automatically
+        precinctMarkersRef.current.forEach(item => item.marker?.remove?.());
+        precinctMarkersRef.current = [];
+        BRISTOL_PRECINCTS.forEach(p => {
+          const el = document.createElement('div');
+          el.className = 'precinct-ghost-watermark';
+          el.style.zIndex = '5';
+          el.style.cursor = 'pointer';
+          el.innerHTML = `
+            <div style="
+              user-select: none;
+              font-size: 28px;
+              font-weight: 900;
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              letter-spacing: -0.03em;
+              line-height: 1;
+              color: ${p.color};
+              opacity: 0.88;
+              text-shadow: 0 0 16px ${p.color}80, 0 2px 8px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.95);
+              transition: transform 0.2s ease, opacity 0.2s ease;
+            ">
+              ${p.code}
+            </div>
+          `;
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setSelectedSign(null);
+            setSelectedRec(null);
+            setSelectedPrecinct(p);
+          });
+          const marker = new mgl.Marker({
+            element: el,
+            anchor: 'center',
+            pitchAlignment: 'viewport',
+            rotationAlignment: 'viewport',
+          }).setLngLat(p.center).addTo(map);
+          precinctMarkersRef.current.push({ marker, id: p.id });
+        });
+
+        setMapReady(true);
       });
 
       map.on('click', () => {
@@ -713,7 +755,7 @@ export default function DashboardPage() {
       mapRef.current = map;
     })();
 
-    return () => { alive = false; mapRef.current?.remove(); mapRef.current = null; };
+    return () => { alive = false; mapRef.current?.remove(); mapRef.current = null; setMapReady(false); };
   }, [theme]);
 
   // Ensure map canvas is resized and fully painted upon unlocking the security gate
@@ -742,7 +784,7 @@ export default function DashboardPage() {
     ['precincts-fill', 'precincts-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', pVis));
     ['volunteer-trails-glow', 'volunteer-trails-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', vVis));
     ['canvass-turf-glow', 'canvass-turf-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', rVis));
-  }, [showBoundary, showCorridors, showHeatmap, showPrecincts, showFieldForceLayer, showRoutesLayer, selectedRoute]);
+  }, [showBoundary, showCorridors, showHeatmap, showPrecincts, showFieldForceLayer, showRoutesLayer, selectedRoute, mapReady]);
 
   /* ---------- Precinct Center Badges on Map ---------- */
   useEffect(() => {
@@ -760,14 +802,12 @@ export default function DashboardPage() {
         const el = document.createElement('div');
         const isSel = selectedPrecinct?.id === p.id;
         el.className = 'precinct-ghost-watermark';
-        el.style.pointerEvents = 'none';
-        el.style.userSelect = 'none';
-        el.style.zIndex = '1';
+        el.style.zIndex = '5';
+        el.style.cursor = 'pointer';
 
         // Letters only watermark (e.g. 1A, 2A, 2B, 3A) directly on the map — no card container
         el.innerHTML = `
           <div style="
-            pointer-events: none;
             user-select: none;
             font-size: 28px;
             font-weight: 900;
@@ -775,7 +815,7 @@ export default function DashboardPage() {
             letter-spacing: -0.03em;
             line-height: 1;
             color: ${p.color};
-            opacity: ${isSel ? 1 : 0.82};
+            opacity: ${isSel ? 1 : 0.88};
             text-shadow: 0 0 16px ${p.color}80, 0 2px 8px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.95);
             transform: ${isSel ? 'scale(1.15)' : 'scale(1)'};
             transition: transform 0.2s ease, opacity 0.2s ease;
@@ -783,6 +823,13 @@ export default function DashboardPage() {
             ${p.code}
           </div>
         `;
+
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelectedSign(null);
+          setSelectedRec(null);
+          setSelectedPrecinct(p);
+        });
 
         const marker = new mgl.Marker({
           element: el,
@@ -793,7 +840,7 @@ export default function DashboardPage() {
         precinctMarkersRef.current.push({ marker, id: p.id });
       });
     })();
-  }, [showPrecincts, selectedPrecinct, is3D, useDotMode]);
+  }, [showPrecincts, selectedPrecinct, is3D, useDotMode, mapReady]);
 
   /* ---------- Traffic Heatmap Layer ---------- */
   useEffect(() => {
@@ -1605,7 +1652,7 @@ export default function DashboardPage() {
         }
       } catch {}
     })();
-  }, [routes, selectedRoute, showRoutesLayer]);
+  }, [routes, selectedRoute, showRoutesLayer, mapReady]);
 
   /* ---------- Actions ---------- */
   const toggle3D = useCallback(() => {
