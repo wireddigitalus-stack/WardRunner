@@ -19,7 +19,6 @@ import {
   Landmark,
   Building2,
   Navigation,
-  CircleDot,
   X,
 } from 'lucide-react';
 import type { Sign, SignType, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
@@ -128,7 +127,6 @@ export default function MobileVipBar({
     showPrecincts,
     showBoundary,
     showHeatmap,
-    useDotMode,
   ].filter(Boolean).length;
 
   // Toggle helpers for single-tap VIP switches
@@ -366,21 +364,6 @@ export default function MobileVipBar({
                 }`}
               >
                 <Flame className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* 9. Street Dot / Standard Pin View */}
-            {setUseDotMode && (
-              <button
-                onClick={() => setUseDotMode(!useDotMode)}
-                title={useDotMode ? "Switch to Standard Pins" : "Fine Street Dots"}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
-                  useDotMode
-                    ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/30'
-                    : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
-                }`}
-              >
-                <CircleDot className="w-4 h-4" />
               </button>
             )}
           </div>

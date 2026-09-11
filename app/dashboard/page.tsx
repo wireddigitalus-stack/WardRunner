@@ -2077,20 +2077,6 @@ export default function DashboardPage() {
               <span className="hidden md:inline">Roster</span>
             </button>
 
-            {/* Street-Level Dot View Quick Toggle */}
-            <button
-              onClick={() => setUseDotMode(!useDotMode)}
-              className={`glass rounded-2xl px-3 py-2 flex items-center gap-1.5 transition-all text-xs font-bold active:scale-95 ${
-                useDotMode
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-lg shadow-cyan-500/20'
-                  : 'hover:scale-105 border border-white/10 text-slate-300 hover:text-white'
-              }`}
-              title={useDotMode ? "Switch to standard pins" : "Filter off large icons to view street-level color coded dots"}
-            >
-              <CircleDot className={`w-4 h-4 ${useDotMode ? 'text-cyan-400' : 'text-slate-400'}`} />
-              <span className="hidden md:inline">{useDotMode ? 'Dots Active' : 'Street Dots'}</span>
-            </button>
-
             {/* Lock Field Command Security Gate */}
             <button
               onClick={handleLockCommand}
@@ -2196,22 +2182,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Street-Level Dot Mode Active Floating Banner Pill */}
-      {useDotMode && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto animate-slide-up">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/90 backdrop-blur-md border border-cyan-500/40 text-cyan-200 text-xs font-semibold shadow-xl">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400" />
-            <span>Street-Level Color Coded Dots Active</span>
-            <button
-              onClick={() => setUseDotMode(false)}
-              className="ml-1 text-[11px] text-slate-400 hover:text-white underline font-bold transition"
-            >
-              Reset to Pins
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ============================================================
           RIGHT-RAIL MAP CONTROLS (Desktop md: screens — 100% Unchanged)
           ============================================================ */}
@@ -2311,14 +2281,6 @@ export default function DashboardPage() {
             className={`p-2 rounded-xl transition-all ${showHeatmap ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30 shadow-md shadow-rose-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <Flame className="w-4 h-4" />
-          </button>
-          <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-          <button
-            onClick={() => setUseDotMode(!useDotMode)}
-            title={useDotMode ? "Switch to Standard Pin View" : "Street-Level Color Coded Dots (fine street view)"}
-            className={`p-2 rounded-xl transition-all ${useDotMode ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-lg shadow-cyan-500/25' : 'text-zinc-400 hover:text-zinc-200'}`}
-          >
-            <CircleDot className="w-4 h-4" />
           </button>
         </div>
       </div>
