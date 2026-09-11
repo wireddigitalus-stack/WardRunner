@@ -2228,19 +2228,29 @@ export default function DashboardPage() {
           >
             <Footprints className="w-4 h-4" />
           </button>
+          {/* Consolidated Field Ops & Turf Routes */}
           <button
-            onClick={() => setShowFieldForceLayer(!showFieldForceLayer)}
-            title={showFieldForceLayer ? "Hide Live Volunteer Trails" : "Show Live Volunteer Trails"}
-            className={`p-2 rounded-xl transition-all ${showFieldForceLayer ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-md shadow-emerald-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+            onClick={() => {
+              if (showFieldForceLayer || showRoutesLayer) {
+                setShowFieldForceLayer(false);
+                setShowRoutesLayer(false);
+              } else {
+                setShowFieldForceLayer(true);
+                setShowRoutesLayer(true);
+              }
+            }}
+            title={
+              (showFieldForceLayer || showRoutesLayer)
+                ? "Hide Field Operations & Turf Routes"
+                : "Show Field Operations & Turf Routes"
+            }
+            className={`p-2 rounded-xl transition-all ${
+              (showFieldForceLayer || showRoutesLayer)
+                ? 'bg-gradient-to-r from-emerald-500/25 to-teal-500/25 text-emerald-300 border border-emerald-500/40 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
           >
             <Users className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShowRoutesLayer(!showRoutesLayer)}
-            title={showRoutesLayer ? "Hide Canvass Turf Routes" : "Show Canvass Turf Routes"}
-            className={`p-2 rounded-xl transition-all ${showRoutesLayer ? 'bg-purple-500/25 text-purple-300 border border-purple-500/40 shadow-md shadow-purple-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
-          >
-            <Compass className="w-4 h-4" />
           </button>
           <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
           <button
@@ -3221,6 +3231,7 @@ export default function DashboardPage() {
             setShowSignsLayer(true);
             setShowCanvassLayer(true);
             setShowFieldForceLayer(true);
+            setShowRoutesLayer(true);
           }
         }}
         selectedVolunteer={selectedVolunteerFilter}
@@ -3230,6 +3241,7 @@ export default function DashboardPage() {
             setShowSignsLayer(true);
             setShowCanvassLayer(true);
             setShowFieldForceLayer(true);
+            setShowRoutesLayer(true);
             const ping = volunteerPings.find(p => p.volunteer_name.toLowerCase().trim() === vol.toLowerCase().trim());
             if (ping && mapRef.current) {
               mapRef.current.flyTo({ center: [ping.longitude, ping.latitude], zoom: 16, duration: 1000 });
@@ -3243,8 +3255,11 @@ export default function DashboardPage() {
           setShowSignsLayer(true);
           setShowCanvassLayer(true);
           setShowFieldForceLayer(true);
+          setShowRoutesLayer(true);
           mapRef.current?.flyTo({ center: [lng, lat], zoom: 16.5, duration: 1000 });
         }}
+        showRoutesLayer={showRoutesLayer}
+        setShowRoutesLayer={setShowRoutesLayer}
       />
 
       {/* ============================================================

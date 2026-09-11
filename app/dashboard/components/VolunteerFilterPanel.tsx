@@ -28,6 +28,8 @@ interface VolunteerFilterPanelProps {
   canvassRecords: CanvassRecord[];
   signs: Sign[];
   onFlyToVolunteer?: (lat: number, lng: number) => void;
+  showRoutesLayer?: boolean;
+  setShowRoutesLayer?: (show: boolean) => void;
 }
 
 const GROUPS = [
@@ -49,6 +51,8 @@ export default function VolunteerFilterPanel({
   canvassRecords,
   signs,
   onFlyToVolunteer,
+  showRoutesLayer,
+  setShowRoutesLayer,
 }: VolunteerFilterPanelProps) {
   if (!isOpen) return null;
 
@@ -138,6 +142,25 @@ export default function VolunteerFilterPanel({
             className="px-2 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-[10px] uppercase tracking-wider transition"
           >
             Show All
+          </button>
+        </div>
+      )}
+
+      {/* Quick Granular Option: Turf Walking Routes on Map */}
+      {setShowRoutesLayer && (
+        <div className="mb-2 p-2 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between text-xs">
+          <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+            <span>🚩</span> Show Turf Walking Loops
+          </span>
+          <button
+            onClick={() => setShowRoutesLayer(!showRoutesLayer)}
+            className={`px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
+              showRoutesLayer
+                ? 'bg-purple-500/25 text-purple-300 border border-purple-500/40 shadow-sm'
+                : 'bg-slate-800 text-slate-400 border border-white/5 hover:text-white'
+            }`}
+          >
+            {showRoutesLayer ? 'Visible' : 'Hidden'}
           </button>
         </div>
       )}

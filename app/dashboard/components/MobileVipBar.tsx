@@ -6,7 +6,6 @@ import {
   Target,
   Users,
   Footprints,
-  Compass,
   Vote,
   ChevronUp,
   ChevronDown,
@@ -117,13 +116,15 @@ export default function MobileVipBar({
   const contactsCount = canvassRecords.filter(r => r.result === 'contact').length;
   const contactRate = canvassRecords.length > 0 ? Math.round((contactsCount / canvassRecords.length) * 100) : 0;
 
-  // Active layers counter for badge
+  // Field Ops & Turf Routes unified state
+  const isFieldOpsActive = showFieldForceLayer || showRoutesLayer;
+
+  // Active layers counter for badge (Field Ops counted as single cohesive layer)
   const activeLayersCount = [
     showSignsLayer && (ownerFilter === 'ours' || ownerFilter === 'all'),
     showSignsLayer && (ownerFilter === 'theirs' || ownerFilter === 'all'),
     showCanvassLayer,
-    showFieldForceLayer,
-    showRoutesLayer,
+    isFieldOpsActive,
     showPrecincts,
     showBoundary,
     showHeatmap,
@@ -131,6 +132,16 @@ export default function MobileVipBar({
   ].filter(Boolean).length;
 
   // Toggle helpers for single-tap VIP switches
+  const toggleFieldOps = () => {
+    if (isFieldOpsActive) {
+      setShowFieldForceLayer(false);
+      setShowRoutesLayer(false);
+    } else {
+      setShowFieldForceLayer(true);
+      setShowRoutesLayer(true);
+    }
+  };
+
   const toggleOurSigns = () => {
     if (!showSignsLayer) {
       setShowSignsLayer(true);
@@ -299,30 +310,17 @@ export default function MobileVipBar({
               <Footprints className="w-4 h-4" />
             </button>
 
-            {/* 4. Field Force / Volunteers */}
+            {/* 4. Field Ops & Turf Routes (Consolidated) */}
             <button
-              onClick={() => setShowFieldForceLayer(!showFieldForceLayer)}
-              title={`Live Field Force (${activeVolunteersCount})`}
+              onClick={toggleFieldOps}
+              title={`Field Ops & Turf Routes (${activeVolunteersCount} active • ${routes.length} loops)`}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
-                showFieldForceLayer
-                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
+                isFieldOpsActive
+                  ? 'bg-gradient-to-br from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
                   : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
               <Users className="w-4 h-4" />
-            </button>
-
-            {/* 5. Turf Routes */}
-            <button
-              onClick={() => setShowRoutesLayer(!showRoutesLayer)}
-              title={`Canvass Turf Routes (${routes.length})`}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
-                showRoutesLayer
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-500/30'
-                  : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
-              }`}
-            >
-              <Compass className="w-4 h-4" />
             </button>
 
             {/* 6. Voting Precincts */}
