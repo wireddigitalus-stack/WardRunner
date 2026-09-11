@@ -3,8 +3,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PrecinctOS | Field Logistics & Yard Sign Intelligence',
-  description: 'Fast, mobile-first field logistics, yard sign intelligence, and precinct operations for political campaigns.',
+  title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
+  description: 'Fast, mobile-first field logistics, yard sign intelligence, and campaign operations for political campaigns.',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',

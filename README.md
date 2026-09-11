@@ -1,4 +1,4 @@
-# PrecinctOS 🏃‍♂️📍
+# CampaignOS 🏃‍♂️📍
 
 > **Fast, mobile-first field logistics, precinct operations, and yard sign intelligence purpose-built for down-ballot political campaigns.**
 

@@ -1,7 +1,7 @@
 {
-  "name": "PrecinctOS Field Ops",
-  "short_name": "PrecinctOS",
-  "description": "Rapid precinct field sign logistics and intelligence for campaigns",
+  "name": "CampaignOS Field Ops",
+  "short_name": "CampaignOS",
+  "description": "Rapid campaign field sign logistics and intelligence",
   "start_url": "/field",
   "display": "standalone",
   "background_color": "#020617",
