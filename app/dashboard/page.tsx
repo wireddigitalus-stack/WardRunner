@@ -781,7 +781,7 @@ export default function DashboardPage() {
     const rVis = (showRoutesLayer || selectedRoute) ? 'visible' : 'none';
     ['boundary-fill', 'boundary-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', bVis));
     ['corridor-glow', 'corridor-core', 'corridor-inner'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
-    ['traffic-heat-glow', 'traffic-heat-core'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', hVis));
+    ['campaign-signs-heatmap'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', hVis));
     ['precincts-fill', 'precincts-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', pVis));
     ['volunteer-trails-glow', 'volunteer-trails-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', vVis));
     ['canvass-turf-glow', 'canvass-turf-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', rVis));
@@ -843,66 +843,64 @@ export default function DashboardPage() {
     })();
   }, [showPrecincts, selectedPrecinct, is3D, useDotMode, mapReady]);
 
-  /* ---------- Traffic Heatmap Layer ---------- */
+  /* ---------- Campaign Sign Density Heatmap Layer ---------- */
   useEffect(() => {
     const m = mapRef.current;
-    if (!m || trafficStations.length === 0) return;
+    if (!m) return;
 
     (async () => {
-    const mgl = (await import('maplibre-gl')).default;
+      const addHeatmap = () => {
+        const geojsonData = {
+          type: 'FeatureCollection',
+          features: signs.filter(s => s.status === 'placed').map(s => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [+s.longitude, +s.latitude] },
+            properties: {
+              weight: s.sign_type === 'large_sign' || s.sign_type === 'banner' ? 2 : 1,
+            },
+          })),
+        };
 
-    const addHeatmap = () => {
-      if (m.getSource('traffic-stations')) {
-        (m.getSource('traffic-stations') as any).setData(stationsToGeoJSON(trafficStations));
-        return;
-      }
-      m.addSource('traffic-stations', { type: 'geojson', data: stationsToGeoJSON(trafficStations) });
-      // Outer glow
-      m.addLayer({
-        id: 'traffic-heat-glow', type: 'circle', source: 'traffic-stations',
-        paint: {
-          'circle-radius': ['interpolate', ['linear'], ['get', 'aadt'], 5000, 16, 12000, 28, 25000, 48],
-          'circle-color': ['interpolate', ['linear'], ['get', 'aadt'], 5000, '#22c55e', 12000, '#eab308', 20000, '#ef4444'],
-          'circle-opacity': 0.15,
-          'circle-blur': 1,
-        },
-      });
-      // Core dot
-      m.addLayer({
-        id: 'traffic-heat-core', type: 'circle', source: 'traffic-stations',
-        paint: {
-          'circle-radius': ['interpolate', ['linear'], ['get', 'aadt'], 5000, 5, 12000, 8, 25000, 13],
-          'circle-color': ['interpolate', ['linear'], ['get', 'aadt'], 5000, '#22c55e', 12000, '#eab308', 20000, '#ef4444'],
-          'circle-opacity': 0.7,
-          'circle-stroke-width': 1.5,
-          'circle-stroke-color': 'rgba(255,255,255,0.6)',
-        },
-      });
+        if (m.getSource('campaign-signs-heat')) {
+          (m.getSource('campaign-signs-heat') as any).setData(geojsonData);
+          return;
+        }
 
-      // Popup on hover (use dynamically imported mgl)
-      try {
-        const popup = new mgl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
-        m.on('mouseenter', 'traffic-heat-core', (e: any) => {
-          m.getCanvas().style.cursor = 'pointer';
-          const f = e.features?.[0];
-          if (!f) return;
-          const p = f.properties;
-          popup.setLngLat(e.lngLat)
-            .setHTML(`<div style="background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);border-radius:10px;padding:8px 12px;border:1px solid rgba(255,255,255,0.1);">
-              <div style="color:white;font-size:12px;font-weight:800;">${p.route}</div>
-              <div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:2px;">${p.location || ''}</div>
-              <div style="color:#fbbf24;font-size:13px;font-weight:900;margin-top:4px;">${Number(p.aadt).toLocaleString()} <span style="font-size:9px;color:rgba(255,255,255,0.4);">AADT</span></div>
-            </div>`)
-            .addTo(m);
+        m.addSource('campaign-signs-heat', { type: 'geojson', data: geojsonData as any });
+
+        m.addLayer({
+          id: 'campaign-signs-heatmap',
+          type: 'heatmap',
+          source: 'campaign-signs-heat',
+          maxzoom: 16,
+          paint: {
+            'heatmap-weight': ['interpolate', ['linear'], ['get', 'weight'], 1, 0.5, 2, 1],
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 11, 0.8, 15, 2.2],
+            'heatmap-color': [
+              'interpolate',
+              ['linear'],
+              ['heatmap-density'],
+              0, 'rgba(0, 0, 0, 0)',
+              0.2, 'rgba(20, 184, 166, 0.35)',
+              0.4, 'rgba(16, 185, 129, 0.55)',
+              0.7, 'rgba(245, 158, 11, 0.75)',
+              1, 'rgba(244, 63, 94, 0.9)'
+            ],
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 11, 20, 15, 45],
+            'heatmap-opacity': 0.75,
+          },
         });
-        m.on('mouseleave', 'traffic-heat-core', () => { m.getCanvas().style.cursor = ''; popup.remove(); });
-      } catch {}
-    };
 
-    if (m.isStyleLoaded()) addHeatmap();
-    else m.on('load', addHeatmap);
+        const hVis = showHeatmap ? 'visible' : 'none';
+        if (m.getLayer('campaign-signs-heatmap')) {
+          m.setLayoutProperty('campaign-signs-heatmap', 'visibility', hVis);
+        }
+      };
+
+      if (m.isStyleLoaded()) addHeatmap();
+      else m.on('load', addHeatmap);
     })();
-  }, [trafficStations, theme]);
+  }, [signs, theme, mapReady, showHeatmap]);
 
   /* ---------- Markers ---------- */
   useEffect(() => {
@@ -2014,7 +2012,7 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => setShowHeatmap(!showHeatmap)}
-            title="Traffic Heatmap"
+            title="Sign Density Heatmap"
             className={`p-2 rounded-xl transition-all ${showHeatmap ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30 shadow-md shadow-rose-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <Flame className="w-4 h-4" />
