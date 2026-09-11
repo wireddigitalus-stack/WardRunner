@@ -506,11 +506,11 @@ export default function FieldPage() {
       <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-5 max-w-md mx-auto">
         <div className="pt-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-xl shadow-lg shadow-emerald-500/10">
-              WR
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-sm tracking-tight shadow-lg shadow-emerald-500/10">
+              POS
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-white">WardRunner</h1>
+              <h1 className="text-2xl font-black tracking-tight text-white">PrecinctOS</h1>
               <p className="text-xs text-emerald-400 font-medium tracking-wide uppercase">Field Operations PWA</p>
             </div>
           </div>
@@ -595,7 +595,7 @@ export default function FieldPage() {
 
         <div className="py-4 text-center">
           <p className="text-xs text-slate-500">
-            WardRunner Field v1.0 • Built for grassroots campaigns
+            PrecinctOS Field v1.0 • Built for grassroots campaigns
           </p>
         </div>
       </main>
@@ -611,8 +611,8 @@ export default function FieldPage() {
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
-              WR
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs tracking-tight">
+              POS
             </div>
             <div>
               <p className="text-xs font-bold text-white leading-tight truncate max-w-[200px]">

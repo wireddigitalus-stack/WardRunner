@@ -1,6 +1,6 @@
-# WardRunner 🏃‍♂️📍
+# PrecinctOS 🏃‍♂️📍
 
-> **Fast, mobile-first field logistics and yard sign intelligence purpose-built for down-ballot political campaigns.**
+> **Fast, mobile-first field logistics, precinct operations, and yard sign intelligence purpose-built for down-ballot political campaigns.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostGIS-green?logo=supabase)](https://supabase.com/)

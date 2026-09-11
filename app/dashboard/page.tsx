@@ -1235,7 +1235,7 @@ export default function DashboardPage() {
     const rows = filtered.map(s => [s.id, s.sign_type, s.is_competitor, s.competitor_name||'', s.latitude, s.longitude, `"${s.placed_by_name}"`, s.status, s.created_at]);
     const a = document.createElement('a');
     a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent([h, ...rows].map(r => (r as any[]).join(',')).join('\n'));
-    a.download = `wardrunner_${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `precinctos_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
   };
 
@@ -1243,7 +1243,7 @@ export default function DashboardPage() {
     const gj = { type: 'FeatureCollection', features: filtered.map(s => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [+s.longitude, +s.latitude] }, properties: { id: s.id, sign_type: s.sign_type, is_competitor: s.is_competitor, competitor_name: s.competitor_name, placed_by: s.placed_by_name, status: s.status, created_at: s.created_at } })) };
     const a = document.createElement('a');
     a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(gj, null, 2));
-    a.download = `wardrunner_${new Date().toISOString().slice(0,10)}.geojson`;
+    a.download = `precinctos_${new Date().toISOString().slice(0,10)}.geojson`;
     a.click();
   };
 
@@ -1289,14 +1289,14 @@ export default function DashboardPage() {
           {/* — Brand Capsule — */}
           <div className="pointer-events-auto glass rounded-2xl px-4 py-2.5 flex items-center gap-3 animate-slide-up">
             <div className="w-9 h-9 rounded-[12px] bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <span className="text-white font-black text-sm">WR</span>
+              <span className="text-white font-black text-xs tracking-tight">POS</span>
             </div>
             <div className="hidden sm:block">
               <div className="flex items-center gap-2">
                 <h1 className="font-extrabold text-sm tracking-tight">Field Command</h1>
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">LIVE</span>
               </div>
-              <p className="text-[11px] opacity-50 leading-none mt-0.5">Melissa K. Brown • Bristol TN City Council</p>
+              <p className="text-[11px] opacity-50 leading-none mt-0.5">PrecinctOS • Melissa K. Brown • Bristol TN City Council</p>
             </div>
           </div>
 

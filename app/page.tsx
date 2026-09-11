@@ -7,11 +7,11 @@ export default function HomePage() {
       {/* Header */}
       <header className="pt-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-xl">
-            WR
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-sm tracking-tight">
+            POS
           </div>
           <div>
-            <h1 className="text-xl font-black text-white tracking-tight">WardRunner</h1>
+            <h1 className="text-xl font-black text-white tracking-tight">PrecinctOS</h1>
             <p className="text-xs text-emerald-400 font-semibold tracking-wider uppercase">Field Logistics & Yard Sign Intel</p>
           </div>
         </div>
@@ -35,7 +35,7 @@ export default function HomePage() {
             The Science of visibility.
           </p>
           <p className="text-slate-400 text-base md:text-lg max-w-2xl">
-            Down-ballot races cannot afford $1,000+/mo legacy voter databases. WardRunner delivers a sub-10-second mobile tool for volunteers and complete visibility over territory coverage and competitor placements.
+            Down-ballot races cannot afford $1,000+/mo legacy voter databases. PrecinctOS delivers a sub-10-second mobile tool for volunteers and complete visibility over territory coverage and competitor placements.
           </p>
         </div>
 
@@ -110,7 +110,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="pt-6 border-t border-slate-900 text-center text-xs text-slate-500">
-        WardRunner • Melissa K. Brown for Bristol TN City Council • Powered by Supabase & Next.js
+        PrecinctOS • Melissa K. Brown for Bristol TN City Council • Powered by Supabase & Next.js
       </footer>
     </div>
   );
