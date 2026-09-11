@@ -73,3 +73,45 @@ export interface VolunteerAssignment {
   completed_at?: string;
 }
 
+export type CanvassResult = 'contact' | 'no_contact' | 'left_flyer';
+export type VoterSentiment = 'strong_support' | 'lean_support' | 'undecided' | 'lean_opposed' | 'strong_opposed';
+export type GroundActivityType = 'door_knock' | 'flyer_hang' | 'town_hall' | 'lit_drop';
+export type GroundVolunteerRole =
+  | 'Door Canvasser'
+  | 'Flyer Hanger'
+  | 'Field Volunteer'
+  | 'Field Scout'
+  | 'Precinct Captain'
+  | 'Field Director'
+  | 'Town Hall / Events';
+
+export interface CanvassRecord {
+  id: string;
+  campaign_id: string;
+  volunteer_name: string;
+  volunteer_role?: GroundVolunteerRole | string;
+  activity_type: GroundActivityType;
+  result: CanvassResult;
+  sentiment?: VoterSentiment;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  street_address?: string;
+  voter_name?: string;
+  wants_yard_sign?: boolean;
+  notes?: string;
+  created_at: string;
+}
+
+export interface VolunteerLocationPing {
+  volunteer_name: string;
+  role: GroundVolunteerRole | string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  last_ping_at: string;
+  is_active: boolean;
+  current_action?: string;
+  breadcrumbs?: [number, number][]; // [lng, lat] coordinate trail
+}
+

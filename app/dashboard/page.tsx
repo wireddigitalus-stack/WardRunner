@@ -6,6 +6,7 @@ import { getTrafficData, stationsToGeoJSON, intersectionsToGeoJSON, TrafficStati
 import realCorridors from '@/lib/realCorridors.json';
 import SmartScout from './components/SmartScout';
 import VolunteerManagerModal from './components/VolunteerManagerModal';
+import VolunteerFilterPanel from './components/VolunteerFilterPanel';
 import MapSearchBar from './components/MapSearchBar';
 import PrecinctLeaderboard from './components/PrecinctLeaderboard';
 import PrecinctDetailCard from './components/PrecinctDetailCard';
@@ -15,7 +16,8 @@ import CommandPinGate from './components/CommandPinGate';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
-import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment } from '@/lib/types';
+import { getStoredCanvassRecords, getStoredVolunteerPings } from '@/lib/canvassData';
+import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
 import DictateButton from '@/app/components/DictateButton';
 import {
@@ -33,6 +35,8 @@ import {
   X,
   SlidersHorizontal,
   MapPin,
+  Footprints,
+  UserCheck,
   Activity,
   Shield,
   Clock,
@@ -168,6 +172,18 @@ export default function DashboardPage() {
   // Street-Level Precision Micro Dot Mode
   const [useDotMode, setUseDotMode] = useState(false);
 
+  // Ground Campaign & Field Force State
+  const [canvassRecords, setCanvassRecords] = useState<CanvassRecord[]>([]);
+  const [volunteerPings, setVolunteerPings] = useState<VolunteerLocationPing[]>([]);
+  const [showCanvassLayer, setShowCanvassLayer] = useState(true);
+  const [showFieldForceLayer, setShowFieldForceLayer] = useState(true);
+  const [isVolunteerFilterOpen, setIsVolunteerFilterOpen] = useState(false);
+  const [selectedVolunteerGroup, setSelectedVolunteerGroup] = useState<string>('all');
+  const [selectedVolunteerFilter, setSelectedVolunteerFilter] = useState<string | null>(null);
+  const [selectedCanvassRecord, setSelectedCanvassRecord] = useState<CanvassRecord | null>(null);
+  const canvassMarkersRef = useRef<any[]>([]);
+  const volunteerMarkersRef = useRef<any[]>([]);
+
   // Drawer Active Tab ('signs' | 'inventory' | 'precincts' | 'missions')
   const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts' | 'missions'>('signs');
 
@@ -183,7 +199,25 @@ export default function DashboardPage() {
     };
     loadAssigns();
     window.addEventListener('wardrunner_assignments_updated', loadAssigns);
-    return () => window.removeEventListener('wardrunner_assignments_updated', loadAssigns);
+
+    // Ground Campaign Data Loaders
+    const loadGroundData = () => {
+      setCanvassRecords(getStoredCanvassRecords());
+      setVolunteerPings(getStoredVolunteerPings());
+    };
+    loadGroundData();
+    window.addEventListener('wardrunner_canvass_updated', loadGroundData);
+    window.addEventListener('wardrunner_pings_updated', loadGroundData);
+
+    // Poll ground data every 8s for live field updates
+    const groundInterval = setInterval(loadGroundData, 8000);
+
+    return () => {
+      window.removeEventListener('wardrunner_assignments_updated', loadAssigns);
+      window.removeEventListener('wardrunner_canvass_updated', loadGroundData);
+      window.removeEventListener('wardrunner_pings_updated', loadGroundData);
+      clearInterval(groundInterval);
+    };
   }, []);
 
   const updateStockQuantity = (type: keyof InventoryStock, delta: number) => {
@@ -331,6 +365,11 @@ export default function DashboardPage() {
     if (statusFilter !== 'all' && s.status !== statusFilter) return false;
     if (ownerFilter === 'ours' && s.is_competitor) return false;
     if (ownerFilter === 'theirs' && !s.is_competitor) return false;
+    if (selectedVolunteerFilter) {
+      const volLower = selectedVolunteerFilter.toLowerCase().trim();
+      const placedLower = (s.placed_by_name || '').toLowerCase().trim();
+      if (!placedLower.includes(volLower) && !volLower.includes(placedLower)) return false;
+    }
     if (searchQ && 
       !s.placed_by_name.toLowerCase().includes(searchQ.toLowerCase()) && 
       !(s.competitor_name || '').toLowerCase().includes(searchQ.toLowerCase()) &&
@@ -338,7 +377,7 @@ export default function DashboardPage() {
       !s.sign_type.replace('_', ' ').toLowerCase().includes(searchQ.toLowerCase())
     ) return false;
     return true;
-  }), [signs, typeFilter, statusFilter, ownerFilter, searchQ]);
+  }), [signs, typeFilter, statusFilter, ownerFilter, searchQ, selectedVolunteerFilter]);
 
   const stats = useMemo(() => ({
     ours:       signs.filter(s => !s.is_competitor && s.status === 'placed').length,
@@ -544,6 +583,38 @@ export default function DashboardPage() {
           },
         });
 
+        /* --- Volunteer Walking Trails (Live GPS Breadcrumbs) --- */
+        map.addSource('volunteer-trails', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        });
+
+        map.addLayer({
+          id: 'volunteer-trails-glow',
+          type: 'line',
+          source: 'volunteer-trails',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': '#10b981',
+            'line-width': 8,
+            'line-opacity': isDark ? 0.35 : 0.22,
+            'line-blur': 4,
+          },
+        });
+
+        map.addLayer({
+          id: 'volunteer-trails-line',
+          type: 'line',
+          source: 'volunteer-trails',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': '#10b981',
+            'line-width': 3,
+            'line-opacity': 0.85,
+            'line-dasharray': [3, 2],
+          },
+        });
+
         // Precinct hover cursor and click to inspect
         try {
           map.on('mouseenter', 'precincts-fill', () => {
@@ -594,11 +665,13 @@ export default function DashboardPage() {
     const cVis = showCorridors ? 'visible' : 'none';
     const hVis = showHeatmap ? 'visible' : 'none';
     const pVis = showPrecincts ? 'visible' : 'none';
+    const vVis = showFieldForceLayer ? 'visible' : 'none';
     ['boundary-fill', 'boundary-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', bVis));
     ['corridor-glow', 'corridor-core', 'corridor-inner'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
     ['traffic-heat-glow', 'traffic-heat-core'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', hVis));
     ['precincts-fill', 'precincts-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', pVis));
-  }, [showBoundary, showCorridors, showHeatmap, showPrecincts]);
+    ['volunteer-trails-glow', 'volunteer-trails-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', vVis));
+  }, [showBoundary, showCorridors, showHeatmap, showPrecincts, showFieldForceLayer]);
 
   /* ---------- Precinct Center Badges on Map ---------- */
   useEffect(() => {
@@ -1219,6 +1292,182 @@ export default function DashboardPage() {
     })();
   }, [assignments, selectedMission, is3D, useDotMode]);
 
+  /* ---------- Ground Canvass Markers ---------- */
+  useEffect(() => {
+    (async () => {
+      const m = mapRef.current;
+      if (!m) return;
+      const mgl = (await import('maplibre-gl')).default;
+
+      canvassMarkersRef.current.forEach(item => item.marker?.remove?.());
+      canvassMarkersRef.current = [];
+
+      if (!showCanvassLayer) return;
+
+      const activeRecords = canvassRecords.filter(rec => {
+        if (selectedVolunteerFilter) {
+          const v1 = rec.volunteer_name.toLowerCase().trim();
+          const v2 = selectedVolunteerFilter.toLowerCase().trim();
+          if (!v1.includes(v2) && !v2.includes(v1)) return false;
+        }
+        if (selectedVolunteerGroup !== 'all') {
+          const role = (rec.volunteer_role || '').toLowerCase();
+          if (selectedVolunteerGroup === 'canvasser' && !(role.includes('canvass') || role.includes('door'))) return false;
+          if (selectedVolunteerGroup === 'flyer' && !(role.includes('flyer') || role.includes('lit'))) return false;
+          if (selectedVolunteerGroup === 'sign' && !(role.includes('sign') || role.includes('field'))) return false;
+          if (selectedVolunteerGroup === 'town_hall' && !(role.includes('town') || role.includes('event'))) return false;
+        }
+        return true;
+      });
+
+      activeRecords.forEach(rec => {
+        const el = document.createElement('div');
+        const isSel = selectedCanvassRecord?.id === rec.id;
+        el.className = `canvass-map-marker ${isSel ? 'is-selected' : ''}`;
+        el.style.cursor = 'pointer';
+        el.style.zIndex = isSel ? '650' : '140';
+
+        const isContact = rec.result === 'contact';
+        const isFlyer = rec.result === 'left_flyer';
+
+        const bg = isContact ? '#059669' : isFlyer ? '#d97706' : '#475569';
+        const icon = isContact ? '🤝' : isFlyer ? '📰' : '🚪';
+        const label = isContact ? (rec.sentiment ? rec.sentiment.replace('_', ' ').toUpperCase() : 'CONTACT') : isFlyer ? 'FLYER' : 'NO CONTACT';
+
+        if (useDotMode) {
+          el.innerHTML = `
+            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;width:20px;height:20px;" title="${rec.street_address || rec.volunteer_name}">
+              <div style="width:10px;height:10px;border-radius:50%;background:${bg};border:2px solid #ffffff;box-shadow:0 0 10px ${bg};"></div>
+            </div>
+          `;
+        } else {
+          el.innerHTML = `
+            <div style="position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer;">
+              <div style="position:absolute;bottom:28px;background:${bg};color:white;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;gap:4px;">
+                <span>${icon}</span>
+                <span>${label}</span>
+              </div>
+              <div style="width:24px;height:24px;border-radius:50%;background:${bg};border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.5);font-size:11px;">
+                ${icon}
+              </div>
+            </div>
+          `;
+        }
+
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelectedSign(null);
+          setSelectedRec(null);
+          setSelectedPrecinct(null);
+          setSelectedMission(null);
+          setSelectedCanvassRecord(rec);
+        });
+
+        const marker = new mgl.Marker({
+          element: el,
+          anchor: 'center',
+          pitchAlignment: 'viewport',
+          rotationAlignment: 'viewport',
+        }).setLngLat([rec.longitude, rec.latitude]).addTo(m);
+
+        canvassMarkersRef.current.push({ marker, id: rec.id });
+      });
+    })();
+  }, [canvassRecords, showCanvassLayer, selectedVolunteerFilter, selectedVolunteerGroup, selectedCanvassRecord, useDotMode]);
+
+  /* ---------- Live Volunteer Markers & Walking Trails ---------- */
+  useEffect(() => {
+    (async () => {
+      const m = mapRef.current;
+      if (!m) return;
+      const mgl = (await import('maplibre-gl')).default;
+
+      volunteerMarkersRef.current.forEach(item => item.marker?.remove?.());
+      volunteerMarkersRef.current = [];
+
+      const trailFeatures: any[] = [];
+
+      if (showFieldForceLayer) {
+        const activeVolunteers = volunteerPings.filter(ping => {
+          if (selectedVolunteerFilter) {
+            const v1 = ping.volunteer_name.toLowerCase().trim();
+            const v2 = selectedVolunteerFilter.toLowerCase().trim();
+            if (!v1.includes(v2) && !v2.includes(v1)) return false;
+          }
+          if (selectedVolunteerGroup !== 'all') {
+            const role = (ping.role || '').toLowerCase();
+            if (selectedVolunteerGroup === 'canvasser' && !(role.includes('canvass') || role.includes('door'))) return false;
+            if (selectedVolunteerGroup === 'flyer' && !(role.includes('flyer') || role.includes('lit'))) return false;
+            if (selectedVolunteerGroup === 'sign' && !(role.includes('sign') || role.includes('field'))) return false;
+            if (selectedVolunteerGroup === 'town_hall' && !(role.includes('town') || role.includes('event'))) return false;
+          }
+          return true;
+        });
+
+        activeVolunteers.forEach(vol => {
+          if (vol.breadcrumbs && vol.breadcrumbs.length >= 2) {
+            trailFeatures.push({
+              type: 'Feature',
+              properties: { volunteer_name: vol.volunteer_name },
+              geometry: {
+                type: 'LineString',
+                coordinates: vol.breadcrumbs,
+              },
+            });
+          }
+
+          const el = document.createElement('div');
+          el.className = 'volunteer-live-marker';
+          el.style.cursor = 'pointer';
+          el.style.zIndex = '700';
+
+          const initials = vol.volunteer_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+          const roleColor = (vol.role || '').includes('Flyer') ? '#d97706' : '#10b981';
+
+          el.innerHTML = `
+            <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+              <div style="position:absolute;bottom:32px;background:rgba(15,23,42,0.92);color:white;padding:3px 8px;border-radius:9999px;font-size:10px;font-weight:800;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.5);border:1.5px solid ${roleColor};display:flex;align-items:center;gap:4px;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;"></span>
+                <span>${vol.volunteer_name}</span>
+              </div>
+              <div style="position:relative;display:flex;align-items:center;justify-content:center;width:28px;height:28px;">
+                <div class="animate-radar pointer-events-none" style="width:48px;height:48px;background:${roleColor}33;z-index:1;"></div>
+                <div style="position:relative;width:26px;height:26px;background:linear-gradient(135deg, #10b981, #0d9488);border:2.5px solid white;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,0.4);z-index:2;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:white;">
+                  ${initials}
+                </div>
+              </div>
+            </div>
+          `;
+
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setSelectedVolunteerFilter(vol.volunteer_name);
+            setIsVolunteerFilterOpen(true);
+          });
+
+          const marker = new mgl.Marker({
+            element: el,
+            anchor: 'center',
+            pitchAlignment: 'viewport',
+            rotationAlignment: 'viewport',
+          }).setLngLat([vol.longitude, vol.latitude]).addTo(m);
+
+          volunteerMarkersRef.current.push({ marker, name: vol.volunteer_name });
+        });
+      }
+
+      try {
+        const src = m.getSource('volunteer-trails');
+        if (src) {
+          (src as any).setData({
+            type: 'FeatureCollection',
+            features: trailFeatures,
+          });
+        }
+      } catch {}
+    })();
+  }, [volunteerPings, showFieldForceLayer, selectedVolunteerFilter, selectedVolunteerGroup]);
+
   /* ---------- Actions ---------- */
   const toggle3D = useCallback(() => {
     const m = mapRef.current; if (!m) return;
@@ -1322,10 +1571,42 @@ export default function DashboardPage() {
               <span className="text-[11px] font-medium opacity-60">Arterials</span>
               <span className="text-sm font-black text-sky-400 animate-count-up">{stats.highImpact}</span>
             </div>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
+              <span className="w-2 h-2 rounded-full bg-teal-400 shadow-md shadow-teal-400/40" />
+              <span className="text-[11px] font-medium opacity-60">Doors</span>
+              <span className="text-sm font-black text-teal-400 animate-count-up">{canvassRecords.length}</span>
+            </div>
           </div>
 
           {/* — Right Controls — */}
           <div className="pointer-events-auto flex items-center gap-2 animate-slide-up" style={{ animationDelay: '160ms' }}>
+            {/* Quick Access to Field Force / Volunteer Filter */}
+            <button
+              onClick={() => setIsVolunteerFilterOpen(!isVolunteerFilterOpen)}
+              className={`glass rounded-2xl px-3 py-2 flex items-center gap-1.5 transition-all text-xs font-bold active:scale-95 ${
+                selectedVolunteerFilter || isVolunteerFilterOpen
+                  ? 'bg-teal-500/25 text-teal-200 border border-teal-500/50 shadow-lg shadow-teal-500/20'
+                  : 'hover:scale-105 border border-white/10 text-slate-300 hover:text-white'
+              }`}
+              title="Filter map by volunteer individual or team"
+            >
+              <Users className="w-4 h-4 text-teal-400" />
+              <span className="hidden sm:inline">
+                {selectedVolunteerFilter ? selectedVolunteerFilter.split(' ')[0] : 'Ground Force'}
+              </span>
+              {selectedVolunteerFilter && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedVolunteerFilter(null);
+                  }}
+                  className="ml-0.5 text-xs text-teal-300 hover:text-white"
+                >
+                  ✕
+                </span>
+              )}
+            </button>
+
             {/* Quick Access to Sign Missions on all screen sizes */}
             <button
               onClick={() => {
@@ -1356,7 +1637,7 @@ export default function DashboardPage() {
               title="Manage Volunteers & Field PINs"
             >
               <Users className="w-4 h-4 text-purple-400" />
-              <span className="hidden md:inline">Volunteers</span>
+              <span className="hidden md:inline">Roster</span>
             </button>
 
             {/* Street-Level Dot View Quick Toggle */}
@@ -1430,6 +1711,13 @@ export default function DashboardPage() {
 
         {/* Layer Toggles */}
         <div className="glass rounded-2xl p-1 flex flex-col items-center gap-0.5">
+          <button onClick={() => setShowCanvassLayer(!showCanvassLayer)} title={showCanvassLayer ? "Hide Canvass Knocks & Flyers" : "Show Canvass Knocks & Flyers"} className={`p-2 rounded-xl transition-all ${showCanvassLayer ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : 'text-zinc-400 hover:text-zinc-200'}`}>
+            <Footprints className="w-4 h-4" />
+          </button>
+          <button onClick={() => setShowFieldForceLayer(!showFieldForceLayer)} title={showFieldForceLayer ? "Hide Live Volunteer Trails" : "Show Live Volunteer Trails"} className={`p-2 rounded-xl transition-all ${showFieldForceLayer ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-zinc-400 hover:text-zinc-200'}`}>
+            <Users className="w-4 h-4" />
+          </button>
+          <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
           <button onClick={() => setShowPrecincts(!showPrecincts)} title="Voting Precincts & Turnout Grid" className={`p-2 rounded-xl transition-all ${showPrecincts ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-400 hover:text-zinc-200'}`}>
             <Vote className="w-4 h-4" />
           </button>
@@ -1529,6 +1817,117 @@ export default function DashboardPage() {
                 <Navigation className="w-3.5 h-3.5" /> View in Apple Maps
               </a>
               <button onClick={() => setSelectedSign(null)} className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}>
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          SELECTED GROUND CANVASS RECORD — INSPECTION CARD (Bottom Center)
+          ============================================================ */}
+      {selectedCanvassRecord && (
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-[400px] max-w-[calc(100vw-32px)] pointer-events-auto animate-slide-up">
+          <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
+            {/* Accent top edge */}
+            <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${
+              selectedCanvassRecord.result === 'contact'
+                ? 'from-emerald-400 to-teal-400'
+                : selectedCanvassRecord.result === 'left_flyer'
+                ? 'from-amber-400 to-orange-400'
+                : 'from-slate-400 to-slate-600'
+            }`} />
+
+            <button
+              onClick={() => setSelectedCanvassRecord(null)}
+              className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
+            >
+              <X className="w-3.5 h-3.5 opacity-50" />
+            </button>
+
+            <div className="flex items-start gap-3.5">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg ${
+                selectedCanvassRecord.result === 'contact'
+                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                  : selectedCanvassRecord.result === 'left_flyer'
+                  ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                  : 'bg-slate-800 border border-slate-700 text-slate-300'
+              }`}>
+                {selectedCanvassRecord.result === 'contact' ? '🤝' : selectedCanvassRecord.result === 'left_flyer' ? '📰' : '🚪'}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
+                    selectedCanvassRecord.result === 'contact'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : selectedCanvassRecord.result === 'left_flyer'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'bg-slate-800 text-slate-400 border border-slate-700'
+                  }`}>
+                    {selectedCanvassRecord.result === 'contact'
+                      ? 'VOTER CONTACT'
+                      : selectedCanvassRecord.result === 'left_flyer'
+                      ? 'LEFT FLYER / LIT'
+                      : 'NO CONTACT'}
+                  </span>
+                  {selectedCanvassRecord.sentiment && (
+                    <span className="text-[10px] font-bold text-teal-300 bg-teal-500/15 px-2 py-0.5 rounded-md border border-teal-500/30">
+                      {selectedCanvassRecord.sentiment.replace('_', ' ')}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-base font-extrabold text-white mt-1 leading-tight">
+                  {selectedCanvassRecord.street_address || 'Door Knock Location'}
+                </h3>
+                {selectedCanvassRecord.voter_name && (
+                  <p className="text-xs text-slate-300 font-medium">
+                    Voter: <span className="font-bold text-white">{selectedCanvassRecord.voter_name}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {selectedCanvassRecord.notes && (
+              <div className="mt-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Voter Notes</span>
+                <p className="italic leading-relaxed">"{selectedCanvassRecord.notes}"</p>
+              </div>
+            )}
+
+            {selectedCanvassRecord.wants_yard_sign && (
+              <div className="mt-2.5 p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
+                <span>🏡</span>
+                <span>Voter Requested Yard Sign for Front Lawn!</span>
+              </div>
+            )}
+
+            <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Knocked by <strong className="text-white">{selectedCanvassRecord.volunteer_name}</strong></span>
+              <span className="font-mono">{new Date(selectedCanvassRecord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <a
+                href={getAppleMapsUrl({
+                  address: selectedCanvassRecord.street_address,
+                  lat: Number(selectedCanvassRecord.latitude),
+                  lng: Number(selectedCanvassRecord.longitude),
+                  title: `Door: ${selectedCanvassRecord.street_address || 'Voter'}`,
+                  mode: 'directions',
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.98] transition"
+              >
+                <Navigation className="w-3.5 h-3.5" /> Navigate
+              </a>
+              <button
+                onClick={() => setSelectedCanvassRecord(null)}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+              >
                 Dismiss
               </button>
             </div>
@@ -2226,6 +2625,32 @@ export default function DashboardPage() {
         isDark={isDark}
         initialTab={modalInitialTab}
         initialTarget={modalInitialTarget}
+      />
+
+      {/* ============================================================
+          FIELD FORCE & VOLUNTEER FILTER PANEL (Floating Glass Modal)
+          ============================================================ */}
+      <VolunteerFilterPanel
+        isOpen={isVolunteerFilterOpen}
+        onClose={() => setIsVolunteerFilterOpen(false)}
+        selectedGroup={selectedVolunteerGroup}
+        onSelectGroup={setSelectedVolunteerGroup}
+        selectedVolunteer={selectedVolunteerFilter}
+        onSelectVolunteer={(vol) => {
+          setSelectedVolunteerFilter(vol);
+          if (vol) {
+            const ping = volunteerPings.find(p => p.volunteer_name.toLowerCase().trim() === vol.toLowerCase().trim());
+            if (ping && mapRef.current) {
+              mapRef.current.flyTo({ center: [ping.longitude, ping.latitude], zoom: 16, duration: 1000 });
+            }
+          }
+        }}
+        volunteerPings={volunteerPings}
+        canvassRecords={canvassRecords}
+        signs={signs}
+        onFlyToVolunteer={(lat, lng) => {
+          mapRef.current?.flyTo({ center: [lng, lat], zoom: 16.5, duration: 1000 });
+        }}
       />
 
       {/* ============================================================

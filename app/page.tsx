@@ -40,50 +40,73 @@ export default function HomePage() {
         </div>
 
         {/* Action Portals */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+          {/* 1. Canvasser App */}
           <Link
-            href="/field"
-            className="group p-6 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-900 transition shadow-2xl relative overflow-hidden flex flex-col justify-between"
+            href="/canvass"
+            className="group p-5 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-teal-500/50 hover:bg-slate-900 transition shadow-2xl relative overflow-hidden flex flex-col justify-between"
           >
             <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <MapPin className="w-6 h-6" />
+              <div className="w-11 h-11 rounded-2xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 text-xl">
+                🚪
               </div>
-              <h3 className="text-2xl font-bold text-white group-hover:text-emerald-300 transition">
-                Field Volunteer App
+              <h3 className="text-xl font-bold text-white group-hover:text-teal-300 transition">
+                Door Knocker App
               </h3>
-              <p className="text-sm text-slate-400">
-                Frictionless PIN login, sub-10s one-tap GPS sign drop, camera capture with auto-compression, and post-election cleanup retrieval mode.
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Sub-3s tactile house logging: Contact / Not Home / Left Flyer taps, walking GPS beacon, and screen wake lock.
               </p>
             </div>
-            <div className="mt-6 flex items-center text-emerald-400 font-bold text-sm gap-2">
-              Launch /field <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+            <div className="mt-5 flex items-center text-teal-400 font-bold text-xs gap-1.5">
+              Launch /canvass <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
             </div>
           </Link>
 
+          {/* 2. Sign Drop App */}
+          <Link
+            href="/field"
+            className="group p-5 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-900 transition shadow-2xl relative overflow-hidden flex flex-col justify-between"
+          >
+            <div className="space-y-3">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-bold text-white group-hover:text-emerald-300 transition">
+                Yard Sign Field App
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Frictionless PIN login, sub-10s one-tap GPS sign drop, camera capture with auto-compression, and retrieval mode.
+              </p>
+            </div>
+            <div className="mt-5 flex items-center text-emerald-400 font-bold text-xs gap-1.5">
+              Launch /field <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
+            </div>
+          </Link>
+
+          {/* 3. Field Command Dashboard */}
           <Link
             href="/dashboard"
-            className="group p-6 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/50 hover:bg-slate-900 transition shadow-2xl relative overflow-hidden flex flex-col justify-between"
+            className="group p-5 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-blue-500/50 hover:bg-slate-900 transition shadow-2xl relative overflow-hidden flex flex-col justify-between"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                  <BarChart3 className="w-6 h-6" />
+                <div className="w-11 h-11 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <BarChart3 className="w-5 h-5" />
                 </div>
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-                  PIN Gate (620620)
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                  <ShieldCheck className="w-3 h-3 text-blue-400" />
+                  PIN 620620
                 </span>
               </div>
-              <h3 className="text-2xl font-bold text-white group-hover:text-blue-300 transition">
-                Field Command
+              <h3 className="text-xl font-bold text-white group-hover:text-blue-300 transition">
+                Field Command Map
               </h3>
-              <p className="text-sm text-slate-400">
-                Campaign Operations & Intelligence: Clustered map markers, competitor reconnaissance, Bristol AADT traffic corridors, and CSV/GeoJSON export.
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Live ground canvass pins, volunteer walking breadcrumbs, competitor recon, and corridor traffic intel.
               </p>
             </div>
-            <div className="mt-6 flex items-center text-blue-400 font-bold text-sm gap-2">
-              Launch Field Command <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+            <div className="mt-5 flex items-center text-blue-400 font-bold text-xs gap-1.5">
+              Launch Command <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
             </div>
           </Link>
         </div>

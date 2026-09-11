@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { compressImage } from '@/lib/imageCompression';
 import { SignType, SignStatus, Sign, VolunteerSession, VolunteerAssignment } from '@/lib/types';
 import { getStoredAssignments, markAssignmentComplete } from '@/lib/assignmentData';
 import { addPlacedSign, getStoredSigns, markSignRetrieved } from '@/lib/signData';
+import { reportVolunteerPing } from '@/lib/canvassData';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
 import {
   MapPin,
@@ -198,13 +200,26 @@ export default function FieldPage() {
     setGpsStatus('locating');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setCoords({
+        const currentCoords = {
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
           accuracy: Math.round(pos.coords.accuracy),
-        });
+        };
+        setCoords(currentCoords);
         setGpsStatus('locked');
         setGpsError(null);
+
+        if (session) {
+          reportVolunteerPing({
+            volunteer_name: session.volunteerName,
+            role: 'Sign Runner',
+            latitude: currentCoords.latitude,
+            longitude: currentCoords.longitude,
+            accuracy: currentCoords.accuracy,
+            is_active: true,
+            current_action: 'Placing & Checking Signs',
+          });
+        }
       },
       (err) => {
         setGpsStatus('error');
@@ -217,6 +232,36 @@ export default function FieldPage() {
       }
     );
   };
+
+  // Periodic location broadcast while active
+  useEffect(() => {
+    if (!session) return;
+    const interval = setInterval(() => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setCoords({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: Math.round(pos.coords.accuracy),
+            });
+            reportVolunteerPing({
+              volunteer_name: session.volunteerName,
+              role: 'Sign Runner',
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: Math.round(pos.coords.accuracy),
+              is_active: true,
+              current_action: 'Active in Field',
+            });
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 6000, maximumAge: 5000 }
+        );
+      }
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   // 2. Frictionless PIN Login
   const handleLogin = async (e: React.FormEvent) => {
@@ -292,6 +337,16 @@ export default function FieldPage() {
   };
 
   const handleLogout = () => {
+    if (session) {
+      reportVolunteerPing({
+        volunteer_name: session.volunteerName,
+        role: 'Sign Runner',
+        latitude: coords?.latitude || 36.595,
+        longitude: coords?.longitude || -82.188,
+        is_active: false,
+        current_action: 'Logged off',
+      });
+    }
     localStorage.removeItem('wardrunner_session');
     setSession(null);
   };
@@ -624,13 +679,24 @@ export default function FieldPage() {
             </div>
           </div>
 
-          <button
-            onClick={handleLogout}
-            title="Log out"
-            className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 active:scale-95 transition"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <Link
+              href="/canvass"
+              className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1 transition"
+              title="Switch to Door Canvassing"
+            >
+              <span>🚪</span>
+              <span className="hidden sm:inline">Canvass</span>
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              title="Log out"
+              className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 active:scale-95 transition"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* GPS Sensor Strip */}
