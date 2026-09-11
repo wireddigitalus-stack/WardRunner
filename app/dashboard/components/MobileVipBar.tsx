@@ -287,14 +287,18 @@ export default function MobileVipBar({
               </button>
             )}
 
-            {/* Bristol City Facts */}
-            {onOpenBristolFacts && (
+            {/* Bristol Boundary Overlay Toggle */}
+            {setShowBoundary && (
               <button
-                onClick={onOpenBristolFacts}
-                className="px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border bg-slate-900/90 text-sky-300 border-sky-500/30 hover:border-sky-500/60"
+                onClick={() => setShowBoundary(!showBoundary)}
+                className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
+                  showBoundary
+                    ? 'bg-sky-600 text-white border-sky-400 shadow-lg shadow-sky-600/30'
+                    : 'bg-slate-900/90 text-sky-300 border-sky-500/30 hover:border-sky-500/60'
+                }`}
               >
-                <Landmark className="w-3.5 h-3.5 text-sky-400" />
-                <span>Bristol Facts</span>
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Bristol Boundary</span>
               </button>
             )}
           </div>

@@ -852,14 +852,76 @@ export default function DashboardPage() {
       });
 
       map.on('click', (e: any) => {
-        const interactiveLayers = ['boundary-fill', 'boundary-line', 'precincts-fill'].filter(id => map.getLayer(id));
-        const features = map.queryRenderedFeatures(e.point, { layers: interactiveLayers });
-        if (features.length > 0) return;
+        // 1. Check if user clicked an active precinct
+        const pLayer = map.getLayer('precincts-fill');
+        const isPrecinctVis = pLayer && map.getLayoutProperty('precincts-fill', 'visibility') !== 'none';
+        if (isPrecinctVis) {
+          const precinctFeatures = map.queryRenderedFeatures(e.point, { layers: ['precincts-fill'] });
+          if (precinctFeatures.length > 0) {
+            const code = precinctFeatures[0].properties?.code;
+            const found = BRISTOL_PRECINCTS.find((pr) => pr.code === code);
+            if (found) {
+              setSelectedSign(null);
+              setSelectedRec(null);
+              setSelectedMission(null);
+              setSelectedRoute(null);
+              setShowBristolFacts(false);
+              setSelectedPrecinct(found);
+              return;
+            }
+          }
+        }
 
+        // 2. Check if user clicked the Bristol boundary overlay (when boundary is visible!)
+        const bLayer = map.getLayer('boundary-fill');
+        const isBoundaryVis = bLayer && map.getLayoutProperty('boundary-fill', 'visibility') !== 'none';
+        if (isBoundaryVis) {
+          const bbox: [[number, number], [number, number]] = [
+            [e.point.x - 6, e.point.y - 6],
+            [e.point.x + 6, e.point.y + 6],
+          ];
+          const boundaryFeatures = map.queryRenderedFeatures(bbox, {
+            layers: ['boundary-fill', 'boundary-line'].filter(id => map.getLayer(id)),
+          });
+          if (boundaryFeatures.length > 0) {
+            setSelectedSign(null);
+            setSelectedRec(null);
+            setSelectedPrecinct(null);
+            setSelectedMission(null);
+            setSelectedRoute(null);
+            setShowBristolFacts(true);
+            return;
+          }
+        }
+
+        // 3. User clicked outside overlays -> dismiss cards
         setSelectedSign(null);
         setSelectedRec(null);
         setSelectedPrecinct(null);
         setShowBristolFacts(false);
+      });
+
+      map.on('mousemove', (e: any) => {
+        const pLayer = map.getLayer('precincts-fill');
+        const isPrecinctVis = pLayer && map.getLayoutProperty('precincts-fill', 'visibility') !== 'none';
+        const bLayer = map.getLayer('boundary-fill');
+        const isBoundaryVis = bLayer && map.getLayoutProperty('boundary-fill', 'visibility') !== 'none';
+
+        const layersToCheck: string[] = [];
+        if (isPrecinctVis) layersToCheck.push('precincts-fill');
+        if (isBoundaryVis) layersToCheck.push('boundary-fill', 'boundary-line');
+
+        if (layersToCheck.length === 0) {
+          map.getCanvas().style.cursor = '';
+          return;
+        }
+
+        const bbox: [[number, number], [number, number]] = [
+          [e.point.x - 3, e.point.y - 3],
+          [e.point.x + 3, e.point.y + 3],
+        ];
+        const features = map.queryRenderedFeatures(bbox, { layers: layersToCheck });
+        map.getCanvas().style.cursor = features.length > 0 ? 'pointer' : '';
       });
       mapRef.current = map;
     })();
@@ -2200,16 +2262,13 @@ export default function DashboardPage() {
           </button>
           <button
             onClick={() => {
-              if (!showBoundary) {
-                setShowBoundary(true);
-                setShowBristolFacts(true);
-              } else if (showBristolFacts) {
+              const next = !showBoundary;
+              setShowBoundary(next);
+              if (!next) {
                 setShowBristolFacts(false);
-              } else {
-                setShowBristolFacts(true);
               }
             }}
-            title="City of Bristol Facts & Ward Boundary"
+            title={showBoundary ? "Hide Bristol Boundary Overlay" : "Show Bristol Boundary Overlay"}
             className={`p-2 rounded-xl transition-all ${showBoundary ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-md shadow-sky-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <Building2 className="w-4 h-4" />
