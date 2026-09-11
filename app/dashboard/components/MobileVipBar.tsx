@@ -19,6 +19,9 @@ import {
   TrendingUp,
   Landmark,
   Building2,
+  Navigation,
+  CircleDot,
+  X,
 } from 'lucide-react';
 import type { Sign, SignType, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import type { PrecinctInfo } from '@/lib/precinctData';
@@ -57,6 +60,11 @@ interface MobileVipBarProps {
   setShowHeatmap?: (v: boolean) => void;
   showBoundary?: boolean;
   setShowBoundary?: (v: boolean) => void;
+  useDotMode?: boolean;
+  setUseDotMode?: (v: boolean) => void;
+  onRecenter?: () => void;
+  onToggle3D?: () => void;
+  is3D?: boolean;
   onOpenBristolFacts?: () => void;
   onSelectPrecinct: (p: PrecinctInfo) => void;
   onFlyToPrecinct: (p: PrecinctInfo) => void;
@@ -90,18 +98,37 @@ export default function MobileVipBar({
   setShowHeatmap,
   showBoundary,
   setShowBoundary,
+  useDotMode,
+  setUseDotMode,
+  onRecenter,
+  onToggle3D,
+  is3D,
   onOpenBristolFacts,
   onSelectPrecinct,
   onFlyToPrecinct,
   onLock,
   isDark,
 }: MobileVipBarProps) {
+  const [isPaletteOpen, setIsPaletteOpen] = useState(true);
   const [isTrayExpanded, setIsTrayExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'quick_filters' | 'precinct_intel' | 'field_pulse'>('quick_filters');
 
   const activeVolunteersCount = volunteerPings.filter(p => p.is_active).length;
   const contactsCount = canvassRecords.filter(r => r.result === 'contact').length;
   const contactRate = canvassRecords.length > 0 ? Math.round((contactsCount / canvassRecords.length) * 100) : 0;
+
+  // Active layers counter for badge
+  const activeLayersCount = [
+    showSignsLayer && (ownerFilter === 'ours' || ownerFilter === 'all'),
+    showSignsLayer && (ownerFilter === 'theirs' || ownerFilter === 'all'),
+    showCanvassLayer,
+    showFieldForceLayer,
+    showRoutesLayer,
+    showPrecincts,
+    showBoundary,
+    showHeatmap,
+    useDotMode,
+  ].filter(Boolean).length;
 
   // Toggle helpers for single-tap VIP switches
   const toggleOurSigns = () => {
@@ -174,134 +201,215 @@ export default function MobileVipBar({
       </div>
 
       {/* ============================================================
-          2. FLOATING BOTTOM VIP CONTROL SHEET (Thumb-friendly iOS tray)
+          2. RIGHT-SIDE MOBILE CONTROL PALETTE (Icons Only, Clunky-Finger Spaced, Toggleable)
           ============================================================ */}
-      <div className="absolute bottom-0 inset-x-0 z-30 pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] px-3">
-        <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-2xl overflow-hidden transition-all duration-300">
-          
-          {/* Drag Handle & Tray Toggle Header */}
-          <button
-            type="button"
-            onClick={() => setIsTrayExpanded(!isTrayExpanded)}
-            className="w-full pt-2 pb-1.5 flex flex-col items-center justify-center text-slate-400 hover:text-slate-200 active:scale-[0.99] transition"
-          >
-            <div className="w-10 h-1 rounded-full bg-white/20 mb-1" />
-            <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase text-slate-400">
-              <span>VIP Executive Controls</span>
-              <ChevronUp className={`w-3 h-3 transition-transform duration-300 ${isTrayExpanded ? 'rotate-180' : ''}`} />
-            </div>
-          </button>
+      <div className="absolute right-3 top-16 z-30 flex flex-col items-center gap-1.5 pointer-events-auto">
+        {/* Navigation & Toggle Header Pod */}
+        <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl p-1 flex flex-col items-center shadow-2xl">
+          {onRecenter && (
+            <button
+              onClick={onRecenter}
+              title="Recenter Bristol"
+              className="w-10 h-10 rounded-xl hover:bg-emerald-500/15 text-emerald-400 flex items-center justify-center active:scale-90 transition-all"
+            >
+              <Navigation className="w-4 h-4" />
+            </button>
+          )}
 
-          {/* Quick-Toggle Pill Bar (Always Visible at Bottom) */}
-          <div className="p-2.5 pt-0 overflow-x-auto no-scrollbar flex items-center gap-2">
-            {/* Our Signs */}
+          {onToggle3D && (
+            <>
+              <div className="w-5 h-px bg-white/10 my-0.5" />
+              <button
+                onClick={onToggle3D}
+                title="3D Perspective"
+                className={`w-10 h-10 rounded-xl text-[11px] font-black flex items-center justify-center transition-all active:scale-90 ${
+                  is3D ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-300 hover:bg-white/10'
+                }`}
+              >
+                3D
+              </button>
+            </>
+          )}
+
+          <div className="w-5 h-px bg-white/10 my-0.5" />
+
+          {/* Palette Expand / Collapse Toggle Button */}
+          <button
+            onClick={() => setIsPaletteOpen(!isPaletteOpen)}
+            title={isPaletteOpen ? "Hide Filter Palette" : "Show Filter Palette"}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center relative transition-all active:scale-90 ${
+              isPaletteOpen
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                : 'text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            {isPaletteOpen ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <Layers className="w-4 h-4" />
+            )}
+            {/* Active Layers Indicator Badge when closed */}
+            {!isPaletteOpen && activeLayersCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-md">
+                {activeLayersCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Vertical Icon Palette (Visible when isPaletteOpen is true) */}
+        {isPaletteOpen && (
+          <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl p-1 flex flex-col items-center gap-1.5 shadow-2xl animate-slide-down max-h-[calc(100vh-210px)] overflow-y-auto no-scrollbar">
+            {/* 1. Our Lawn Signs */}
             <button
               onClick={toggleOurSigns}
-              className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
+              title={`Our Signs (${stats.ours})`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                 showSignsLayer && ownerFilter === 'ours'
-                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-lg shadow-emerald-500/30'
-                  : 'bg-slate-900/90 text-emerald-300 border-emerald-500/30 hover:border-emerald-500/60'
+                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/30'
+                  : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
-              <MapPin className="w-3.5 h-3.5" />
-              <span>Our Signs ({stats.ours})</span>
+              <MapPin className="w-4 h-4" />
             </button>
 
-            {/* Competitor Signs */}
+            {/* 2. Opponent Signs */}
             <button
               onClick={toggleCompetitorSigns}
-              className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
+              title={`Opponent Signs (${stats.theirs})`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                 showSignsLayer && ownerFilter === 'theirs'
-                  ? 'bg-rose-500 text-white border-rose-400 shadow-lg shadow-rose-500/30'
-                  : 'bg-slate-900/90 text-rose-300 border-rose-500/30 hover:border-rose-500/60'
+                  ? 'bg-rose-500 text-white border-rose-400 shadow-md shadow-rose-500/30'
+                  : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
-              <Target className="w-3.5 h-3.5" />
-              <span>Opponent ({stats.theirs})</span>
+              <Target className="w-4 h-4" />
             </button>
 
-            {/* Voting Precincts */}
-            <button
-              onClick={() => setShowPrecincts(!showPrecincts)}
-              className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
-                showPrecincts
-                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-500/30'
-                  : 'bg-slate-900/90 text-indigo-300 border-indigo-500/30 hover:border-indigo-500/60'
-              }`}
-            >
-              <Vote className="w-3.5 h-3.5" />
-              <span>Precincts ({precincts.length})</span>
-            </button>
-
-            {/* Door Knocker Activity */}
+            {/* 3. Door Knocks / Canvass */}
             <button
               onClick={() => setShowCanvassLayer(!showCanvassLayer)}
-              className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
+              title={`Door Knocks (${canvassRecords.length})`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                 showCanvassLayer
-                  ? 'bg-teal-500 text-slate-950 border-teal-400 shadow-lg shadow-teal-500/30'
-                  : 'bg-slate-900/90 text-teal-300 border-teal-500/30 hover:border-teal-500/60'
+                  ? 'bg-teal-500 text-slate-950 border-teal-400 shadow-md shadow-teal-500/30'
+                  : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
-              <Footprints className="w-3.5 h-3.5" />
-              <span>Doors ({canvassRecords.length})</span>
+              <Footprints className="w-4 h-4" />
             </button>
 
-            {/* Ground Force Volunteers */}
+            {/* 4. Field Force / Volunteers */}
             <button
               onClick={() => setShowFieldForceLayer(!showFieldForceLayer)}
-              className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
+              title={`Live Field Force (${activeVolunteersCount})`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                 showFieldForceLayer
-                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-lg shadow-emerald-500/30'
-                  : 'bg-slate-900/90 text-emerald-300 border-emerald-500/30 hover:border-emerald-500/60'
+                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
+                  : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
-              <Users className="w-3.5 h-3.5" />
-              <span>Field Force ({activeVolunteersCount})</span>
+              <Users className="w-4 h-4" />
             </button>
 
-            {/* Turf Routes */}
+            {/* 5. Turf Routes */}
             <button
               onClick={() => setShowRoutesLayer(!showRoutesLayer)}
-              className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
+              title={`Canvass Turf Routes (${routes.length})`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                 showRoutesLayer
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-lg shadow-purple-500/30'
-                  : 'bg-slate-900/90 text-purple-300 border-purple-500/30 hover:border-purple-500/60'
+                  ? 'bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-500/30'
+                  : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
-              <Compass className="w-3.5 h-3.5" />
-              <span>Turf Routes ({routes.length})</span>
+              <Compass className="w-4 h-4" />
             </button>
 
-            {/* Campaign Heatmap Toggle */}
+            {/* 6. Voting Precincts */}
+            <button
+              onClick={() => setShowPrecincts(!showPrecincts)}
+              title={`Voting Precincts (${precincts.length})`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
+                showPrecincts
+                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-500/30'
+                  : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
+              }`}
+            >
+              <Vote className="w-4 h-4" />
+            </button>
+
+            {/* 7. Bristol Boundary Overlay */}
+            {setShowBoundary && (
+              <button
+                onClick={() => {
+                  const next = !showBoundary;
+                  setShowBoundary(next);
+                }}
+                title="Bristol Boundary Overlay"
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
+                  showBoundary
+                    ? 'bg-sky-600 text-white border-sky-400 shadow-md shadow-sky-500/30'
+                    : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* 8. Vibrant Heatmap */}
             {setShowHeatmap && (
               <button
                 onClick={() => setShowHeatmap(!showHeatmap)}
-                className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
+                title="Sign Density Heatmap"
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                   showHeatmap
-                    ? 'bg-gradient-to-r from-orange-500 to-rose-600 text-white border-orange-400 shadow-lg shadow-rose-600/30'
-                    : 'bg-slate-900/90 text-orange-300 border-orange-500/30 hover:border-orange-500/60'
+                    ? 'bg-gradient-to-br from-orange-500 to-rose-600 text-white border-orange-400 shadow-md shadow-rose-600/30'
+                    : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
                 }`}
               >
-                <Flame className="w-3.5 h-3.5 text-orange-400" />
-                <span>Heatmap {showHeatmap ? 'ON' : 'OFF'}</span>
+                <Flame className="w-4 h-4" />
               </button>
             )}
 
-            {/* Bristol Boundary Overlay Toggle */}
-            {setShowBoundary && (
+            {/* 9. Street Dot / Standard Pin View */}
+            {setUseDotMode && (
               <button
-                onClick={() => setShowBoundary(!showBoundary)}
-                className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
-                  showBoundary
-                    ? 'bg-sky-600 text-white border-sky-400 shadow-lg shadow-sky-600/30'
-                    : 'bg-slate-900/90 text-sky-300 border-sky-500/30 hover:border-sky-500/60'
+                onClick={() => setUseDotMode(!useDotMode)}
+                title={useDotMode ? "Switch to Standard Pins" : "Fine Street Dots"}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
+                  useDotMode
+                    ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/30'
+                    : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
                 }`}
               >
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Bristol Boundary</span>
+                <CircleDot className="w-4 h-4" />
               </button>
             )}
           </div>
+        )}
+      </div>
+
+      {/* ============================================================
+          3. FLOATING BOTTOM VIP INTEL DRAWER (Elevated Safe from Safari Nav)
+          ============================================================ */}
+      <div className="absolute bottom-3 inset-x-0 z-30 pointer-events-auto pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] px-3">
+        <div className="max-w-md mx-auto bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-2xl overflow-hidden transition-all duration-300">
+          
+          {/* Drawer Toggle Header Button */}
+          <button
+            type="button"
+            onClick={() => setIsTrayExpanded(!isTrayExpanded)}
+            className="w-full py-2.5 px-4 flex items-center justify-between text-slate-300 hover:text-white active:scale-[0.99] transition"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-black tracking-wider uppercase text-white">VIP Intel & SitRep</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300 bg-white/10 px-2.5 py-1 rounded-full border border-white/10">
+              <span>{isTrayExpanded ? 'Close Drawer' : 'Precincts & Pulse'}</span>
+              <ChevronUp className={`w-3 h-3 transition-transform duration-300 ${isTrayExpanded ? 'rotate-180' : ''}`} />
+            </div>
+          </button>
 
           {/* Expandable Executive Drawer Content */}
           {isTrayExpanded && (

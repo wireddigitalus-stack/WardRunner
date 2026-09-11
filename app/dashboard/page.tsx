@@ -2116,6 +2116,11 @@ export default function DashboardPage() {
         setShowHeatmap={setShowHeatmap}
         showBoundary={showBoundary}
         setShowBoundary={setShowBoundary}
+        useDotMode={useDotMode}
+        setUseDotMode={setUseDotMode}
+        onRecenter={recenter}
+        onToggle3D={toggle3D}
+        is3D={is3D}
         onOpenBristolFacts={() => {
           setSelectedSign(null);
           setSelectedRec(null);
@@ -2181,21 +2186,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-
-      {/* ============================================================
-          MOBILE MAP CONTROLS (Recenter & 3D Tilt - Minimal)
-          ============================================================ */}
-      <div className="md:hidden absolute right-3 top-16 z-20 flex flex-col gap-1.5 pointer-events-auto">
-        <div className="bg-slate-950/85 backdrop-blur-xl border border-white/10 rounded-2xl p-1 flex flex-col items-center shadow-xl">
-          <button onClick={recenter} title="Recenter Bristol" className="p-2 rounded-xl hover:bg-emerald-500/15 text-emerald-400 active:scale-90 transition-all">
-            <Navigation className="w-4 h-4" />
-          </button>
-          <div className="w-4 h-px bg-white/10 my-0.5" />
-          <button onClick={toggle3D} title="3D Perspective" className={`p-2 rounded-xl text-[11px] font-black transition-all active:scale-90 ${is3D ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-300'}`}>
-            3D
-          </button>
-        </div>
-      </div>
 
       {/* ============================================================
           RIGHT-RAIL MAP CONTROLS (Desktop md: screens — 100% Unchanged)
