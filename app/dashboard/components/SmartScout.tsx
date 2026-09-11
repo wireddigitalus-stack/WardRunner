@@ -14,9 +14,15 @@ import {
   MessageCircle,
   Bell,
   BellOff,
+  Footprints,
+  UserPlus,
+  Users,
+  Clock,
+  CheckCircle2,
 } from 'lucide-react';
-import type { Sign, SignType, Recommendation } from '@/lib/types';
+import type { Sign, SignType, Recommendation, CanvassRoute } from '@/lib/types';
 import type { TrafficStation, Intersection } from '@/lib/trafficData';
+import { addCanvassRoute } from '@/lib/canvassRouteData';
 import DictateButton from '@/app/components/DictateButton';
 
 interface SmartScoutProps {
@@ -30,6 +36,11 @@ interface SmartScoutProps {
   onFlyTo: (lat: number, lng: number) => void;
   onSelectRec: (rec: Recommendation) => void;
   searchBar?: React.ReactNode;
+  routes?: CanvassRoute[];
+  onSelectRoute?: (route: CanvassRoute) => void;
+  onAssignRoute?: (routeId: string, volunteerName: string) => void;
+  onAddRoute?: (route: CanvassRoute) => void;
+  availableVolunteers?: { id: string; name: string; role: string }[];
 }
 
 export default function SmartScout({
@@ -43,12 +54,25 @@ export default function SmartScout({
   onFlyTo,
   onSelectRec,
   searchBar,
+  routes = [],
+  onSelectRoute,
+  onAssignRoute,
+  onAddRoute,
+  availableVolunteers = [],
 }: SmartScoutProps) {
   const [expanded, setExpanded] = useState(false);
-  const [tab, setTab] = useState<'recs' | 'chat'>('recs');
+  const [tab, setTab] = useState<'recs' | 'turf' | 'chat'>('recs');
   const [loading, setLoading] = useState(false);
+  const [turfLoading, setTurfLoading] = useState(false);
   const [error, setError] = useState('');
+  const [turfError, setTurfError] = useState('');
   const [notifications, setNotifications] = useState(true);
+
+  // Turf generator controls
+  const [selectedPrecinctCode, setSelectedPrecinctCode] = useState('3A');
+  const [doorTarget, setDoorTarget] = useState(40);
+  const [durationMinutes, setDurationMinutes] = useState(45);
+  const [assigningRouteId, setAssigningRouteId] = useState<string | null>(null);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
@@ -76,6 +100,35 @@ export default function SmartScout({
       setError(err.message || 'Failed to get recommendations');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTurfRoutes = async () => {
+    setTurfLoading(true);
+    setTurfError('');
+    try {
+      const res = await fetch('/api/scout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'canvass_route',
+          precinct_code: selectedPrecinctCode,
+          door_target: doorTarget,
+          target_duration: durationMinutes,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      const generatedRoutes = data.routes || [];
+      for (const r of generatedRoutes) {
+        const saved = await addCanvassRoute(r);
+        if (onAddRoute) onAddRoute(saved);
+        if (onSelectRoute) onSelectRoute(saved);
+      }
+    } catch (err: any) {
+      setTurfError(err.message || 'Failed to generate turf routes');
+    } finally {
+      setTurfLoading(false);
     }
   };
 
@@ -185,18 +238,24 @@ export default function SmartScout({
 
             {/* Tab Switcher */}
             <div className="px-3 pt-3 pb-2 shrink-0">
-              <div className="grid grid-cols-2 gap-1 p-0.5 rounded-xl bg-white/5">
+              <div className="grid grid-cols-3 gap-1 p-0.5 rounded-xl bg-white/5 text-[10px]">
                 <button
                   onClick={() => setTab('recs')}
-                  className={`py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${tab === 'recs' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25' : 'opacity-40 hover:opacity-70'}`}
+                  className={`py-1.5 rounded-lg font-bold flex items-center justify-center gap-1 transition-all ${tab === 'recs' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25' : 'opacity-40 hover:opacity-70'}`}
                 >
-                  <Target className="w-3 h-3" /> Recommendations
+                  <Target className="w-3 h-3" /> Signs
+                </button>
+                <button
+                  onClick={() => setTab('turf')}
+                  className={`py-1.5 rounded-lg font-bold flex items-center justify-center gap-1 transition-all ${tab === 'turf' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md shadow-purple-500/25' : 'opacity-40 hover:opacity-70'}`}
+                >
+                  <Footprints className="w-3 h-3" /> Turf
                 </button>
                 <button
                   onClick={() => setTab('chat')}
-                  className={`py-1.5 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${tab === 'chat' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25' : 'opacity-40 hover:opacity-70'}`}
+                  className={`py-1.5 rounded-lg font-bold flex items-center justify-center gap-1 transition-all ${tab === 'chat' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/25' : 'opacity-40 hover:opacity-70'}`}
                 >
-                  <MessageCircle className="w-3 h-3" /> Ask Scout
+                  <MessageCircle className="w-3 h-3" /> Chat
                 </button>
               </div>
             </div>
@@ -280,6 +339,191 @@ export default function SmartScout({
                     <div className="text-center py-6">
                       <p className="text-[10px] opacity-30">No recommendations yet</p>
                       <button onClick={fetchRecommendations} className="mt-2 text-[10px] font-bold text-amber-400">Generate Now</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* === TURF CANVASS ROUTES === */}
+              {tab === 'turf' && (
+                <div className="space-y-2.5">
+                  {/* Generation Controls */}
+                  <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-300 flex items-center gap-1">
+                        <Footprints className="w-3 h-3" /> Scout Canvass Turfs
+                      </span>
+                      <span className="text-[9px] text-zinc-400 font-medium">Bristol, TN</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5 text-xs">
+                      <div>
+                        <label className="text-[9px] text-zinc-400 block mb-0.5 font-semibold">Target Precinct</label>
+                        <select
+                          value={selectedPrecinctCode}
+                          onChange={e => setSelectedPrecinctCode(e.target.value)}
+                          className="w-full h-7 px-2 rounded-lg bg-black/40 border border-white/10 text-[10px] font-bold text-white focus:outline-none"
+                        >
+                          <option value="3A">Precinct 3A (Anderson)</option>
+                          <option value="2A">Precinct 2A (Virginia Ave)</option>
+                          <option value="2B">Precinct 2B (Holston View)</option>
+                          <option value="2C">Precinct 2C (Avoca)</option>
+                          <option value="1A">Precinct 1A (S. Holston)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[9px] text-zinc-400 block mb-0.5 font-semibold">Doors / Duration</label>
+                        <select
+                          value={doorTarget}
+                          onChange={e => {
+                            const d = Number(e.target.value);
+                            setDoorTarget(d);
+                            setDurationMinutes(d === 25 ? 30 : d === 40 ? 45 : d === 50 ? 60 : 75);
+                          }}
+                          className="w-full h-7 px-2 rounded-lg bg-black/40 border border-white/10 text-[10px] font-bold text-white focus:outline-none"
+                        >
+                          <option value="25">25 doors (~30m)</option>
+                          <option value="40">40 doors (~45m)</option>
+                          <option value="50">50 doors (~60m)</option>
+                          <option value="70">70 doors (~75m)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={fetchTurfRoutes}
+                      disabled={turfLoading}
+                      className="w-full py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-md shadow-purple-500/20 active:scale-95 transition disabled:opacity-50"
+                    >
+                      {turfLoading ? (
+                        <>
+                          <Sparkles className="w-3 h-3 animate-spin" />
+                          <span>Mapping Neighborhood Sidewalks…</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3" />
+                          <span>Generate Optimized Turf Loops</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {turfError && (
+                    <div className="p-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-[10px]">
+                      <p className="font-bold">⚠️ {turfError}</p>
+                      <button onClick={fetchTurfRoutes} className="mt-1 underline opacity-80">Retry</button>
+                    </div>
+                  )}
+
+                  {/* Route List */}
+                  {routes.length > 0 ? (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-zinc-400 px-0.5">
+                        <span>Active & Available Turfs</span>
+                        <span className="font-mono text-purple-300">{routes.length} Total</span>
+                      </div>
+
+                      {routes.map((route) => {
+                        const isAssigned = !!route.assigned_volunteer_name;
+                        const isCompleted = route.status === 'completed';
+
+                        return (
+                          <div
+                            key={route.id}
+                            className="p-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05] transition-all space-y-2"
+                          >
+                            <div className="flex items-start justify-between gap-1.5">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[8px] font-extrabold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                    {route.precinct_code}
+                                  </span>
+                                  <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded ${isCompleted ? 'bg-emerald-500/20 text-emerald-300' : isAssigned ? 'bg-sky-500/20 text-sky-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                                    {isCompleted ? 'DONE' : isAssigned ? 'ASSIGNED' : 'OPEN'}
+                                  </span>
+                                </div>
+                                <h4 className="text-[11px] font-bold text-white mt-1 truncate">
+                                  {route.name}
+                                </h4>
+                                <p className="text-[9px] text-zinc-400 mt-0.5 flex items-center gap-1.5">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  ~{route.estimated_walk_minutes}m • {route.target_doors} doors • {route.distance_miles}mi
+                                </p>
+                              </div>
+                            </div>
+
+                            <p className="text-[9px] text-zinc-400 line-clamp-2 italic leading-relaxed">
+                              "{route.strategic_reasoning}"
+                            </p>
+
+                            {/* Assigned Volunteer Pill or Quick Assign */}
+                            <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[10px]">
+                              <div className="flex items-center gap-1 text-zinc-300">
+                                <Users className="w-3 h-3 text-purple-400" />
+                                <span className="font-semibold truncate max-w-[110px]">
+                                  {route.assigned_volunteer_name || 'No volunteer'}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => {
+                                    if (onSelectRoute) onSelectRoute(route);
+                                    if (onFlyTo) onFlyTo(route.start_point.lat, route.start_point.lng);
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white font-bold text-[9px] transition active:scale-95"
+                                >
+                                  Preview
+                                </button>
+
+                                <div className="relative">
+                                  <button
+                                    onClick={() => setAssigningRouteId(assigningRouteId === route.id ? null : route.id)}
+                                    className="px-2 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 font-bold text-[9px] transition flex items-center gap-0.5 active:scale-95"
+                                  >
+                                    <UserPlus className="w-2.5 h-2.5" />
+                                    <span>{isAssigned ? 'Reassign' : 'Assign'}</span>
+                                  </button>
+
+                                  {assigningRouteId === route.id && (
+                                    <div className="absolute right-0 bottom-full mb-1 w-44 rounded-xl bg-slate-900 border border-white/15 p-1 shadow-2xl z-50 animate-slide-up text-[10px]">
+                                      <div className="text-[8px] font-bold text-zinc-400 px-2 py-1 uppercase">
+                                        Assign Volunteer
+                                      </div>
+                                      {availableVolunteers.map(vol => (
+                                        <button
+                                          key={vol.id}
+                                          onClick={() => {
+                                            if (onAssignRoute) onAssignRoute(route.id, vol.name);
+                                            setAssigningRouteId(null);
+                                          }}
+                                          className={`w-full text-left px-2 py-1 rounded-lg transition flex items-center justify-between ${
+                                            route.assigned_volunteer_name === vol.name
+                                              ? 'bg-purple-500/30 text-purple-200 font-bold'
+                                              : 'hover:bg-white/10 text-white'
+                                          }`}
+                                        >
+                                          <span>{vol.name}</span>
+                                          <span className="text-[8px] text-zinc-400">{vol.role.split(' ')[0]}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-[10px] opacity-30">No turf routes generated yet</p>
+                      <button onClick={fetchTurfRoutes} className="mt-2 text-[10px] font-bold text-purple-300 underline">
+                        Generate Turf Loops for {selectedPrecinctCode}
+                      </button>
                     </div>
                   )}
                 </div>

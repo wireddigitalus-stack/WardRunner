@@ -94,6 +94,78 @@ Respond ONLY with a valid JSON array. Each element must have:
       const recommendations = JSON.parse(jsonMatch[0]);
       return NextResponse.json({ recommendations });
 
+    } else if (mode === 'canvass_route') {
+      // AI Canvass Turf Route Generation
+      const targetPrecinct = body.precinct_code || '3A';
+      const targetDoors = body.door_target || 45;
+      const targetMinutes = body.target_duration || 50;
+
+      const canvassPrompt = `You are an expert field director and turf-cutter for political grassroots campaigns in Bristol, Tennessee.
+Your job is to generate 2 to 3 high-impact, realistic neighborhood walking canvass routes (turf cuts) for volunteers to knock doors.
+
+TARGET PRECINCT: ${targetPrecinct} (Bristol, TN)
+TARGET PARAMETERS: Approximately ${targetDoors} doors, ${targetMinutes} minutes walk loop per route.
+
+NEIGHBORHOOD CONTEXT FOR BRISTOL TN PRECINCTS:
+- Precinct 3A (Anderson): Dense residential grid along 9th St, 10th St, Anderson St, Windsor Ave, Kentucky Ave, near Anderson Elementary. (Center ~ 36.5866, -82.1963)
+- Precinct 2A (Virginia Ave): Virginia Ave corridor, Melrose St, Carolina Ave, Pennsylvania Ave, East Cedar St. (Center ~ 36.6025, -82.1765)
+- Precinct 2B (Holston View): King College Rd, Country Club Dr, Valley View Dr, Golfway Dr, suburban single-family loop near Holston View School. (Center ~ 36.5910, -82.1550)
+- Precinct 2C (Avoca): Subdivisions off Volunteer Pkwy (US-11W), Exide Dr, Tremont Ave, Vance Dr. (Center ~ 36.5660, -82.1950)
+- Precinct 1A (South Holston): Holston Hills, South Holston Lake corridor, Ruth St, Weaver Pike. (Center ~ 36.5830, -82.1850)
+
+REQUIREMENTS FOR EACH ROUTE:
+1. Must be a walkable loop starting and ending at a landmark or street corner.
+2. Must provide sequential street waypoints with house number ranges (e.g. "901 - 945 9th St").
+3. Must provide 6-12 path coordinates [lng, lat] along Bristol TN roads forming the walking perimeter loop.
+4. Must include strategic political rationale for why this block matters for municipal council turnout.
+
+Respond ONLY with a valid JSON array matching this exact schema:
+[
+  {
+    "name": "string (e.g. Turf 3A: Anderson & Windsor Loop)",
+    "precinct_code": "${targetPrecinct}",
+    "precinct_name": "string",
+    "target_doors": number,
+    "estimated_walk_minutes": number,
+    "distance_miles": number,
+    "start_point": {
+      "lat": number,
+      "lng": number,
+      "address": "string"
+    },
+    "waypoints": [
+      {
+        "street": "string",
+        "lat": number,
+        "lng": number,
+        "house_range": "string",
+        "target_doors": number,
+        "notes": "string"
+      }
+    ],
+    "path_coordinates": [
+      [lng, lat],
+      [lng, lat]
+    ],
+    "strategic_reasoning": "string"
+  }
+]`;
+
+      const result = await runGenerate({
+        contents: [
+          { role: 'user', parts: [{ text: canvassPrompt }] },
+        ],
+      });
+
+      const text = result.response.text();
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        return NextResponse.json({ error: 'Failed to parse canvass routes', raw: text }, { status: 500 });
+      }
+
+      const routes = JSON.parse(jsonMatch[0]);
+      return NextResponse.json({ routes });
+
     } else if (mode === 'chat') {
       // Chat mode — conversational Q&A
       const userMessage = message || 'What are the best locations for signs?';
@@ -110,7 +182,7 @@ Respond ONLY with a valid JSON array. Each element must have:
       return NextResponse.json({ response: text });
 
     } else {
-      return NextResponse.json({ error: 'Invalid mode. Use "recommend" or "chat".' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid mode. Use "recommend", "canvass_route", or "chat".' }, { status: 400 });
     }
 
   } catch (error: any) {

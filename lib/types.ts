@@ -115,3 +115,38 @@ export interface VolunteerLocationPing {
   breadcrumbs?: [number, number][]; // [lng, lat] coordinate trail
 }
 
+export type CanvassRouteStatus = 'draft' | 'assigned' | 'in_progress' | 'completed';
+
+export interface CanvassRouteWaypoint {
+  street: string;
+  lat: number;
+  lng: number;
+  house_range?: string; // e.g. "901 - 945 9th St"
+  target_doors?: number;
+  notes?: string;
+}
+
+export interface CanvassRoute {
+  id: string;
+  campaign_id: string;
+  name: string;
+  precinct_code: string;
+  precinct_name: string;
+  assigned_volunteer_name?: string | null;
+  status: CanvassRouteStatus;
+  target_doors: number;
+  estimated_walk_minutes: number;
+  distance_miles: number;
+  start_point: {
+    lat: number;
+    lng: number;
+    address: string;
+  };
+  waypoints: CanvassRouteWaypoint[];
+  path_coordinates: [number, number][]; // [lng, lat] street-snapped coordinates
+  strategic_reasoning: string;
+  created_at: string;
+  assigned_at?: string;
+  completed_at?: string;
+}
+

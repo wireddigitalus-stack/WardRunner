@@ -13,11 +13,13 @@ import PrecinctDetailCard from './components/PrecinctDetailCard';
 import MissionDetailCard from './components/MissionDetailCard';
 import MissionsDrawerTab from './components/MissionsDrawerTab';
 import CommandPinGate from './components/CommandPinGate';
+import RouteDetailCard from './components/RouteDetailCard';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
 import { getStoredCanvassRecords, getStoredVolunteerPings, snapWalkingPathToStreets } from '@/lib/canvassData';
-import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing } from '@/lib/types';
+import { getStoredCanvassRoutes, saveStoredCanvassRoutes, assignCanvassRoute, updateCanvassRouteStatus } from '@/lib/canvassRouteData';
+import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
 import DictateButton from '@/app/components/DictateButton';
 import {
@@ -54,6 +56,7 @@ import {
   Minus,
   CircleDot,
   Lock,
+  Compass,
 } from 'lucide-react';
 
 /* ================================================================
@@ -188,6 +191,12 @@ export default function DashboardPage() {
   const canvassMarkersRef = useRef<any[]>([]);
   const volunteerMarkersRef = useRef<any[]>([]);
 
+  // Canvass Routes State
+  const [routes, setRoutes] = useState<CanvassRoute[]>([]);
+  const [selectedRoute, setSelectedRoute] = useState<CanvassRoute | null>(null);
+  const [showRoutesLayer, setShowRoutesLayer] = useState(false);
+  const routeMarkersRef = useRef<any[]>([]);
+
   // Drawer Active Tab ('signs' | 'inventory' | 'precincts' | 'missions')
   const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts' | 'missions'>('signs');
 
@@ -213,6 +222,13 @@ export default function DashboardPage() {
     window.addEventListener('wardrunner_canvass_updated', loadGroundData);
     window.addEventListener('wardrunner_pings_updated', loadGroundData);
 
+    // Canvass Routes Data Loader
+    const loadRoutes = () => {
+      setRoutes(getStoredCanvassRoutes());
+    };
+    loadRoutes();
+    window.addEventListener('wardrunner_routes_updated', loadRoutes);
+
     // Poll ground data every 8s for live field updates
     const groundInterval = setInterval(loadGroundData, 8000);
 
@@ -220,6 +236,7 @@ export default function DashboardPage() {
       window.removeEventListener('wardrunner_assignments_updated', loadAssigns);
       window.removeEventListener('wardrunner_canvass_updated', loadGroundData);
       window.removeEventListener('wardrunner_pings_updated', loadGroundData);
+      window.removeEventListener('wardrunner_routes_updated', loadRoutes);
       clearInterval(groundInterval);
     };
   }, []);
@@ -394,6 +411,22 @@ export default function DashboardPage() {
   const activeMissionsCount = useMemo(() => {
     return assignments.filter(a => a.status !== 'completed').length;
   }, [assignments]);
+
+  const availableVolunteersList = useMemo(() => {
+    if (volunteerPings.length > 0) {
+      return volunteerPings.map(p => ({
+        id: p.volunteer_name,
+        name: p.volunteer_name,
+        role: String(p.role || 'Volunteer'),
+      }));
+    }
+    return [
+      { id: 'vol-1', name: 'Sarah Jenkins', role: 'Door Canvasser' },
+      { id: 'vol-2', name: 'Marcus Taylor', role: 'Flyer Hanger' },
+      { id: 'vol-3', name: 'David Vance', role: 'Field Director' },
+      { id: 'vol-4', name: 'Campaign Volunteer', role: 'Field Volunteer' },
+    ];
+  }, [volunteerPings]);
 
   /* ---------- Inventory Supply Calculations ---------- */
   const inventoryStats = useMemo(() => {
@@ -619,6 +652,38 @@ export default function DashboardPage() {
           },
         });
 
+        /* --- Canvass Turf Walking Routes --- */
+        map.addSource('canvass-turf-routes', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        });
+
+        map.addLayer({
+          id: 'canvass-turf-glow',
+          type: 'line',
+          source: 'canvass-turf-routes',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': '#a855f7',
+            'line-width': 9,
+            'line-opacity': isDark ? 0.45 : 0.3,
+            'line-blur': 4,
+          },
+        });
+
+        map.addLayer({
+          id: 'canvass-turf-line',
+          type: 'line',
+          source: 'canvass-turf-routes',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: {
+            'line-color': '#c084fc',
+            'line-width': 3.5,
+            'line-opacity': 0.9,
+            'line-dasharray': [4, 2],
+          },
+        });
+
         // Precinct hover cursor and click to inspect
         try {
           map.on('mouseenter', 'precincts-fill', () => {
@@ -670,12 +735,14 @@ export default function DashboardPage() {
     const hVis = showHeatmap ? 'visible' : 'none';
     const pVis = showPrecincts ? 'visible' : 'none';
     const vVis = showFieldForceLayer ? 'visible' : 'none';
+    const rVis = (showRoutesLayer || selectedRoute) ? 'visible' : 'none';
     ['boundary-fill', 'boundary-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', bVis));
     ['corridor-glow', 'corridor-core', 'corridor-inner'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
     ['traffic-heat-glow', 'traffic-heat-core'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', hVis));
     ['precincts-fill', 'precincts-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', pVis));
     ['volunteer-trails-glow', 'volunteer-trails-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', vVis));
-  }, [showBoundary, showCorridors, showHeatmap, showPrecincts, showFieldForceLayer]);
+    ['canvass-turf-glow', 'canvass-turf-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', rVis));
+  }, [showBoundary, showCorridors, showHeatmap, showPrecincts, showFieldForceLayer, showRoutesLayer, selectedRoute]);
 
   /* ---------- Precinct Center Badges on Map ---------- */
   useEffect(() => {
@@ -1464,6 +1531,82 @@ export default function DashboardPage() {
     })();
   }, [volunteerPings, canvassRecords, showFieldForceLayer, selectedVolunteerFilter, selectedVolunteerGroup]);
 
+  /* ---------- Canvass Turf Routes Rendering ---------- */
+  useEffect(() => {
+    (async () => {
+      const m = mapRef.current;
+      if (!m) return;
+      const mgl = (await import('maplibre-gl')).default;
+
+      routeMarkersRef.current.forEach(item => item.marker?.remove?.());
+      routeMarkersRef.current = [];
+
+      const routeFeatures: any[] = [];
+
+      if (showRoutesLayer || selectedRoute) {
+        const routesToRender = selectedRoute ? [selectedRoute] : routes;
+
+        routesToRender.forEach(route => {
+          if (route.path_coordinates && route.path_coordinates.length >= 2) {
+            routeFeatures.push({
+              type: 'Feature',
+              properties: { id: route.id, name: route.name, precinct: route.precinct_code },
+              geometry: {
+                type: 'LineString',
+                coordinates: route.path_coordinates,
+              },
+            });
+
+            // Add start pin (🚩)
+            const startEl = document.createElement('div');
+            startEl.className = 'route-start-marker';
+            startEl.style.cursor = 'pointer';
+            startEl.style.zIndex = '550';
+            startEl.innerHTML = `
+              <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
+                <div style="background:rgba(15,23,42,0.92);color:white;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:900;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.5);border:1.5px solid #a855f7;display:flex;align-items:center;gap:4px;">
+                  <span>🚩</span>
+                  <span>${route.name.split(':')[0]}</span>
+                </div>
+                <div style="width:24px;height:24px;border-radius:50%;background:#9333ea;border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);font-size:11px;margin-top:2px;">
+                  🚶
+                </div>
+              </div>
+            `;
+
+            startEl.addEventListener('click', (e) => {
+              e.stopPropagation();
+              setSelectedRoute(route);
+              setSelectedSign(null);
+              setSelectedMission(null);
+              setSelectedCanvassRecord(null);
+              setSelectedPrecinct(null);
+            });
+
+            const marker = new mgl.Marker({
+              element: startEl,
+              anchor: 'bottom',
+              pitchAlignment: 'viewport',
+              rotationAlignment: 'viewport',
+            }).setLngLat([route.start_point.lng, route.start_point.lat]).addTo(m);
+
+            routeMarkersRef.current.push({ marker, id: route.id });
+          }
+        });
+      }
+
+      try {
+        const src = m.getSource('canvass-turf-routes');
+        if (src) {
+          (src as any).setData({
+            type: 'FeatureCollection',
+            features: routeFeatures,
+          });
+        }
+      } catch {}
+    })();
+  }, [routes, selectedRoute, showRoutesLayer]);
+
   /* ---------- Actions ---------- */
   const toggle3D = useCallback(() => {
     const m = mapRef.current; if (!m) return;
@@ -1734,6 +1877,13 @@ export default function DashboardPage() {
             className={`p-2 rounded-xl transition-all ${showFieldForceLayer ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-md shadow-emerald-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <Users className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowRoutesLayer(!showRoutesLayer)}
+            title={showRoutesLayer ? "Hide Canvass Turf Routes" : "Show Canvass Turf Routes"}
+            className={`p-2 rounded-xl transition-all ${showRoutesLayer ? 'bg-purple-500/25 text-purple-300 border border-purple-500/40 shadow-md shadow-purple-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
+            <Compass className="w-4 h-4" />
           </button>
           <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
           <button
@@ -2646,6 +2796,26 @@ export default function DashboardPage() {
             m.fitBounds(bounds, { padding: 80, duration: 1000 });
           }
         }}
+        routes={routes}
+        onSelectRoute={(route) => {
+          setShowRoutesLayer(true);
+          setSelectedRoute(route);
+          setSelectedSign(null);
+          setSelectedMission(null);
+          setSelectedPrecinct(null);
+          setSelectedCanvassRecord(null);
+        }}
+        onAssignRoute={(routeId, volunteerName) => {
+          assignCanvassRoute(routeId, volunteerName);
+          const updated = getStoredCanvassRoutes();
+          setRoutes(updated);
+          const sel = updated.find(r => r.id === routeId);
+          if (sel) setSelectedRoute(sel);
+        }}
+        onAddRoute={() => {
+          setRoutes(getStoredCanvassRoutes());
+        }}
+        availableVolunteers={availableVolunteersList}
       />
 
       {/* ============================================================
@@ -2760,6 +2930,34 @@ export default function DashboardPage() {
         onFlyTo={(lat, lng) => {
           mapRef.current?.flyTo({ center: [lng, lat], zoom: 16, pitch: is3D ? 55 : 0, duration: 800 });
         }}
+        isDark={isDark}
+      />
+
+      {/* ============================================================
+          CANVASS TURF ROUTE DETAIL CARD (Bottom Center slide-up)
+          ============================================================ */}
+      <RouteDetailCard
+        route={selectedRoute}
+        onClose={() => setSelectedRoute(null)}
+        canvassRecords={canvassRecords}
+        onFlyToRoute={(lat, lng) => {
+          mapRef.current?.flyTo({ center: [lng, lat], zoom: 16.5, pitch: is3D ? 55 : 0, duration: 900 });
+        }}
+        onAssignVolunteer={(routeId, volunteerName) => {
+          assignCanvassRoute(routeId, volunteerName);
+          const updated = getStoredCanvassRoutes();
+          setRoutes(updated);
+          const sel = updated.find(r => r.id === routeId);
+          if (sel) setSelectedRoute(sel);
+        }}
+        onToggleStatus={(routeId, status) => {
+          updateCanvassRouteStatus(routeId, status);
+          const updated = getStoredCanvassRoutes();
+          setRoutes(updated);
+          const sel = updated.find(r => r.id === routeId);
+          if (sel) setSelectedRoute(sel);
+        }}
+        availableVolunteers={availableVolunteersList}
         isDark={isDark}
       />
     </div>

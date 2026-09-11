@@ -13,6 +13,7 @@ import {
   Volume2,
   Layers,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   Undo2,
   FileText,
@@ -21,6 +22,8 @@ import {
   UserCheck,
   Footprints,
   Compass,
+  Clock,
+  ExternalLink,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 import {
@@ -30,6 +33,7 @@ import {
   GroundActivityType,
   VolunteerSession,
   GroundVolunteerRole,
+  CanvassRoute,
 } from '@/lib/types';
 import {
   addCanvassRecord,
@@ -37,6 +41,7 @@ import {
   getStoredCanvassRecords,
   reportVolunteerPing,
 } from '@/lib/canvassData';
+import { getVolunteerActiveRoute } from '@/lib/canvassRouteData';
 import { addPlacedSign } from '@/lib/signData';
 
 const SENTIMENT_OPTIONS: { id: VoterSentiment; label: string; icon: string; bg: string; text: string; border: string }[] = [
@@ -78,6 +83,10 @@ export default function CanvassPage() {
   const [lastLoggedRecord, setLastLoggedRecord] = useState<CanvassRecord | null>(null);
   const [justLoggedToast, setJustLoggedToast] = useState<{ label: string; color: string } | null>(null);
   const [sessionHistory, setSessionHistory] = useState<CanvassRecord[]>([]);
+
+  // Active Assigned Turf Route
+  const [activeRoute, setActiveRoute] = useState<CanvassRoute | null>(null);
+  const [showRouteWaypoints, setShowRouteWaypoints] = useState(false);
 
   // Sound Chime helper
   const playTactileChime = (tone: 'high' | 'mid' | 'flyer') => {
@@ -159,6 +168,27 @@ export default function CanvassPage() {
       r => r.volunteer_name.toLowerCase().trim() === session.volunteerName.toLowerCase().trim()
     );
     setSessionHistory(myRecords);
+  }, [session]);
+
+  // 2b. Load Active Assigned Turf Route
+  useEffect(() => {
+    if (!session) {
+      setActiveRoute(null);
+      return;
+    }
+    const loadRoute = () => {
+      const r = getVolunteerActiveRoute(session.volunteerName);
+      setActiveRoute(r || null);
+    };
+    loadRoute();
+
+    const handleUpdate = () => loadRoute();
+    window.addEventListener('wardrunner_routes_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('wardrunner_routes_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, [session]);
 
   // 3. Location Acquisition
@@ -570,6 +600,106 @@ export default function CanvassPage() {
           </div>
         </div>
       </header>
+
+      {/* 1.5 Active Assigned Turf Route (Scout Walking Loop) */}
+      {activeRoute && (
+        <div className="mx-4 mt-3 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 shadow-xl shadow-indigo-950/20">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shrink-0">
+                <Compass className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/25 text-indigo-300 border border-indigo-500/30">
+                    Turf {activeRoute.precinct_code}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-semibold">Assigned Walking Route</span>
+                </div>
+                <h3 className="text-sm font-bold text-white mt-0.5 leading-tight">
+                  {activeRoute.name}
+                </h3>
+              </div>
+            </div>
+            <a
+              href={`https://maps.apple.com/?daddr=${encodeURIComponent(`${activeRoute.waypoints[0]?.street || 'Bristol TN'}, Bristol, TN`)}&dirflg=w`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-[11px] font-bold text-indigo-200 flex items-center gap-1 transition shrink-0 active:scale-95 shadow-sm"
+              title="Open walking directions in Apple Maps"
+            >
+              <Navigation className="w-3 h-3 text-indigo-300" />
+              <span>Walk</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+            </a>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-[11px] font-medium mb-1.5">
+              <span className="text-slate-300">
+                Route Progress: <strong className="text-white font-bold">{sessionHistory.length}</strong> / {activeRoute.target_doors} doors
+              </span>
+              <span className={`font-bold ${sessionHistory.length >= activeRoute.target_doors ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                {Math.min(100, Math.round((sessionHistory.length / Math.max(1, activeRoute.target_doors)) * 100))}%
+              </span>
+            </div>
+            <div className="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden border border-slate-700/50">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  sessionHistory.length >= activeRoute.target_doors
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                    : 'bg-gradient-to-r from-indigo-500 to-emerald-400'
+                }`}
+                style={{ width: `${Math.min(100, (sessionHistory.length / Math.max(1, activeRoute.target_doors)) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Waypoint Streets Expand Toggle */}
+          {activeRoute.waypoints && activeRoute.waypoints.length > 0 && (
+            <div className="mt-3 pt-2.5 border-t border-slate-800/80">
+              <button
+                type="button"
+                onClick={() => setShowRouteWaypoints(!showRouteWaypoints)}
+                className="w-full flex items-center justify-between text-[11px] font-semibold text-slate-400 hover:text-slate-200 transition"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-slate-400" />
+                  <span>{activeRoute.waypoints.length} Target Blocks ({activeRoute.estimated_walk_minutes} min walk)</span>
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showRouteWaypoints ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showRouteWaypoints && (
+                <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {activeRoute.waypoints.map((wp, i) => (
+                    <div
+                      key={i}
+                      className="p-2 rounded-xl bg-slate-950/70 border border-slate-800/80 text-[11px] flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-black flex items-center justify-center shrink-0">
+                          {i + 1}
+                        </span>
+                        <div>
+                          <p className="font-bold text-white leading-tight">{wp.street}</p>
+                          <p className="text-[10px] text-slate-400">
+                            {wp.house_range ? `${wp.house_range} • ` : ''}{wp.notes || 'Walking segment'}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/15 px-1.5 py-0.5 rounded border border-indigo-500/25 shrink-0">
+                        {wp.target_doors || 10} doors
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 2. Walk Session HUD (Doors, Contacts, Flyers) */}
       <div className="p-4">
