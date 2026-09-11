@@ -60,9 +60,9 @@ export const SEED_CANVASS_ROUTES: CanvassRoute[] = [
     estimated_walk_minutes: 50,
     distance_miles: 1.25,
     start_point: {
-      lat: 36.6025,
-      lng: -82.1765,
-      address: '1120 Virginia Ave',
+      lat: 36.6016,
+      lng: -82.1775,
+      address: 'Virginia Ave & E Cedar St',
     },
     waypoints: [
       { street: 'Virginia Avenue', lat: 36.6025, lng: -82.1765, house_range: '1120 – 1160 Virginia Ave', target_doors: 20, notes: 'East side residential homes' },
@@ -70,6 +70,7 @@ export const SEED_CANVASS_ROUTES: CanvassRoute[] = [
       { street: 'Carolina Avenue', lat: 36.6015, lng: -82.1740, house_range: '1050 – 1100 Carolina Ave', target_doors: 10, notes: 'Return corridor to Virginia Ave' },
     ],
     path_coordinates: [
+      [-82.1775, 36.6016],
       [-82.176466, 36.602484],
       [-82.176412, 36.602558],
       [-82.176153, 36.602914],
@@ -83,7 +84,7 @@ export const SEED_CANVASS_ROUTES: CanvassRoute[] = [
       [-82.173000, 36.604800],
       [-82.172500, 36.603800],
       [-82.174000, 36.602000],
-      [-82.176466, 36.602484],
+      [-82.1775, 36.6016],
     ],
     strategic_reasoning: 'Active pedestrian corridor with moderate turnout (33.8%) and strong receptiveness to municipal election literature.',
     created_at: new Date(Date.now() - 3600000 * 20).toISOString(),
@@ -138,6 +139,20 @@ export function getStoredCanvassRoutes(): CanvassRoute[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      // Auto-migrate route-2a-1 start point if still at legacy 36.6025 to avoid overlapping Marcus's stop
+      const r2a = parsed.find((r: any) => r.id === 'route-2a-1');
+      if (r2a && Math.abs(r2a.start_point?.lat - 36.6025) < 0.0005) {
+        r2a.start_point = {
+          lat: 36.6016,
+          lng: -82.1775,
+          address: 'Virginia Ave & E Cedar St',
+        };
+        const seed2a = SEED_CANVASS_ROUTES.find(s => s.id === 'route-2a-1');
+        if (seed2a) {
+          r2a.path_coordinates = seed2a.path_coordinates;
+        }
+        localStorage.setItem(CANVASS_ROUTES_STORAGE_KEY, JSON.stringify(parsed));
+      }
       return parsed;
     }
     return SEED_CANVASS_ROUTES;
