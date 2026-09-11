@@ -48,8 +48,8 @@ export default function RouteDetailCard({
   const appleMapsUrl = `https://maps.apple.com/?daddr=${route.start_point.lat},${route.start_point.lng}&dirflg=w`;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
-      <div className="w-[440px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+      <div className="w-full max-w-[440px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
         <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl border border-white/10">
         {/* Top Gradient Accent Bar */}
         <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${isCompleted ? 'from-emerald-400 to-teal-400' : isAssigned ? 'from-purple-500 to-indigo-500' : 'from-amber-400 to-orange-500'}`} />

@@ -165,7 +165,7 @@ export default function SmartScout({
       {/* ============================================
           LEFT RAIL: MAP LEGEND & SCOUT CARD (level with right nav)
           ============================================ */}
-      <div className="absolute top-[68px] sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-76px)] sm:w-[340px] flex flex-col gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
+      <div className="absolute top-[68px] sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-92px)] max-w-[320px] sm:max-w-none sm:w-[340px] flex flex-col gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
 
         {/* --- Map Legend (Desktop Left Rail) --- */}
         <div className="hidden sm:block pointer-events-auto">

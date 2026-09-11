@@ -79,8 +79,9 @@ export default function VolunteerFilterPanel({
   });
 
   return (
-    <div className="absolute top-20 left-4 z-30 w-84 sm:w-96 max-h-[80vh] glass rounded-3xl p-4 shadow-2xl border border-white/10 flex flex-col animate-slide-up backdrop-blur-xl">
-      {/* Panel Header */}
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+      <div className="w-full max-w-[420px] max-h-[88vh] glass rounded-3xl p-4 shadow-2xl border border-white/10 flex flex-col animate-slide-up backdrop-blur-xl pointer-events-auto overflow-y-auto no-scrollbar">
+        {/* Panel Header */}
       <div className="flex items-center justify-between pb-3 border-b border-white/10">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
@@ -242,5 +243,6 @@ export default function VolunteerFilterPanel({
         </button>
       </div>
     </div>
-  );
+  </div>
+);
 }

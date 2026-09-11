@@ -24,8 +24,8 @@ export default function MissionDetailCard({
   const isCompleted = mission.status === 'completed';
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
-      <div className="w-[420px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+      <div className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
         <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl border border-white/10">
         {/* Accent Edge */}
         <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${

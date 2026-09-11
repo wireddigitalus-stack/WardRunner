@@ -2294,8 +2294,8 @@ export default function DashboardPage() {
           SELECTED SIGN — INSPECTION CARD (Centered on Desktop and Mobile)
           ============================================================ */}
       {selectedSign && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
-          <div className="w-[380px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+          <div className="w-full max-w-[380px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
             <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
               {/* Accent edge */}
               <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${selectedSign.is_competitor ? 'from-rose-500 to-pink-500' : 'from-emerald-400 to-teal-400'}`} />
@@ -2375,8 +2375,8 @@ export default function DashboardPage() {
           SELECTED GROUND CANVASS RECORD — INSPECTION CARD (Centered on Desktop & Mobile)
           ============================================================ */}
       {selectedCanvassRecord && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
-          <div className="w-[400px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+          <div className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
             <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
               {/* Accent top edge */}
               <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${
@@ -2496,8 +2496,8 @@ export default function DashboardPage() {
           SCOUT RECOMMENDATION — APPROVAL CARD (Bottom Center slide-up)
           ============================================================ */}
       {selectedRec && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
-          <div className="w-[420px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+          <div className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
             <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl shadow-amber-500/10">
             {/* Amber glowing top edge */}
             <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300" />

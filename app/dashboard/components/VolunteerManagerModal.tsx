@@ -352,7 +352,7 @@ export default function VolunteerManagerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in pointer-events-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animate-fade-in pointer-events-auto">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity"
