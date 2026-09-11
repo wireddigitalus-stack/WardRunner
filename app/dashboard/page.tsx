@@ -697,68 +697,23 @@ export default function DashboardPage() {
         el.style.userSelect = 'none';
         el.style.zIndex = '1';
 
-        // Compact ghosted typography watermark directly in the middle of each precinct's color overlay
+        // Letters only watermark (e.g. 1A, 2A, 2B, 3A) directly on the map — no card container
         el.innerHTML = `
           <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
             pointer-events: none;
             user-select: none;
-            padding: 3px 8px;
-            border-radius: 10px;
-            background: rgba(15, 23, 42, 0.35);
-            backdrop-filter: blur(2px);
-            border: 1px solid ${p.color}25;
-            max-width: 120px;
-            transform: ${isSel ? 'scale(1.1)' : 'scale(1)'};
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+            font-size: 28px;
+            font-weight: 900;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            color: ${p.color};
+            opacity: ${isSel ? 1 : 0.82};
+            text-shadow: 0 0 16px ${p.color}80, 0 2px 8px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.95);
+            transform: ${isSel ? 'scale(1.15)' : 'scale(1)'};
+            transition: transform 0.2s ease, opacity 0.2s ease;
           ">
-            ${/* Compact Ghosted Precinct Code (e.g. 3A, 2A, 1B) */''}
-            <div style="
-              font-size: 22px;
-              font-weight: 900;
-              font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              letter-spacing: -0.02em;
-              line-height: 1;
-              color: ${p.color};
-              opacity: ${isSel ? 0.95 : 0.75};
-              text-shadow: 0 0 12px ${p.color}60, 0 1px 4px rgba(0,0,0,0.9);
-            ">
-              ${p.code}
-            </div>
-
-            ${/* Compact Ghosted Precinct Name */''}
-            <div style="
-              font-size: 9px;
-              font-weight: 800;
-              letter-spacing: 0.12em;
-              text-transform: uppercase;
-              color: white;
-              opacity: ${isSel ? 0.95 : 0.70};
-              margin-top: 2px;
-              text-shadow: 0 1px 4px rgba(0,0,0,0.95);
-              white-space: nowrap;
-            ">
-              ${p.name.replace('Precinct ', '').replace(/^[0-9][A-Z]\s*–\s*/, '')}
-            </div>
-
-            ${/* Compact Turnout */''}
-            <div style="
-              font-size: 8px;
-              font-weight: 700;
-              letter-spacing: 0.05em;
-              text-transform: uppercase;
-              color: ${p.color};
-              opacity: ${isSel ? 0.95 : 0.75};
-              margin-top: 1px;
-              text-shadow: 0 1px 3px rgba(0,0,0,0.95);
-              white-space: nowrap;
-            ">
-              ${p.historicTurnoutPct}% Turnout
-            </div>
+            ${p.code}
           </div>
         `;
 
