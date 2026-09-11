@@ -27,6 +27,7 @@ import {
   Camera,
   Scan,
   RefreshCw,
+  Zap,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 import { compressImageToBase64 } from '@/lib/imageCompression';
@@ -570,6 +571,20 @@ export default function CanvassPage() {
                 {isAuthenticating ? 'Authorizing...' : 'Start Walking Turf'}
                 <ChevronRight className="w-4 h-4" />
               </button>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPinInput('620620');
+                    setNameInput('Door Canvasser');
+                  }}
+                  className="w-full py-3 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-xs font-bold text-emerald-400 border border-emerald-500/30 flex items-center justify-center gap-1.5 active:scale-95 transition"
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                  <span>⚡ 1-Tap Canvasser Auto-Fill (PIN: 620620)</span>
+                </button>
+              </div>
             </form>
 
             <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
@@ -808,69 +823,69 @@ export default function CanvassPage() {
         {/* BUTTON 1: CONTACT (VOTER SPOKE) */}
         <button
           onClick={handleOpenContactModal}
-          className="w-full p-4 rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-xl shadow-emerald-500/20 active:scale-[0.98] transition border border-emerald-400/30 flex items-center justify-between group"
+          className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-2xl shadow-emerald-500/30 active:scale-[0.96] transition-all duration-150 border-2 border-emerald-300 flex items-center justify-between group"
         >
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-2xl group-hover:scale-110 transition">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition shrink-0">
               🤝
             </div>
             <div className="text-left">
-              <h3 className="text-lg font-black tracking-tight text-white leading-tight">
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight uppercase">
                 Voter Contact
               </h3>
-              <p className="text-xs text-emerald-100/80 font-medium">
-                Spoke with voter · Record sentiment & notes
+              <p className="text-xs sm:text-sm text-emerald-100 font-bold mt-0.5">
+                Spoke face-to-face · Record reaction
               </p>
             </div>
           </div>
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-            <ChevronRight className="w-5 h-5 text-white" />
-          </div>
+          <span className="text-xs font-black uppercase tracking-wider bg-white text-emerald-950 px-4 py-2 rounded-2xl shadow-md shrink-0">
+            SPOKE ➔
+          </span>
         </button>
 
         {/* BUTTON 2: NO CONTACT (NOT HOME) */}
         <button
           onClick={handleNoContactTap}
-          className="w-full p-4 rounded-3xl bg-slate-900 hover:bg-slate-850 text-white shadow-lg active:scale-[0.98] transition border border-slate-700/80 flex items-center justify-between group"
+          className="w-full p-5 sm:p-6 rounded-3xl bg-slate-900 hover:bg-slate-850 text-white shadow-xl active:scale-[0.96] transition-all duration-150 border-2 border-slate-700 flex items-center justify-between group"
         >
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-3xl group-hover:scale-105 transition shrink-0">
               🚪
             </div>
             <div className="text-left">
-              <h3 className="text-lg font-black tracking-tight text-slate-200 leading-tight">
-                No Contact · Not Home
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-slate-100 leading-tight uppercase">
+                Not Home / No Answer
               </h3>
-              <p className="text-xs text-slate-400 font-medium">
-                1-Tap Quick Log · Dropped pin at current GPS
+              <p className="text-xs sm:text-sm text-slate-400 font-bold mt-0.5">
+                Nobody at door · 1-Tap drop pin
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
-            1 Tap
+          <span className="text-xs font-black uppercase tracking-wider text-slate-200 bg-slate-800 px-4 py-2 rounded-2xl border-2 border-slate-700 shadow-md shrink-0">
+            1 TAP ✓
           </span>
         </button>
 
         {/* BUTTON 3: LEFT FLYER / LIT */}
         <button
           onClick={handleLeftFlyerTap}
-          className="w-full p-4 rounded-3xl bg-gradient-to-r from-amber-600/90 to-amber-700/90 hover:from-amber-500 hover:to-amber-600 text-white shadow-lg shadow-amber-600/20 active:scale-[0.98] transition border border-amber-500/40 flex items-center justify-between group"
+          className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-500 hover:to-amber-600 text-white shadow-2xl shadow-amber-600/30 active:scale-[0.96] transition-all duration-150 border-2 border-amber-300 flex items-center justify-between group"
         >
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-2xl group-hover:scale-110 transition">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition shrink-0">
               📰
             </div>
             <div className="text-left">
-              <h3 className="text-lg font-black tracking-tight text-white leading-tight">
-                Left Flyer / Door Hanger
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight uppercase">
+                Left Flyer / Lit
               </h3>
-              <p className="text-xs text-amber-100/80 font-medium">
-                1-Tap Quick Log · Hung literature on door
+              <p className="text-xs sm:text-sm text-amber-100 font-bold mt-0.5">
+                Hung door hanger · 1-Tap drop pin
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold text-amber-950 bg-amber-200 px-3 py-1.5 rounded-xl">
-            1 Tap
+          <span className="text-xs font-black uppercase tracking-wider text-amber-950 bg-amber-300 px-4 py-2 rounded-2xl shadow-md shrink-0">
+            1 TAP ✓
           </span>
         </button>
 
@@ -879,31 +894,31 @@ export default function CanvassPage() {
           type="button"
           onClick={() => signPhotoInputRef.current?.click()}
           disabled={isScanningSign}
-          className="w-full p-4 rounded-3xl bg-gradient-to-r from-purple-900/50 via-slate-900 to-indigo-950/70 hover:from-purple-900/70 hover:to-indigo-900/70 text-white shadow-lg shadow-purple-950/20 active:scale-[0.98] transition border border-purple-500/40 flex items-center justify-between group disabled:opacity-60"
+          className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 hover:from-purple-900 hover:to-indigo-900 text-white shadow-2xl shadow-purple-950/40 active:scale-[0.96] transition-all duration-150 border-2 border-purple-400/80 flex items-center justify-between group disabled:opacity-60"
         >
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-purple-500/25 border border-purple-400/40 flex items-center justify-center text-3xl group-hover:scale-105 transition shrink-0">
               {isScanningSign ? (
-                <RefreshCw className="w-6 h-6 animate-spin text-purple-300" />
+                <RefreshCw className="w-7 h-7 animate-spin text-purple-300" />
               ) : (
-                <Scan className="w-6 h-6 text-purple-300 stroke-[2.5]" />
+                <Scan className="w-7 h-7 text-purple-300 stroke-[2.5]" />
               )}
             </div>
             <div className="text-left">
               <div className="flex items-center gap-1.5">
-                <h3 className="text-lg font-black tracking-tight text-white leading-tight">
-                  {isScanningSign ? 'AI Scanning Sign...' : 'Spot Yard Sign'}
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight uppercase">
+                  {isScanningSign ? 'AI Scanning...' : 'Spot Yard Sign'}
                 </h3>
-                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 border border-purple-400/40">
-                  AI Auto-Pin
-                </span>
               </div>
-              <p className="text-xs text-purple-200/80 font-medium">
+              <p className="text-xs sm:text-sm text-purple-200/90 font-bold mt-0.5">
                 Snap any sign · AI reads candidate & drops pin
               </p>
             </div>
           </div>
-          <Camera className="w-5 h-5 text-purple-300 shrink-0 mr-1" />
+          <span className="text-xs font-black uppercase tracking-wider text-purple-950 bg-purple-300 px-4 py-2 rounded-2xl shadow-md shrink-0 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 fill-purple-950" />
+            AUTO-PIN ✓
+          </span>
         </button>
 
         {/* Hidden Camera Input for Canvass Yard Sign Spotting */}
@@ -1035,34 +1050,46 @@ export default function CanvassPage() {
             </div>
 
             <form onSubmit={handleSaveContactRecord} className="space-y-4">
-              {/* Voter Sentiment Selector */}
+              {/* Voter Sentiment Selector - POS Style Big Punch Buttons */}
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                  Voter Sentiment / Reaction
+                <label className="block text-xs font-black text-slate-300 uppercase tracking-wider mb-2.5">
+                  Voter Sentiment / Reaction (Tap to Pick)
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {SENTIMENT_OPTIONS.map(opt => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setSelectedSentiment(opt.id)}
-                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition ${
-                        selectedSentiment === opt.id
-                          ? `${opt.bg} ${opt.text} ${opt.border} ring-2 ring-emerald-400/40 shadow-md`
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:bg-slate-800'
-                      }`}
-                    >
-                      <span className="text-base">{opt.icon}</span>
-                      <span>{opt.label}</span>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {SENTIMENT_OPTIONS.map(opt => {
+                    const isChosen = selectedSentiment === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setSelectedSentiment(opt.id)}
+                        className={`p-3.5 rounded-2xl border-2 text-left flex items-center justify-between transition-all duration-150 active:scale-95 ${
+                          isChosen
+                            ? `${opt.bg} ${opt.text} ${opt.border} ring-4 ring-emerald-500/20 shadow-lg scale-[1.02]`
+                            : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:border-slate-700'
+                        } ${opt.id === 'strong_opposed' ? 'col-span-2' : ''}`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-2xl">{opt.icon}</span>
+                          <span className="font-black text-xs sm:text-sm uppercase tracking-tight text-white">
+                            {opt.label}
+                          </span>
+                        </div>
+                        {isChosen && (
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white text-slate-950">
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Voter Name & Street Address */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">
+                  <label className="block text-xs font-bold text-slate-400 mb-1">
                     Voter Name (Optional)
                   </label>
                   <input
@@ -1070,12 +1097,12 @@ export default function CanvassPage() {
                     value={voterName}
                     onChange={(e) => setVoterName(e.target.value)}
                     placeholder="e.g. Linda Smith"
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border-2 border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">
+                  <label className="block text-xs font-bold text-slate-400 mb-1">
                     Street Address (Optional)
                   </label>
                   <input
@@ -1083,7 +1110,7 @@ export default function CanvassPage() {
                     value={streetAddress}
                     onChange={(e) => setStreetAddress(e.target.value)}
                     placeholder="e.g. 901 9th St"
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border-2 border-slate-700 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -1091,32 +1118,32 @@ export default function CanvassPage() {
               {/* Wants Yard Sign Toggle */}
               <div
                 onClick={() => setWantsYardSign(!wantsYardSign)}
-                className={`p-3 rounded-2xl border cursor-pointer transition flex items-center justify-between ${
+                className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between ${
                   wantsYardSign
-                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
-                    : 'bg-slate-950/60 border-slate-800 text-slate-400'
+                    ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 ring-2 ring-emerald-500/20 shadow-md'
+                    : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xl">🏡</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🏡</span>
                   <div>
-                    <p className="text-xs font-bold text-white">Voter Wants Yard Sign</p>
-                    <p className="text-[11px] text-slate-400">Automatically creates yard sign drop mission</p>
+                    <p className="text-xs sm:text-sm font-black text-white uppercase tracking-tight">Voter Wants Yard Sign</p>
+                    <p className="text-[11px] text-slate-400 font-semibold">Auto-creates yard sign drop mission on map</p>
                   </div>
                 </div>
                 <input
                   type="checkbox"
                   checked={wantsYardSign}
                   onChange={(e) => setWantsYardSign(e.target.checked)}
-                  className="w-5 h-5 accent-emerald-500 rounded cursor-pointer"
+                  className="w-6 h-6 accent-emerald-500 rounded cursor-pointer"
                 />
               </div>
 
               {/* Conversation Notes with Speech Dictation */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-semibold text-slate-400">
-                    Conversation Notes
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Notes (Optional)
                   </label>
                   <DictateButton
                     onTranscript={(text) => {
@@ -1126,28 +1153,28 @@ export default function CanvassPage() {
                   />
                 </div>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={contactNotes}
                   onChange={(e) => setContactNotes(e.target.value)}
-                  placeholder="Key issues, questions, volunteer interests... (or tap microphone to speak)"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 resize-none"
+                  placeholder="Key issues, questions, volunteer interests... (or tap mic)"
+                  className="w-full bg-slate-950 border-2 border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500 resize-none"
                 />
               </div>
 
               {/* Submit Buttons */}
-              <div className="pt-2 flex gap-2">
+              <div className="pt-2 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowContactModal(false)}
-                  className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition"
+                  className="flex-1 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-[2] py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition"
+                  className="flex-[2] py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/25 transition active:scale-[0.98]"
                 >
-                  Save & Log Contact
+                  SAVE & RECORD KNOCK ✓
                 </button>
               </div>
             </form>
