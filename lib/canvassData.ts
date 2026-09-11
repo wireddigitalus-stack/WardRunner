@@ -148,11 +148,19 @@ export const SEED_VOLUNTEER_PINGS: VolunteerLocationPing[] = [
     is_active: true,
     current_action: 'Canvassing 9th St / Precinct 3A',
     breadcrumbs: [
-      [-82.1963, 36.5866],
-      [-82.1958, 36.5862],
-      [-82.1952, 36.5858],
-      [-82.1947, 36.5854],
-      [-82.1940, 36.5850],
+      [-82.196396, 36.586331],
+      [-82.196339, 36.586256],
+      [-82.196323, 36.586149],
+      [-82.196296, 36.585973],
+      [-82.196279, 36.585790],
+      [-82.196165, 36.585626],
+      [-82.195726, 36.585367],
+      [-82.195367, 36.585009],
+      [-82.195192, 36.584898],
+      [-82.194751, 36.584619],
+      [-82.194678, 36.584650],
+      [-82.194411, 36.584672],
+      [-82.194003, 36.584670],
     ],
   },
   {
@@ -165,10 +173,16 @@ export const SEED_VOLUNTEER_PINGS: VolunteerLocationPing[] = [
     is_active: true,
     current_action: 'Hanging Door Lit on Virginia Ave',
     breadcrumbs: [
-      [-82.1765, 36.6025],
-      [-82.1758, 36.6030],
-      [-82.1750, 36.6035],
-      [-82.1742, 36.6040],
+      [-82.176466, 36.602484],
+      [-82.176412, 36.602558],
+      [-82.176153, 36.602914],
+      [-82.176021, 36.603101],
+      [-82.175669, 36.603597],
+      [-82.174977, 36.603274],
+      [-82.174858, 36.603431],
+      [-82.174620, 36.603745],
+      [-82.174488, 36.603903],
+      [-82.174352, 36.604077],
     ],
   },
   {
@@ -195,6 +209,8 @@ export const SEED_VOLUNTEER_PINGS: VolunteerLocationPing[] = [
     current_action: 'Placing Signs on State St',
     breadcrumbs: [
       [-82.1887, 36.5951],
+      [-82.1868, 36.5958],
+      [-82.1848, 36.5966],
       [-82.1830, 36.5975],
     ],
   },
@@ -278,6 +294,12 @@ export function getStoredVolunteerPings(): VolunteerLocationPing[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      // Auto-upgrade legacy straight 5-point breadcrumbs to realistic street curvature
+      const sj = parsed.find((p: any) => p.volunteer_name === 'Sarah Jenkins');
+      if (sj && sj.breadcrumbs && sj.breadcrumbs.length === 5) {
+        localStorage.setItem(VOLUNTEER_PINGS_STORAGE_KEY, JSON.stringify(SEED_VOLUNTEER_PINGS));
+        return SEED_VOLUNTEER_PINGS;
+      }
       return parsed;
     }
     return SEED_VOLUNTEER_PINGS;
@@ -348,4 +370,73 @@ export function reportVolunteerPing(ping: Partial<VolunteerLocationPing> & { vol
 
   saveStoredVolunteerPings(current);
   return updatedPing;
+}
+
+const routeCache = new Map<string, [number, number][]>();
+
+/**
+ * Snaps a sequence of walking waypoints (house knocks or GPS pings)
+ * to follow the actual street and sidewalk geometry rather than
+ * drawing a direct diagonal line cutting across yards and houses.
+ */
+export async function snapWalkingPathToStreets(waypoints: [number, number][]): Promise<[number, number][]> {
+  if (!waypoints || waypoints.length < 2) return waypoints || [];
+
+  const cacheKey = waypoints.map(w => `${w[0].toFixed(5)},${w[1].toFixed(5)}`).join(';');
+  if (routeCache.has(cacheKey)) {
+    return routeCache.get(cacheKey)!;
+  }
+
+  // If waypoints is already a detailed street trace (>= 8 points), return directly
+  if (waypoints.length >= 8) {
+    routeCache.set(cacheKey, waypoints);
+    return waypoints;
+  }
+
+  // Cap sampled waypoints to 25 to respect OSRM url limits
+  let sampled = waypoints;
+  if (waypoints.length > 25) {
+    const step = Math.ceil(waypoints.length / 25);
+    sampled = waypoints.filter((_, idx) => idx === 0 || idx === waypoints.length - 1 || idx % step === 0);
+  }
+
+  const coordStr = sampled.map(w => `${w[0].toFixed(6)},${w[1].toFixed(6)}`).join(';');
+  const url = `https://router.project-osrm.org/route/v1/foot/${coordStr}?overview=full&geometries=geojson`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.code === 'Ok' && data.routes?.[0]?.geometry?.coordinates?.length) {
+        const coords = data.routes[0].geometry.coordinates as [number, number][];
+        routeCache.set(cacheKey, coords);
+        return coords;
+      }
+    }
+  } catch {
+    // Graceful offline fallback
+  }
+
+  // Orthogonal Street-Grid Angle Fallback:
+  // Instead of cutting diagonally through a block, angle with the street grid!
+  const streetAngledCoords: [number, number][] = [waypoints[0]];
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const p1 = waypoints[i];
+    const p2 = waypoints[i + 1];
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+
+    if (Math.hypot(dx, dy) > 0.0001) {
+      // Step along street axes (Manhattan street corner)
+      streetAngledCoords.push([p1[0] + dx * 0.75, p1[1] + dy * 0.25]);
+      streetAngledCoords.push([p2[0], p1[1] + dy * 0.25]);
+    }
+    streetAngledCoords.push(p2);
+  }
+
+  routeCache.set(cacheKey, streetAngledCoords);
+  return streetAngledCoords;
 }

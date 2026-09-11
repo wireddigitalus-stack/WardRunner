@@ -16,7 +16,7 @@ import CommandPinGate from './components/CommandPinGate';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
-import { getStoredCanvassRecords, getStoredVolunteerPings } from '@/lib/canvassData';
+import { getStoredCanvassRecords, getStoredVolunteerPings, snapWalkingPathToStreets } from '@/lib/canvassData';
 import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
 import DictateButton from '@/app/components/DictateButton';
@@ -1404,16 +1404,35 @@ export default function DashboardPage() {
           return true;
         });
 
-        activeVolunteers.forEach(vol => {
+        for (const vol of activeVolunteers) {
           if (vol.breadcrumbs && vol.breadcrumbs.length >= 2) {
+            const streetCoords = await snapWalkingPathToStreets(vol.breadcrumbs);
             trailFeatures.push({
               type: 'Feature',
               properties: { volunteer_name: vol.volunteer_name },
               geometry: {
                 type: 'LineString',
-                coordinates: vol.breadcrumbs,
+                coordinates: streetCoords,
               },
             });
+          } else {
+            // Check if volunteer has canvass knocks; if so, connect along the street!
+            const volKnocks = canvassRecords
+              .filter(r => r.volunteer_name.toLowerCase().trim() === vol.volunteer_name.toLowerCase().trim())
+              .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+            if (volKnocks.length >= 2) {
+              const knockCoords: [number, number][] = volKnocks.map(r => [r.longitude, r.latitude]);
+              const streetCoords = await snapWalkingPathToStreets(knockCoords);
+              trailFeatures.push({
+                type: 'Feature',
+                properties: { volunteer_name: vol.volunteer_name },
+                geometry: {
+                  type: 'LineString',
+                  coordinates: streetCoords,
+                },
+              });
+            }
           }
 
           const el = document.createElement('div');
@@ -1453,7 +1472,7 @@ export default function DashboardPage() {
           }).setLngLat([vol.longitude, vol.latitude]).addTo(m);
 
           volunteerMarkersRef.current.push({ marker, name: vol.volunteer_name });
-        });
+        }
       }
 
       try {
@@ -1466,7 +1485,7 @@ export default function DashboardPage() {
         }
       } catch {}
     })();
-  }, [volunteerPings, showFieldForceLayer, selectedVolunteerFilter, selectedVolunteerGroup]);
+  }, [volunteerPings, canvassRecords, showFieldForceLayer, selectedVolunteerFilter, selectedVolunteerGroup]);
 
   /* ---------- Actions ---------- */
   const toggle3D = useCallback(() => {
