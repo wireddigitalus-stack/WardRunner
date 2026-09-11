@@ -166,8 +166,8 @@ export const SEED_VOLUNTEER_PINGS: VolunteerLocationPing[] = [
   {
     volunteer_name: 'Marcus Taylor',
     role: 'Flyer Hanger',
-    latitude: 36.6040,
-    longitude: -82.1742,
+    latitude: 36.6048,
+    longitude: -82.1730,
     accuracy: 8,
     last_ping_at: new Date(Date.now() - 1000 * 120).toISOString(),
     is_active: true,
@@ -183,6 +183,7 @@ export const SEED_VOLUNTEER_PINGS: VolunteerLocationPing[] = [
       [-82.174620, 36.603745],
       [-82.174488, 36.603903],
       [-82.174352, 36.604077],
+      [-82.173000, 36.604800],
     ],
   },
   {
@@ -294,7 +295,12 @@ export function getStoredVolunteerPings(): VolunteerLocationPing[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      // Auto-upgrade legacy straight 5-point breadcrumbs to realistic street curvature
+      // Auto-upgrade legacy straight 5-point breadcrumbs or overlap at 36.6040
+      const mt = parsed.find((p: any) => p.volunteer_name === 'Marcus Taylor');
+      if (mt && Math.abs(mt.latitude - 36.6040) < 0.0005) {
+        localStorage.setItem(VOLUNTEER_PINGS_STORAGE_KEY, JSON.stringify(SEED_VOLUNTEER_PINGS));
+        return SEED_VOLUNTEER_PINGS;
+      }
       const sj = parsed.find((p: any) => p.volunteer_name === 'Sarah Jenkins');
       if (sj && sj.breadcrumbs && sj.breadcrumbs.length === 5) {
         localStorage.setItem(VOLUNTEER_PINGS_STORAGE_KEY, JSON.stringify(SEED_VOLUNTEER_PINGS));

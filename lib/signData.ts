@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 
 export const SEED_SIGNS: Sign[] = [
   { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Campaign Volunteer', street_address: '620 State Street', sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
-  { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6010, longitude: -82.1780, placed_by_name: 'Campaign Volunteer', street_address: '1430 Lee Highway', sign_type: 'banner', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
+  { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5990, longitude: -82.1815, placed_by_name: 'Campaign Volunteer', street_address: '1430 Lee Highway', sign_type: 'banner', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
   { id: '3', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5880, longitude: -82.1861, placed_by_name: 'Campaign Volunteer', street_address: '920 Volunteer Parkway', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 12).toISOString() },
   { id: '4', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5975, longitude: -82.1830, placed_by_name: 'Opponent Volunteer', street_address: '412 State Street', sign_type: 'yard_sign', is_competitor: true, competitor_name: 'Bob Reynolds', status: 'placed', created_at: new Date(Date.now() - 3600000 * 8).toISOString() },
   { id: '5', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6085, longitude: -82.1720, placed_by_name: 'Campaign Volunteer', street_address: '2105 Lee Highway', sign_type: 'billboard', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 24).toISOString() },
@@ -25,6 +25,19 @@ export function getStoredSigns(): Sign[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      // Auto-migrate Sign 2 if it's still at 36.6010 (covering Marcus Taylor's first stop)
+      let needsUpdate = false;
+      const updated = parsed.map((s: Sign) => {
+        if (s.id === '2' && Math.abs(s.latitude - 36.6010) < 0.0005) {
+          needsUpdate = true;
+          return { ...s, latitude: 36.5990, longitude: -82.1815 };
+        }
+        return s;
+      });
+      if (needsUpdate) {
+        localStorage.setItem(SIGNS_STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      }
       return parsed;
     }
     return SEED_SIGNS;

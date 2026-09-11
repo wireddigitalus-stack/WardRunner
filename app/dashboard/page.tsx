@@ -1354,6 +1354,13 @@ export default function DashboardPage() {
           `;
         }
 
+        el.addEventListener('mouseenter', () => {
+          el.style.zIndex = '9999';
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.zIndex = isSel ? '650' : '140';
+        });
+
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           setSelectedSign(null);
@@ -1457,6 +1464,13 @@ export default function DashboardPage() {
               </div>
             </div>
           `;
+
+          el.addEventListener('mouseenter', () => {
+            el.style.zIndex = '9999';
+          });
+          el.addEventListener('mouseleave', () => {
+            el.style.zIndex = '700';
+          });
 
           el.addEventListener('click', (e) => {
             e.stopPropagation();
