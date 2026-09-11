@@ -15,6 +15,7 @@ import MissionsDrawerTab from './components/MissionsDrawerTab';
 import CommandPinGate from './components/CommandPinGate';
 import RouteDetailCard from './components/RouteDetailCard';
 import MobileVipBar from './components/MobileVipBar';
+import BristolFactsCard from './components/BristolFactsCard';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
@@ -29,6 +30,8 @@ import {
   Target,
   Download,
   Layers,
+  Building2,
+  Landmark,
   TrendingUp,
   RefreshCw,
   Search,
@@ -174,6 +177,10 @@ export default function DashboardPage() {
   const [selectedPrecinct, setSelectedPrecinct] = useState<PrecinctInfo | null>(null);
   const precinctMarkersRef = useRef<any[]>([]);
   const [mapReady, setMapReady] = useState(false);
+
+  // Stand Alone Bristol Overlay Facts Card State
+  const [showBristolFacts, setShowBristolFacts] = useState(false);
+  const bristolWatermarkRef = useRef<any>(null);
 
   // Signs Layer Toggle (Defaults to off per user preference)
   const [showSignsLayer, setShowSignsLayer] = useState(false);
@@ -701,8 +708,54 @@ export default function DashboardPage() {
             if (found) {
               setSelectedSign(null);
               setSelectedRec(null);
+              setSelectedMission(null);
+              setSelectedRoute(null);
+              setShowBristolFacts(false);
               setSelectedPrecinct(found);
             }
+          });
+        } catch {}
+
+        // Stand Alone Bristol Overlay hover and click to inspect Bristol Facts
+        try {
+          map.on('mouseenter', 'boundary-fill', () => {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          map.on('mouseleave', 'boundary-fill', () => {
+            map.getCanvas().style.cursor = '';
+          });
+          map.on('click', 'boundary-fill', (e: any) => {
+            // Check if user clicked an active precinct feature
+            const bbox: [[number, number], [number, number]] = [
+              [e.point.x - 4, e.point.y - 4],
+              [e.point.x + 4, e.point.y + 4],
+            ];
+            const pLayer = map.getLayer('precincts-fill');
+            const isPrecinctsVis = pLayer && map.getLayoutProperty('precincts-fill', 'visibility') !== 'none';
+            const precinctFeatures = isPrecinctsVis ? map.queryRenderedFeatures(bbox, { layers: ['precincts-fill'] }) : [];
+            if (precinctFeatures.length > 0) return; // handled by precincts-fill
+
+            setSelectedSign(null);
+            setSelectedRec(null);
+            setSelectedPrecinct(null);
+            setSelectedMission(null);
+            setSelectedRoute(null);
+            setShowBristolFacts(true);
+          });
+
+          map.on('mouseenter', 'boundary-line', () => {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          map.on('mouseleave', 'boundary-line', () => {
+            map.getCanvas().style.cursor = '';
+          });
+          map.on('click', 'boundary-line', () => {
+            setSelectedSign(null);
+            setSelectedRec(null);
+            setSelectedPrecinct(null);
+            setSelectedMission(null);
+            setSelectedRoute(null);
+            setShowBristolFacts(true);
           });
         } catch {}
 
@@ -734,6 +787,9 @@ export default function DashboardPage() {
             e.stopPropagation();
             setSelectedSign(null);
             setSelectedRec(null);
+            setSelectedMission(null);
+            setSelectedRoute(null);
+            setShowBristolFacts(false);
             setSelectedPrecinct(p);
           });
           const marker = new mgl.Marker({
@@ -745,13 +801,65 @@ export default function DashboardPage() {
           precinctMarkersRef.current.push({ marker, id: p.id });
         });
 
+        // Bristol City Boundary Watermark Marker (Interactive Chip)
+        if (bristolWatermarkRef.current) {
+          try { bristolWatermarkRef.current.remove(); } catch {}
+          bristolWatermarkRef.current = null;
+        }
+        const bristolBadgeEl = document.createElement('div');
+        bristolBadgeEl.className = 'bristol-boundary-badge';
+        bristolBadgeEl.style.zIndex = '6';
+        bristolBadgeEl.style.cursor = 'pointer';
+        bristolBadgeEl.innerHTML = `
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(14, 165, 233, 0.18);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+            color: #38bdf8;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+          ">
+            <span>🏛️</span>
+            <span>Bristol, TN</span>
+            <span style="font-size: 9px; opacity: 0.8; font-weight: 700; text-transform: uppercase;">Facts</span>
+          </div>
+        `;
+        bristolBadgeEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setSelectedSign(null);
+          setSelectedRec(null);
+          setSelectedPrecinct(null);
+          setSelectedMission(null);
+          setSelectedRoute(null);
+          setShowBristolFacts(true);
+        });
+        bristolWatermarkRef.current = new mgl.Marker({
+          element: bristolBadgeEl,
+          anchor: 'center',
+          pitchAlignment: 'viewport',
+          rotationAlignment: 'viewport',
+        }).setLngLat([-82.188, 36.612]).addTo(map);
+
         setMapReady(true);
       });
 
-      map.on('click', () => {
+      map.on('click', (e: any) => {
+        const interactiveLayers = ['boundary-fill', 'boundary-line', 'precincts-fill'].filter(id => map.getLayer(id));
+        const features = map.queryRenderedFeatures(e.point, { layers: interactiveLayers });
+        if (features.length > 0) return;
+
         setSelectedSign(null);
         setSelectedRec(null);
         setSelectedPrecinct(null);
+        setShowBristolFacts(false);
       });
       mapRef.current = map;
     })();
@@ -780,6 +888,9 @@ export default function DashboardPage() {
     const vVis = showFieldForceLayer ? 'visible' : 'none';
     const rVis = (showRoutesLayer || selectedRoute) ? 'visible' : 'none';
     ['boundary-fill', 'boundary-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', bVis));
+    if (bristolWatermarkRef.current) {
+      bristolWatermarkRef.current.getElement().style.display = showBoundary ? 'block' : 'none';
+    }
     ['corridor-glow', 'corridor-core', 'corridor-inner'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
     ['campaign-signs-heatmap'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', hVis));
     ['precincts-fill', 'precincts-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', pVis));
@@ -1941,10 +2052,21 @@ export default function DashboardPage() {
         setShowRoutesLayer={setShowRoutesLayer}
         showHeatmap={showHeatmap}
         setShowHeatmap={setShowHeatmap}
+        showBoundary={showBoundary}
+        setShowBoundary={setShowBoundary}
+        onOpenBristolFacts={() => {
+          setSelectedSign(null);
+          setSelectedRec(null);
+          setSelectedPrecinct(null);
+          setSelectedMission(null);
+          setSelectedRoute(null);
+          setShowBristolFacts(true);
+        }}
         onSelectPrecinct={(p) => {
           setSelectedPrecinct(p);
           setSelectedSign(null);
           setSelectedRec(null);
+          setShowBristolFacts(false);
         }}
         onFlyToPrecinct={(p) => {
           mapRef.current?.flyTo({
@@ -2077,11 +2199,20 @@ export default function DashboardPage() {
             <Vote className="w-4 h-4" />
           </button>
           <button
-            onClick={() => setShowBoundary(!showBoundary)}
-            title="Ward Boundary"
+            onClick={() => {
+              if (!showBoundary) {
+                setShowBoundary(true);
+                setShowBristolFacts(true);
+              } else if (showBristolFacts) {
+                setShowBristolFacts(false);
+              } else {
+                setShowBristolFacts(true);
+              }
+            }}
+            title="City of Bristol Facts & Ward Boundary"
             className={`p-2 rounded-xl transition-all ${showBoundary ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-md shadow-sky-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
-            <Layers className="w-4 h-4" />
+            <Building2 className="w-4 h-4" />
           </button>
           <button
             onClick={() => setShowCorridors(!showCorridors)}
@@ -3053,6 +3184,29 @@ export default function DashboardPage() {
           setShowFieldForceLayer(true);
           mapRef.current?.flyTo({ center: [lng, lat], zoom: 16.5, duration: 1000 });
         }}
+      />
+
+      {/* ============================================================
+          BRISTOL MUNICIPAL & CAMPAIGN FACTS CARD (Bottom Center slide-up)
+          ============================================================ */}
+      <BristolFactsCard
+        isOpen={showBristolFacts}
+        onClose={() => setShowBristolFacts(false)}
+        signs={signs}
+        canvassRecords={canvassRecords}
+        volunteerPings={volunteerPings}
+        routes={routes}
+        showPrecincts={showPrecincts}
+        onTogglePrecincts={() => setShowPrecincts(!showPrecincts)}
+        onZoomToCity={() => {
+          mapRef.current?.flyTo({
+            center: [-82.188, 36.595],
+            zoom: 13.5,
+            pitch: is3D ? 45 : 0,
+            duration: 900,
+          });
+        }}
+        isDark={isDark}
       />
 
       {/* ============================================================

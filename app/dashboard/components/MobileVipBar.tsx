@@ -17,6 +17,8 @@ import {
   BarChart3,
   CheckCircle2,
   TrendingUp,
+  Landmark,
+  Building2,
 } from 'lucide-react';
 import type { Sign, SignType, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import type { PrecinctInfo } from '@/lib/precinctData';
@@ -53,6 +55,9 @@ interface MobileVipBarProps {
   setShowRoutesLayer: (v: boolean) => void;
   showHeatmap?: boolean;
   setShowHeatmap?: (v: boolean) => void;
+  showBoundary?: boolean;
+  setShowBoundary?: (v: boolean) => void;
+  onOpenBristolFacts?: () => void;
   onSelectPrecinct: (p: PrecinctInfo) => void;
   onFlyToPrecinct: (p: PrecinctInfo) => void;
   onLock: () => void;
@@ -83,6 +88,9 @@ export default function MobileVipBar({
   setShowRoutesLayer,
   showHeatmap,
   setShowHeatmap,
+  showBoundary,
+  setShowBoundary,
+  onOpenBristolFacts,
   onSelectPrecinct,
   onFlyToPrecinct,
   onLock,
@@ -278,6 +286,17 @@ export default function MobileVipBar({
                 <span>Heatmap {showHeatmap ? 'ON' : 'OFF'}</span>
               </button>
             )}
+
+            {/* Bristol City Facts */}
+            {onOpenBristolFacts && (
+              <button
+                onClick={onOpenBristolFacts}
+                className="px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border bg-slate-900/90 text-sky-300 border-sky-500/30 hover:border-sky-500/60"
+              >
+                <Landmark className="w-3.5 h-3.5 text-sky-400" />
+                <span>Bristol Facts</span>
+              </button>
+            )}
           </div>
 
           {/* Expandable Executive Drawer Content */}
@@ -357,6 +376,27 @@ export default function MobileVipBar({
                       />
                     </div>
                   </div>
+
+                  {/* Bristol City Facts Card Button */}
+                  {onOpenBristolFacts && (
+                    <button
+                      onClick={onOpenBristolFacts}
+                      className="w-full p-3 rounded-2xl bg-gradient-to-r from-sky-500/15 via-sky-500/10 to-transparent border border-sky-500/30 flex items-center justify-between hover:border-sky-500/50 active:scale-[0.99] transition text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
+                          <Landmark className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-white">City of Bristol, TN Facts</p>
+                          <p className="text-[10px] text-sky-300/80">Pop: 27,147 • 22,150 Registered Voters • Ordinances</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider px-2 py-1 rounded-lg bg-sky-500/20 border border-sky-500/30">
+                        View
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
 
