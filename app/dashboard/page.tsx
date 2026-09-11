@@ -14,6 +14,7 @@ import MissionDetailCard from './components/MissionDetailCard';
 import MissionsDrawerTab from './components/MissionsDrawerTab';
 import CommandPinGate from './components/CommandPinGate';
 import RouteDetailCard from './components/RouteDetailCard';
+import MobileVipBar from './components/MobileVipBar';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
@@ -1716,9 +1717,9 @@ export default function DashboardPage() {
       <div ref={mapContainerRef} className="absolute inset-0 z-0" />
 
       {/* ============================================================
-          TOP FLOATING BAR
+          TOP FLOATING BAR (Desktop md: screens — 100% Unchanged)
           ============================================================ */}
-      <header className="absolute top-0 inset-x-0 z-20 pointer-events-none p-3 sm:p-4">
+      <header className="hidden md:block absolute top-0 inset-x-0 z-20 pointer-events-none p-3 sm:p-4">
         <div className="w-full flex items-start justify-between gap-3">
 
           {/* — Brand Capsule — */}
@@ -1861,6 +1862,48 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {/* ============================================================
+          MOBILE VIP EXECUTIVE VIEW (< md screens)
+          ============================================================ */}
+      <MobileVipBar
+        stats={stats}
+        inventoryStats={inventoryStats}
+        canvassRecords={canvassRecords}
+        volunteerPings={volunteerPings}
+        routes={routes}
+        precincts={BRISTOL_PRECINCTS}
+        signs={signs}
+        showSignsLayer={showSignsLayer}
+        setShowSignsLayer={setShowSignsLayer}
+        ownerFilter={ownerFilter}
+        setOwnerFilter={setOwnerFilter}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        showPrecincts={showPrecincts}
+        setShowPrecincts={setShowPrecincts}
+        showCanvassLayer={showCanvassLayer}
+        setShowCanvassLayer={setShowCanvassLayer}
+        showFieldForceLayer={showFieldForceLayer}
+        setShowFieldForceLayer={setShowFieldForceLayer}
+        showRoutesLayer={showRoutesLayer}
+        setShowRoutesLayer={setShowRoutesLayer}
+        onSelectPrecinct={(p) => {
+          setSelectedPrecinct(p);
+          setSelectedSign(null);
+          setSelectedRec(null);
+        }}
+        onFlyToPrecinct={(p) => {
+          mapRef.current?.flyTo({
+            center: p.center,
+            zoom: 15.2,
+            pitch: is3D ? 50 : 0,
+            duration: 900,
+          });
+        }}
+        onLock={handleLockCommand}
+        isDark={isDark}
+      />
+
       {/* Street-Level Dot Mode Active Floating Banner Pill */}
       {useDotMode && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto animate-slide-up">
@@ -1878,9 +1921,24 @@ export default function DashboardPage() {
       )}
 
       {/* ============================================================
-          RIGHT-RAIL MAP CONTROLS (Apple Maps style)
+          MOBILE MAP CONTROLS (Recenter & 3D Tilt - Minimal)
           ============================================================ */}
-      <div className="absolute right-3 sm:right-4 top-20 z-10 flex flex-col gap-2 pointer-events-auto animate-slide-up" style={{ animationDelay: '200ms' }}>
+      <div className="md:hidden absolute right-3 top-16 z-20 flex flex-col gap-1.5 pointer-events-auto">
+        <div className="bg-slate-950/85 backdrop-blur-xl border border-white/10 rounded-2xl p-1 flex flex-col items-center shadow-xl">
+          <button onClick={recenter} title="Recenter Bristol" className="p-2 rounded-xl hover:bg-emerald-500/15 text-emerald-400 active:scale-90 transition-all">
+            <Navigation className="w-4 h-4" />
+          </button>
+          <div className="w-4 h-px bg-white/10 my-0.5" />
+          <button onClick={toggle3D} title="3D Perspective" className={`p-2 rounded-xl text-[11px] font-black transition-all active:scale-90 ${is3D ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-300'}`}>
+            3D
+          </button>
+        </div>
+      </div>
+
+      {/* ============================================================
+          RIGHT-RAIL MAP CONTROLS (Desktop md: screens — 100% Unchanged)
+          ============================================================ */}
+      <div className="hidden md:flex absolute right-3 sm:right-4 top-20 z-10 flex-col gap-2 pointer-events-auto animate-slide-up" style={{ animationDelay: '200ms' }}>
         {/* Navigation Stack */}
         <div className="glass rounded-2xl p-1 flex flex-col items-center">
           <button onClick={recenter} title="Recenter Bristol" className="p-2.5 rounded-xl hover:bg-emerald-500/15 hover:text-emerald-400 active:scale-90 transition-all">
