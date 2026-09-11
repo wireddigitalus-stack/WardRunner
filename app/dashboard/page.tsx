@@ -16,7 +16,7 @@ import CommandPinGate from './components/CommandPinGate';
 import RouteDetailCard from './components/RouteDetailCard';
 import MobileVipBar from './components/MobileVipBar';
 import BristolFactsCard from './components/BristolFactsCard';
-import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON } from '@/lib/precinctData';
+import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON, BRISTOL_ALL_PRECINCTS_BOUNDS, BRISTOL_ALL_PRECINCTS_CENTER } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
 import { getStoredCanvassRecords, getStoredVolunteerPings, snapWalkingPathToStreets } from '@/lib/canvassData';
@@ -550,13 +550,17 @@ export default function DashboardPage() {
       const mgl = (await import('maplibre-gl')).default;
       if (mapRef.current) mapRef.current.remove();
 
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      const initialCenter: [number, number] = isMobile ? BRISTOL_ALL_PRECINCTS_CENTER : BRISTOL_CENTER;
+      const initialZoom = isMobile ? 11.4 : 13.2;
+
       const map = new mgl.Map({
         container: mapContainerRef.current,
         style: MAP_STYLES[theme],
-        center: BRISTOL_CENTER,
-        zoom: 13.2,
-        pitch: is3D ? 52 : 0,
-        bearing: is3D ? -15 : 0,
+        center: initialCenter,
+        zoom: initialZoom,
+        pitch: is3D ? (isMobile ? 32 : 52) : 0,
+        bearing: is3D ? (isMobile ? -10 : -15) : 0,
         attributionControl: false,
       } as any);
 
@@ -565,6 +569,16 @@ export default function DashboardPage() {
       map.on('load', () => {
         if (!alive) return;
         try { map.resize(); } catch {}
+
+        if (isMobile) {
+          try {
+            map.fitBounds(BRISTOL_ALL_PRECINCTS_BOUNDS, {
+              padding: { top: 95, bottom: 85, left: 24, right: 64 },
+              maxZoom: 12.0,
+              duration: 0,
+            });
+          } catch {}
+        }
 
         /* --- AADT corridor glow lines (Real Road Geometry) --- */
         map.addSource('corridors', {
@@ -1888,7 +1902,18 @@ export default function DashboardPage() {
   }, [is3D]);
 
   const recenter = useCallback(() => {
-    mapRef.current?.flyTo({ center: BRISTOL_CENTER, zoom: 13.2, pitch: is3D ? 52 : 0, bearing: is3D ? -15 : 0, duration: 900 });
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (isMobile) {
+      mapRef.current?.fitBounds(BRISTOL_ALL_PRECINCTS_BOUNDS, {
+        padding: { top: 95, bottom: 85, left: 24, right: 64 },
+        pitch: is3D ? 32 : 0,
+        bearing: is3D ? -10 : 0,
+        maxZoom: 12.0,
+        duration: 900,
+      });
+    } else {
+      mapRef.current?.flyTo({ center: BRISTOL_CENTER, zoom: 13.2, pitch: is3D ? 52 : 0, bearing: is3D ? -15 : 0, duration: 900 });
+    }
   }, [is3D]);
 
   const exportCSV = () => {

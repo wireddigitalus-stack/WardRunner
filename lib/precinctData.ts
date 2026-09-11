@@ -297,6 +297,15 @@ export const BRISTOL_PRECINCTS_GEOJSON = {
   ],
 };
 
+// Bounding box encompassing all 6 Bristol precincts (1A, 2A, 2B, 2C, 3A, 4A)
+export const BRISTOL_ALL_PRECINCTS_BOUNDS: [[number, number], [number, number]] = [
+  [-82.285, 36.515], // Southwest [lng, lat]
+  [-82.090, 36.610], // Northeast [lng, lat]
+];
+
+// Geographic center covering all 6 Bristol precincts
+export const BRISTOL_ALL_PRECINCTS_CENTER: [number, number] = [-82.1875, 36.5625];
+
 /**
  * Standard ray-casting algorithm to test if [lng, lat] point is inside polygon
  */
