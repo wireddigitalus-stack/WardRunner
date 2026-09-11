@@ -125,8 +125,8 @@ export default function DashboardPage() {
 
   const [is3D, setIs3D] = useState(true);
   const [showBoundary, setShowBoundary] = useState(true);
-  const [showCorridors, setShowCorridors] = useState(true);
-  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [showCorridors, setShowCorridors] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Traffic data from TDOT + OSM
@@ -162,6 +162,7 @@ export default function DashboardPage() {
   // Dispatched Sign Missions State
   const [assignments, setAssignments] = useState<VolunteerAssignment[]>([]);
   const [selectedMission, setSelectedMission] = useState<VolunteerAssignment | null>(null);
+  const [showMissionsLayer, setShowMissionsLayer] = useState(false);
   const missionMarkersRef = useRef<any[]>([]);
 
   // Voting Precincts & Turnout State
@@ -169,14 +170,17 @@ export default function DashboardPage() {
   const [selectedPrecinct, setSelectedPrecinct] = useState<PrecinctInfo | null>(null);
   const precinctMarkersRef = useRef<any[]>([]);
 
+  // Signs Layer Toggle (Defaults to off per user preference)
+  const [showSignsLayer, setShowSignsLayer] = useState(false);
+
   // Street-Level Precision Micro Dot Mode
   const [useDotMode, setUseDotMode] = useState(false);
 
   // Ground Campaign & Field Force State
   const [canvassRecords, setCanvassRecords] = useState<CanvassRecord[]>([]);
   const [volunteerPings, setVolunteerPings] = useState<VolunteerLocationPing[]>([]);
-  const [showCanvassLayer, setShowCanvassLayer] = useState(true);
-  const [showFieldForceLayer, setShowFieldForceLayer] = useState(true);
+  const [showCanvassLayer, setShowCanvassLayer] = useState(false);
+  const [showFieldForceLayer, setShowFieldForceLayer] = useState(false);
   const [isVolunteerFilterOpen, setIsVolunteerFilterOpen] = useState(false);
   const [selectedVolunteerGroup, setSelectedVolunteerGroup] = useState<string>('all');
   const [selectedVolunteerFilter, setSelectedVolunteerFilter] = useState<string | null>(null);
@@ -840,6 +844,8 @@ export default function DashboardPage() {
       markersRef.current.forEach(mk => mk.remove());
       markersRef.current = [];
 
+      if (!showSignsLayer) return;
+
       filtered.forEach((sign, i) => {
         const el = document.createElement('div');
         const isComp = sign.is_competitor;
@@ -1038,7 +1044,7 @@ export default function DashboardPage() {
         markersRef.current.push(marker);
       });
     })();
-  }, [filtered, selectedSign, is3D, useDotMode]);
+  }, [filtered, selectedSign, is3D, useDotMode, showSignsLayer]);
 
   // Render Dispatched Sign Missions on Map
   useEffect(() => {
@@ -1051,6 +1057,8 @@ export default function DashboardPage() {
       // Clear old mission markers
       missionMarkersRef.current.forEach(item => item.marker?.remove?.());
       missionMarkersRef.current = [];
+
+      if (!showMissionsLayer) return;
 
       const activeAssignments = assignments.filter(a => a.status !== 'completed');
 
@@ -1290,7 +1298,7 @@ export default function DashboardPage() {
         missionMarkersRef.current.push({ marker, id: mission.id });
       });
     })();
-  }, [assignments, selectedMission, is3D, useDotMode]);
+  }, [assignments, selectedMission, is3D, useDotMode, showMissionsLayer]);
 
   /* ---------- Ground Canvass Markers ---------- */
   useEffect(() => {
@@ -1744,23 +1752,61 @@ export default function DashboardPage() {
 
         {/* Layer Toggles */}
         <div className="glass rounded-2xl p-1 flex flex-col items-center gap-0.5">
-          <button onClick={() => setShowCanvassLayer(!showCanvassLayer)} title={showCanvassLayer ? "Hide Canvass Knocks & Flyers" : "Show Canvass Knocks & Flyers"} className={`p-2 rounded-xl transition-all ${showCanvassLayer ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : 'text-zinc-400 hover:text-zinc-200'}`}>
+          <button
+            onClick={() => setShowSignsLayer(!showSignsLayer)}
+            title={showSignsLayer ? "Hide Yard Signs" : "Show Yard Signs"}
+            className={`p-2 rounded-xl transition-all ${showSignsLayer ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-md shadow-emerald-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
+            <MapPin className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowMissionsLayer(!showMissionsLayer)}
+            title={showMissionsLayer ? "Hide Target Missions" : "Show Target Missions"}
+            className={`p-2 rounded-xl transition-all ${showMissionsLayer ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-md shadow-purple-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
+            <Target className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setShowCanvassLayer(!showCanvassLayer)}
+            title={showCanvassLayer ? "Hide Canvass Knocks & Flyers" : "Show Canvass Knocks & Flyers"}
+            className={`p-2 rounded-xl transition-all ${showCanvassLayer ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-md shadow-teal-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
             <Footprints className="w-4 h-4" />
           </button>
-          <button onClick={() => setShowFieldForceLayer(!showFieldForceLayer)} title={showFieldForceLayer ? "Hide Live Volunteer Trails" : "Show Live Volunteer Trails"} className={`p-2 rounded-xl transition-all ${showFieldForceLayer ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-zinc-400 hover:text-zinc-200'}`}>
+          <button
+            onClick={() => setShowFieldForceLayer(!showFieldForceLayer)}
+            title={showFieldForceLayer ? "Hide Live Volunteer Trails" : "Show Live Volunteer Trails"}
+            className={`p-2 rounded-xl transition-all ${showFieldForceLayer ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-md shadow-emerald-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
             <Users className="w-4 h-4" />
           </button>
           <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-          <button onClick={() => setShowPrecincts(!showPrecincts)} title="Voting Precincts & Turnout Grid" className={`p-2 rounded-xl transition-all ${showPrecincts ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-zinc-400 hover:text-zinc-200'}`}>
+          <button
+            onClick={() => setShowPrecincts(!showPrecincts)}
+            title="Voting Precincts & Turnout Grid"
+            className={`p-2 rounded-xl transition-all ${showPrecincts ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
             <Vote className="w-4 h-4" />
           </button>
-          <button onClick={() => setShowBoundary(!showBoundary)} title="Ward Boundary" className={`p-2 rounded-xl transition-all ${showBoundary ? 'bg-sky-500/15 text-sky-400' : 'text-zinc-400 hover:text-zinc-200'}`}>
+          <button
+            onClick={() => setShowBoundary(!showBoundary)}
+            title="Ward Boundary"
+            className={`p-2 rounded-xl transition-all ${showBoundary ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-md shadow-sky-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
             <Layers className="w-4 h-4" />
           </button>
-          <button onClick={() => setShowCorridors(!showCorridors)} title="AADT Corridors" className={`p-2 rounded-xl transition-all ${showCorridors ? 'bg-amber-500/15 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'}`}>
+          <button
+            onClick={() => setShowCorridors(!showCorridors)}
+            title="AADT Corridors"
+            className={`p-2 rounded-xl transition-all ${showCorridors ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-md shadow-amber-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
             <TrendingUp className="w-4 h-4" />
           </button>
-          <button onClick={() => setShowHeatmap(!showHeatmap)} title="Traffic Heatmap" className={`p-2 rounded-xl transition-all ${showHeatmap ? 'bg-rose-500/15 text-rose-400' : 'text-zinc-400 hover:text-zinc-200'}`}>
+          <button
+            onClick={() => setShowHeatmap(!showHeatmap)}
+            title="Traffic Heatmap"
+            className={`p-2 rounded-xl transition-all ${showHeatmap ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30 shadow-md shadow-rose-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
             <Flame className="w-4 h-4" />
           </button>
           <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
@@ -2214,6 +2260,7 @@ export default function DashboardPage() {
                     setShowVolunteerModal(true);
                   }}
                   onSelectMission={(m) => {
+                    setShowMissionsLayer(true);
                     setSelectedMission(m);
                     setSelectedSign(null);
                     setSelectedRec(null);
@@ -2488,6 +2535,7 @@ export default function DashboardPage() {
                           <button
                             key={sign.id}
                             onClick={() => {
+                              setShowSignsLayer(true);
                               setSelectedSign(sign);
                               mapRef.current?.flyTo({ center: [+sign.longitude, +sign.latitude], zoom: 15.8, pitch: is3D ? 55 : 0, duration: 800 });
                             }}
@@ -2667,11 +2715,21 @@ export default function DashboardPage() {
         isOpen={isVolunteerFilterOpen}
         onClose={() => setIsVolunteerFilterOpen(false)}
         selectedGroup={selectedVolunteerGroup}
-        onSelectGroup={setSelectedVolunteerGroup}
+        onSelectGroup={(grp) => {
+          setSelectedVolunteerGroup(grp);
+          if (grp !== 'all') {
+            setShowSignsLayer(true);
+            setShowCanvassLayer(true);
+            setShowFieldForceLayer(true);
+          }
+        }}
         selectedVolunteer={selectedVolunteerFilter}
         onSelectVolunteer={(vol) => {
           setSelectedVolunteerFilter(vol);
           if (vol) {
+            setShowSignsLayer(true);
+            setShowCanvassLayer(true);
+            setShowFieldForceLayer(true);
             const ping = volunteerPings.find(p => p.volunteer_name.toLowerCase().trim() === vol.toLowerCase().trim());
             if (ping && mapRef.current) {
               mapRef.current.flyTo({ center: [ping.longitude, ping.latitude], zoom: 16, duration: 1000 });
@@ -2682,6 +2740,9 @@ export default function DashboardPage() {
         canvassRecords={canvassRecords}
         signs={signs}
         onFlyToVolunteer={(lat, lng) => {
+          setShowSignsLayer(true);
+          setShowCanvassLayer(true);
+          setShowFieldForceLayer(true);
           mapRef.current?.flyTo({ center: [lng, lat], zoom: 16.5, duration: 1000 });
         }}
       />
