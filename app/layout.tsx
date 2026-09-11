@@ -18,10 +18,10 @@ export const metadata: Metadata = {
     siteName: 'CampaignOS',
     images: [
       {
-        url: '/campaignos-social-icon.jpg',
-        width: 1024,
-        height: 1024,
-        alt: 'CampaignOS Modern Social Share Icon',
+        url: '/og-image.jpg',
+        width: 1376,
+        height: 768,
+        alt: 'CampaignOS - Field Logistics & Yard Sign Intelligence',
       },
     ],
     locale: 'en_US',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
     description: 'Fast, mobile-first field logistics, yard sign intelligence, and campaign operations for political campaigns.',
-    images: ['/campaignos-social-icon.jpg'],
+    images: ['/og-image.jpg'],
   },
 };
 
