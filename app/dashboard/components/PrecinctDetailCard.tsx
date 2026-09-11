@@ -30,8 +30,9 @@ export default function PrecinctDetailCard({
   const saturationPct = Math.min(100, Math.round((stats.signsPer1kVoters / targetSaturation) * 100));
 
   return (
-    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-[440px] max-w-[calc(100vw-32px)] pointer-events-auto animate-slide-up">
-      <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl border border-white/15">
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
+      <div className="w-[440px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+        <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl border border-white/15">
         {/* Accent Edge */}
         <div
           className="absolute top-0 left-0 right-0 h-[3px]"
@@ -202,5 +203,6 @@ export default function PrecinctDetailCard({
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

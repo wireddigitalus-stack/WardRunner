@@ -2301,192 +2301,202 @@ export default function DashboardPage() {
 
 
       {/* ============================================================
-          SELECTED SIGN — INSPECTION CARD (Bottom Center slide-up)
+          SELECTED SIGN — INSPECTION CARD (Centered on Desktop and Mobile)
           ============================================================ */}
       {selectedSign && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-[380px] max-w-[calc(100vw-32px)] pointer-events-auto animate-slide-up">
-          <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden">
-            {/* Accent edge */}
-            <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${selectedSign.is_competitor ? 'from-rose-500 to-pink-500' : 'from-emerald-400 to-teal-400'}`} />
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
+          <div className="w-[380px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+            <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
+              {/* Accent edge */}
+              <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${selectedSign.is_competitor ? 'from-rose-500 to-pink-500' : 'from-emerald-400 to-teal-400'}`} />
 
-            <button onClick={() => setSelectedSign(null)} className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
-              <X className="w-3.5 h-3.5 opacity-50" />
-            </button>
-
-            <div className="flex items-start gap-4">
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${selectedSign.is_competitor ? 'from-rose-500 to-pink-600' : 'from-emerald-400 to-teal-500'} flex items-center justify-center text-2xl shadow-lg ${selectedSign.is_competitor ? 'shadow-rose-500/30' : 'shadow-emerald-500/30'}`}>
-                {SIGN_TYPE_META[selectedSign.sign_type]?.emoji || '📍'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${selectedSign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
-                  {selectedSign.is_competitor ? 'Opponent Sighting' : 'Official Campaign'}
-                </span>
-                <h3 className="font-extrabold text-base mt-1 truncate">
-                  {selectedSign.is_competitor ? selectedSign.competitor_name : 'Melissa K. Brown'}
-                </h3>
-                <p className="text-xs opacity-50 capitalize mt-0.5">
-                  {selectedSign.sign_type.replace('_', ' ')} · <span className={selectedSign.is_competitor ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{selectedSign.is_competitor ? 'Reported' : (selectedSign.status === 'placed' ? 'Placed' : selectedSign.status.replace('_', ' '))}</span> {relativeTime(selectedSign.created_at)}
-                </p>
-              </div>
-            </div>
-
-            <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
-              <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10">
-                <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider block">📍 Street Address</span>
-                {loadingAddress ? (
-                  <span className={`inline-block h-4 w-44 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-                ) : (
-                  <span className="font-extrabold mt-1 block text-sm text-white">{streetAddress || selectedSign.street_address || 'Bristol, TN'}</span>
-                )}
-                <span className="text-[10px] opacity-40 block mt-0.5 font-mono">Bristol, TN • {Number(selectedSign.latitude).toFixed(4)}, {Number(selectedSign.longitude).toFixed(4)}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <span className="text-[9px] uppercase font-bold opacity-30 block">
-                    {selectedSign.is_competitor ? 'Reported By' : 'Placed By'}
-                  </span>
-                  <span className="font-semibold mt-0.5 block">
-                    {selectedSign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[9px] uppercase font-bold opacity-30 block">GPS</span>
-                  <span className="font-mono opacity-60 mt-0.5 block">{Number(selectedSign.latitude).toFixed(4)}, {Number(selectedSign.longitude).toFixed(4)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <a
-                href={getAppleMapsUrl({
-                  address: selectedSign.street_address,
-                  lat: Number(selectedSign.latitude),
-                  lng: Number(selectedSign.longitude),
-                  title: selectedSign.is_competitor
-                    ? `${selectedSign.competitor_name || 'Competitor'} Sign`
-                    : 'Brown Campaign Sign',
-                  mode: 'view',
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-[0.97] transition-all"
-              >
-                <Navigation className="w-3.5 h-3.5" /> View in Apple Maps
-              </a>
-              <button onClick={() => setSelectedSign(null)} className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}>
-                Dismiss
+              <button onClick={() => setSelectedSign(null)} className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
+                <X className="w-3.5 h-3.5 opacity-50" />
               </button>
+
+              <div className="flex items-start gap-4">
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${selectedSign.is_competitor ? 'from-rose-500 to-pink-600' : 'from-emerald-400 to-teal-500'} flex items-center justify-center text-2xl shadow-lg ${selectedSign.is_competitor ? 'shadow-rose-500/30' : 'shadow-emerald-500/30'}`}>
+                  {SIGN_TYPE_META[selectedSign.sign_type]?.emoji || '📍'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${selectedSign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+                    {selectedSign.is_competitor ? 'Opponent Sighting' : 'Official Campaign'}
+                  </span>
+                  <h3 className="font-extrabold text-base mt-1 truncate">
+                    {selectedSign.is_competitor ? selectedSign.competitor_name : 'Melissa K. Brown'}
+                  </h3>
+                  <p className="text-xs opacity-50 capitalize mt-0.5">
+                    {selectedSign.sign_type.replace('_', ' ')} · <span className={selectedSign.is_competitor ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{selectedSign.is_competitor ? 'Reported' : (selectedSign.status === 'placed' ? 'Placed' : selectedSign.status.replace('_', ' '))}</span> {relativeTime(selectedSign.created_at)}
+                  </p>
+                </div>
+              </div>
+
+              <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
+                <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10">
+                  <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider block">📍 Street Address</span>
+                  {loadingAddress ? (
+                    <span className={`inline-block h-4 w-44 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+                  ) : (
+                    <span className="font-extrabold mt-1 block text-sm text-white">{streetAddress || selectedSign.street_address || 'Bristol, TN'}</span>
+                  )}
+                  <span className="text-[10px] opacity-40 block mt-0.5 font-mono">Bristol, TN • {Number(selectedSign.latitude).toFixed(4)}, {Number(selectedSign.longitude).toFixed(4)}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-[9px] uppercase font-bold opacity-30 block">
+                      {selectedSign.is_competitor ? 'Reported By' : 'Placed By'}
+                    </span>
+                    <span className="font-semibold mt-0.5 block">
+                      {selectedSign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold opacity-30 block">GPS</span>
+                    <span className="font-mono opacity-60 mt-0.5 block">{Number(selectedSign.latitude).toFixed(4)}, {Number(selectedSign.longitude).toFixed(4)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <a
+                  href={getAppleMapsUrl({
+                    address: streetAddress || selectedSign.street_address,
+                    lat: Number(selectedSign.latitude),
+                    lng: Number(selectedSign.longitude),
+                    title: `Sign: ${streetAddress || selectedSign.street_address || 'Bristol TN'}`,
+                    mode: 'directions',
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-[0.97] transition-all"
+                >
+                  <Navigation className="w-3.5 h-3.5" /> View in Apple Maps
+                </a>
+                <button onClick={() => setSelectedSign(null)} className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}>
+                  Dismiss
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* ============================================================
-          SELECTED GROUND CANVASS RECORD — INSPECTION CARD (Bottom Center)
+          SELECTED GROUND CANVASS RECORD — INSPECTION CARD (Centered on Desktop & Mobile)
           ============================================================ */}
       {selectedCanvassRecord && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-[400px] max-w-[calc(100vw-32px)] pointer-events-auto animate-slide-up">
-          <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
-            {/* Accent top edge */}
-            <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${
-              selectedCanvassRecord.result === 'contact'
-                ? 'from-emerald-400 to-teal-400'
-                : selectedCanvassRecord.result === 'left_flyer'
-                ? 'from-amber-400 to-orange-400'
-                : 'from-slate-400 to-slate-600'
-            }`} />
-
-            <button
-              onClick={() => setSelectedCanvassRecord(null)}
-              className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
-            >
-              <X className="w-3.5 h-3.5 opacity-50" />
-            </button>
-
-            <div className="flex items-start gap-3.5">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg ${
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
+          <div className="w-[400px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+            <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
+              {/* Accent top edge */}
+              <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${
                 selectedCanvassRecord.result === 'contact'
-                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                  ? 'from-emerald-400 to-teal-400'
                   : selectedCanvassRecord.result === 'left_flyer'
-                  ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
-                  : 'bg-slate-800 border border-slate-700 text-slate-300'
-              }`}>
-                {selectedCanvassRecord.result === 'contact' ? '🤝' : selectedCanvassRecord.result === 'left_flyer' ? '📰' : '🚪'}
-              </div>
+                  ? 'from-amber-400 to-orange-400'
+                  : 'from-slate-400 to-slate-600'
+              }`} />
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-                    selectedCanvassRecord.result === 'contact'
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : selectedCanvassRecord.result === 'left_flyer'
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-slate-800 text-slate-400 border border-slate-700'
-                  }`}>
-                    {selectedCanvassRecord.result === 'contact'
-                      ? 'VOTER CONTACT'
-                      : selectedCanvassRecord.result === 'left_flyer'
-                      ? 'LEFT FLYER / LIT'
-                      : 'NO CONTACT'}
-                  </span>
-                  {selectedCanvassRecord.sentiment && (
-                    <span className="text-[10px] font-bold text-teal-300 bg-teal-500/15 px-2 py-0.5 rounded-md border border-teal-500/30">
-                      {selectedCanvassRecord.sentiment.replace('_', ' ')}
-                    </span>
-                  )}
-                </div>
-
-                <h3 className="text-base font-extrabold text-white mt-1 leading-tight">
-                  {selectedCanvassRecord.street_address || 'Door Knock Location'}
-                </h3>
-                {selectedCanvassRecord.voter_name && (
-                  <p className="text-xs text-slate-300 font-medium">
-                    Voter: <span className="font-bold text-white">{selectedCanvassRecord.voter_name}</span>
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {selectedCanvassRecord.notes && (
-              <div className="mt-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Voter Notes</span>
-                <p className="italic leading-relaxed">"{selectedCanvassRecord.notes}"</p>
-              </div>
-            )}
-
-            {selectedCanvassRecord.wants_yard_sign && (
-              <div className="mt-2.5 p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
-                <span>🏡</span>
-                <span>Voter Requested Yard Sign for Front Lawn!</span>
-              </div>
-            )}
-
-            <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Knocked by <strong className="text-white">{selectedCanvassRecord.volunteer_name}</strong></span>
-              <span className="font-mono">{new Date(selectedCanvassRecord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <a
-                href={getAppleMapsUrl({
-                  address: selectedCanvassRecord.street_address,
-                  lat: Number(selectedCanvassRecord.latitude),
-                  lng: Number(selectedCanvassRecord.longitude),
-                  title: `Door: ${selectedCanvassRecord.street_address || 'Voter'}`,
-                  mode: 'directions',
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.98] transition"
-              >
-                <Navigation className="w-3.5 h-3.5" /> Navigate
-              </a>
               <button
                 onClick={() => setSelectedCanvassRecord(null)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+                className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
               >
-                Dismiss
+                <X className="w-3.5 h-3.5 opacity-50" />
               </button>
+
+              <div className="flex items-start gap-3.5">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg ${
+                  selectedCanvassRecord.result === 'contact'
+                    ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                    : selectedCanvassRecord.result === 'left_flyer'
+                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                    : 'bg-slate-800 border border-slate-700 text-slate-300'
+                }`}>
+                  {selectedCanvassRecord.result === 'contact' ? '🤝' : selectedCanvassRecord.result === 'left_flyer' ? '📰' : '🚪'}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
+                      selectedCanvassRecord.result === 'contact'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : selectedCanvassRecord.result === 'left_flyer'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'bg-slate-700/50 text-slate-300 border border-slate-600'
+                    }`}>
+                      {selectedCanvassRecord.result === 'contact' ? 'Spoke With Voter' : selectedCanvassRecord.result === 'left_flyer' ? 'Left Campaign Flyer' : 'No Contact / Not Home'}
+                    </span>
+                  </div>
+
+                  <h3 className="font-extrabold text-base mt-1 truncate">
+                    {selectedCanvassRecord.voter_name || 'Voter Contact'}
+                  </h3>
+                  <p className="text-xs text-slate-400 truncate mt-0.5 font-medium">
+                    Canvasser: <span className="text-white font-semibold">{selectedCanvassRecord.volunteer_name || 'Field Team'}</span> · {relativeTime(selectedCanvassRecord.created_at)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3.5 space-y-2 text-xs">
+                <div className="p-2.5 rounded-2xl bg-white/[0.04] border border-white/10">
+                  <span className="text-[9px] uppercase font-bold text-teal-400 tracking-wider block">📍 Address</span>
+                  <p className="font-extrabold text-sm text-white mt-0.5 truncate">{selectedCanvassRecord.street_address || 'Bristol, TN'}</p>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                    {Number(selectedCanvassRecord.latitude).toFixed(4)}, {Number(selectedCanvassRecord.longitude).toFixed(4)}
+                  </p>
+                </div>
+
+                {selectedCanvassRecord.sentiment && (
+                  <div className="p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Voter Sentiment</span>
+                    <span className={`text-xs font-black uppercase px-2.5 py-0.5 rounded-lg ${
+                      selectedCanvassRecord.sentiment === 'strong_support' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                      selectedCanvassRecord.sentiment === 'lean_support' ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' :
+                      selectedCanvassRecord.sentiment === 'undecided' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                      'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    }`}>
+                      {selectedCanvassRecord.sentiment.replace('_', ' ')}
+                    </span>
+                  </div>
+                )}
+
+                {selectedCanvassRecord.wants_yard_sign && (
+                  <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
+                    <span>🏡</span>
+                    <span>Voter Requested Yard Sign for Front Lawn!</span>
+                  </div>
+                )}
+
+                {selectedCanvassRecord.notes && (
+                  <div className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10">
+                    <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Field Notes</span>
+                    <p className="text-xs text-slate-200 mt-1 italic">&ldquo;{selectedCanvassRecord.notes}&rdquo;</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <a
+                  href={getAppleMapsUrl({
+                    address: selectedCanvassRecord.street_address,
+                    lat: Number(selectedCanvassRecord.latitude),
+                    lng: Number(selectedCanvassRecord.longitude),
+                    title: `Door: ${selectedCanvassRecord.street_address || 'Voter'}`,
+                    mode: 'directions',
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.98] transition"
+                >
+                  <Navigation className="w-3.5 h-3.5" /> Navigate
+                </a>
+                <button
+                  onClick={() => setSelectedCanvassRecord(null)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2496,8 +2506,9 @@ export default function DashboardPage() {
           SCOUT RECOMMENDATION — APPROVAL CARD (Bottom Center slide-up)
           ============================================================ */}
       {selectedRec && (
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 w-[420px] max-w-[calc(100vw-32px)] pointer-events-auto animate-slide-up">
-          <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl shadow-amber-500/10">
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
+          <div className="w-[420px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+            <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl shadow-amber-500/10">
             {/* Amber glowing top edge */}
             <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300" />
 
@@ -2624,7 +2635,8 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* ============================================================
           iOS-STYLE SLIDE-OVER DRAWER

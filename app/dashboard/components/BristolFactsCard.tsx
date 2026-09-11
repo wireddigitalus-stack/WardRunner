@@ -59,8 +59,9 @@ export default function BristolFactsCard({
   const activeVolunteers = volunteerPings.filter(p => p.is_active).length;
 
   return (
-    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-25 w-[460px] max-w-[calc(100vw-32px)] pointer-events-auto animate-slide-up">
-      <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl border border-sky-500/30">
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
+      <div className="w-[460px] max-w-[calc(100vw-32px)] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+        <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl border border-sky-500/30">
         {/* Top Gradient Edge (Sky to Emerald) */}
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-sky-400 via-teal-400 to-emerald-400" />
 
@@ -423,5 +424,6 @@ export default function BristolFactsCard({
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
