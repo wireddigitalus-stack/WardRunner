@@ -40,6 +40,32 @@ const SIGN_TYPES: { id: SignType; label: string; icon: string; size: string }[] 
   { id: 'billboard', label: 'Billboard', icon: '🏢', size: 'High-Impact Arterial' },
 ];
 
+import TacticalOnboardingTour, { TourStep } from '@/app/components/TacticalOnboardingTour';
+
+const FIELD_TOUR_STEPS: TourStep[] = [
+  {
+    targetId: 'tour-field-camera',
+    title: 'AI Sign Scanner',
+    description: 'Point your camera at any yard sign or billboard. AI immediately identifies the candidate, sign format, and compresses the photo to save mobile data.',
+    accentColor: 'purple',
+    badge: 'AI Vision',
+  },
+  {
+    targetId: 'tour-field-signtype',
+    title: 'Touchscreen Sign Selector',
+    description: 'McDonald\'s-style buttons allow easy 1-tap switching between Yard Signs, Large 4x4s, Banners, and Competitor signs.',
+    accentColor: 'cyan',
+    badge: 'Sign Format',
+  },
+  {
+    targetId: 'tour-field-drop-btn',
+    title: 'Giant 1-Tap Sign Drop',
+    description: 'Punch the giant button to lock your GPS coordinates and log the sign onto CampaignOS in less than 2 seconds.',
+    accentColor: 'emerald',
+    badge: '1-Tap Drop',
+  },
+];
+
 export default function FieldPage() {
   // Session State
   const [session, setSession] = useState<VolunteerSession | null>(null);
@@ -47,6 +73,21 @@ export default function FieldPage() {
   const [nameInput, setNameInput] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Auto-launch field briefing for first-time session
+  useEffect(() => {
+    if (!session) return;
+    try {
+      const seen = localStorage.getItem('wardrunner_tour_completed_wardrunner_field_tour_v1');
+      if (!seen) {
+        const timer = setTimeout(() => {
+          setIsTourOpen(true);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, [session]);
 
   // Field Placement State
   const [activeTab, setActiveTab] = useState<'place' | 'retrieve'>('place');
@@ -772,6 +813,15 @@ export default function FieldPage() {
           </div>
 
           <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setIsTourOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1 transition"
+              title="Interactive Briefing Tour"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Tour</span>
+            </button>
+
             <Link
               href="/canvass"
               className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1 transition"
@@ -1004,6 +1054,7 @@ export default function FieldPage() {
           {/* Quick-Launch AI Photo Sign Scanner - Giant POS Punch Button */}
           <div className="relative">
             <button
+              id="tour-field-camera"
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isAiScanning}
@@ -1123,7 +1174,7 @@ export default function FieldPage() {
           </div>
 
           {/* 4-Way Sign Type Selector - Giant POS Register Tiles */}
-          <div>
+          <div id="tour-field-signtype">
             <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2.5">
               Step 2: Sign Format / Size
             </label>
@@ -1283,6 +1334,7 @@ export default function FieldPage() {
           {/* Ergonomic Giant McDonald's Cash Register Action Button */}
           <div className="pt-3">
             <button
+              id="tour-field-drop-btn"
               type="button"
               disabled={isSubmitting || gpsStatus === 'locating' || isAiScanning}
               onClick={handleDropSign}
@@ -1449,6 +1501,14 @@ export default function FieldPage() {
           )}
         </div>
       )}
+
+      {/* 60-Second Field Sign Runner Briefing Tour */}
+      <TacticalOnboardingTour
+        tourKey="wardrunner_field_tour_v1"
+        steps={FIELD_TOUR_STEPS}
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+      />
     </main>
   );
 }

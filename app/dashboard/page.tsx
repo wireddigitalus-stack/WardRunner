@@ -24,6 +24,39 @@ import { getStoredCanvassRoutes, saveStoredCanvassRoutes, assignCanvassRoute, up
 import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
 import DictateButton from '@/app/components/DictateButton';
+import TacticalOnboardingTour, { TourStep } from '@/app/components/TacticalOnboardingTour';
+
+const DASHBOARD_TOUR_STEPS: TourStep[] = [
+  {
+    targetId: 'tour-signs-toggle, tour-mobile-signs, tour-mobile-palette-toggle',
+    title: 'Yard Signs Radar',
+    description: 'Toggle between Full Sign Icons, Micro-Dots, or clear the map. Filter between your campaign signs and opponent placements instantly.',
+    accentColor: 'emerald',
+    badge: 'Lawn Signs',
+  },
+  {
+    targetId: 'tour-field-ops, tour-mobile-field-ops, tour-mobile-palette-toggle',
+    title: 'Live Field Operations',
+    description: 'Track active ground volunteers, live breadcrumb GPS pings, and assigned turf walking loops across all Bristol voting wards.',
+    accentColor: 'teal',
+    badge: 'Ground Force',
+  },
+  {
+    targetId: 'tour-scout-ai',
+    title: 'Scout AI Placement Advisor',
+    description: 'Autonomous AI analyzes TDOT traffic volume (AADT) and major intersections to recommend high-visibility sign and banner locations.',
+    accentColor: 'amber',
+    badge: 'Scout AI',
+  },
+  {
+    targetId: 'tour-missions-btn',
+    title: 'Missions & Volunteer Dispatch',
+    description: 'Deploy field runners to hot spots, create custom turf walking routes, and generate secure volunteer sign-in PINs in one click.',
+    accentColor: 'purple',
+    badge: 'Dispatch',
+  },
+];
+
 import {
   Vote,
   Users,
@@ -262,6 +295,22 @@ export default function DashboardPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [ownerFilter, setOwnerFilter] = useState<'all' | 'ours' | 'theirs'>('all');
   const [searchQ, setSearchQ] = useState('');
+  const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Auto-launch Onboarding Briefing for first-time dashboard visitors
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem('wardrunner_tour_completed_wardrunner_dashboard_tour_v1');
+      if (!seen) {
+        const timer = setTimeout(() => {
+          setIsTourOpen(true);
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Reverse geocoding for street names
   const [streetAddress, setStreetAddress] = useState<string>('');
@@ -2046,6 +2095,7 @@ export default function DashboardPage() {
 
             {/* Quick Access to Sign Missions on all screen sizes */}
             <button
+              id="tour-missions-btn"
               onClick={() => {
                 setModalInitialTab('dispatch');
                 setModalInitialTarget(null);
@@ -2075,6 +2125,16 @@ export default function DashboardPage() {
             >
               <Users className="w-4 h-4 text-purple-400" />
               <span className="hidden md:inline">Roster</span>
+            </button>
+
+            {/* Interactive Onboarding Mission Tour */}
+            <button
+              onClick={() => setIsTourOpen(true)}
+              className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 active:scale-95 group shadow-sm shadow-emerald-500/10"
+              title="Interactive Briefing Tour"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-12 transition-transform" />
+              <span className="hidden md:inline">Tour</span>
             </button>
 
             {/* Lock Field Command Security Gate */}
@@ -2108,6 +2168,7 @@ export default function DashboardPage() {
         volunteerPings={volunteerPings}
         routes={routes}
         precincts={BRISTOL_PRECINCTS}
+        onOpenTour={() => setIsTourOpen(true)}
         signs={signs}
         showSignsLayer={showSignsLayer}
         setShowSignsLayer={setShowSignsLayer}
@@ -2204,6 +2265,7 @@ export default function DashboardPage() {
         <div className="glass rounded-2xl p-1 flex flex-col items-center gap-0.5">
           {/* Yard Signs (3-State Cycle: Pins -> Dots -> Off) */}
           <button
+            id="tour-signs-toggle"
             onClick={() => {
               if (!showSignsLayer) {
                 setShowSignsLayer(true);
@@ -2252,6 +2314,7 @@ export default function DashboardPage() {
           </button>
           {/* Consolidated Field Ops & Turf Routes */}
           <button
+            id="tour-field-ops"
             onClick={() => {
               if (showFieldForceLayer || showRoutesLayer) {
                 setShowFieldForceLayer(false);
@@ -3386,6 +3449,14 @@ export default function DashboardPage() {
         }}
         availableVolunteers={availableVolunteersList}
         isDark={isDark}
+      />
+
+      {/* 60-Second Tactical Mission Briefing Onboarding Tour */}
+      <TacticalOnboardingTour
+        tourKey="wardrunner_dashboard_tour_v1"
+        steps={DASHBOARD_TOUR_STEPS}
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
       />
     </div>
   );

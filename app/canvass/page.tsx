@@ -48,6 +48,31 @@ import {
 } from '@/lib/canvassData';
 import { getVolunteerActiveRoute } from '@/lib/canvassRouteData';
 import { addPlacedSign } from '@/lib/signData';
+import TacticalOnboardingTour, { TourStep } from '@/app/components/TacticalOnboardingTour';
+
+const CANVASS_TOUR_STEPS: TourStep[] = [
+  {
+    targetId: 'tour-canvass-contact',
+    title: 'Voter Contact (Spoke)',
+    description: 'When a resident answers the door, tap here to record their sentiment (Strong Support, Undecided, Opposed), request a lawn sign, or dictate notes.',
+    accentColor: 'emerald',
+    badge: 'Voter Spoke',
+  },
+  {
+    targetId: 'tour-canvass-flyer, tour-canvass-not-home',
+    title: '1-Tap Not Home & Flyer',
+    description: 'Zero typing required while walking. Simply tap once to log that literature was hung or nobody answered. GPS fixes the house immediately.',
+    accentColor: 'amber',
+    badge: '1-Tap Lit',
+  },
+  {
+    targetId: 'tour-canvass-spot-sign',
+    title: 'Spot Yard Signs On Foot',
+    description: 'Notice a campaign or competitor sign in a yard while walking? Snap a quick picture and AI logs the lawn sign directly to the command map.',
+    accentColor: 'purple',
+    badge: 'AI Spotter',
+  },
+];
 
 const SENTIMENT_OPTIONS: { id: VoterSentiment; label: string; icon: string; bg: string; text: string; border: string }[] = [
   { id: 'strong_support', label: 'Strong Support', icon: '🟢', bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/40' },
@@ -65,6 +90,21 @@ export default function CanvassPage() {
   const [volunteerRole, setVolunteerRole] = useState<GroundVolunteerRole>('Door Canvasser');
   const [authError, setAuthError] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Auto-launch canvass briefing for first-time session
+  useEffect(() => {
+    if (!session) return;
+    try {
+      const seen = localStorage.getItem('wardrunner_tour_completed_wardrunner_canvass_tour_v1');
+      if (!seen) {
+        const timer = setTimeout(() => {
+          setIsTourOpen(true);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, [session]);
 
   // Screen WakeLock State
   const [wakeLockActive, setWakeLockActive] = useState(false);
@@ -631,6 +671,16 @@ export default function CanvassPage() {
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Mission Briefing Tour Button */}
+            <button
+              onClick={() => setIsTourOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1 transition"
+              title="Interactive Briefing Tour"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Tour</span>
+            </button>
+
             {/* Direct Switch to Yard Sign Drop */}
             <Link
               href="/field"
@@ -822,6 +872,7 @@ export default function CanvassPage() {
 
         {/* BUTTON 1: CONTACT (VOTER SPOKE) */}
         <button
+          id="tour-canvass-contact"
           onClick={handleOpenContactModal}
           className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-2xl shadow-emerald-500/30 active:scale-[0.96] transition-all duration-150 border-2 border-emerald-300 flex items-center justify-between group"
         >
@@ -845,6 +896,7 @@ export default function CanvassPage() {
 
         {/* BUTTON 2: NO CONTACT (NOT HOME) */}
         <button
+          id="tour-canvass-not-home"
           onClick={handleNoContactTap}
           className="w-full p-5 sm:p-6 rounded-3xl bg-slate-900 hover:bg-slate-850 text-white shadow-xl active:scale-[0.96] transition-all duration-150 border-2 border-slate-700 flex items-center justify-between group"
         >
@@ -868,6 +920,7 @@ export default function CanvassPage() {
 
         {/* BUTTON 3: LEFT FLYER / LIT */}
         <button
+          id="tour-canvass-flyer"
           onClick={handleLeftFlyerTap}
           className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-500 hover:to-amber-600 text-white shadow-2xl shadow-amber-600/30 active:scale-[0.96] transition-all duration-150 border-2 border-amber-300 flex items-center justify-between group"
         >
@@ -891,6 +944,7 @@ export default function CanvassPage() {
 
         {/* BUTTON 4: SPOT YARD SIGN (AI PHOTO SCAN) */}
         <button
+          id="tour-canvass-spot-sign"
           type="button"
           onClick={() => signPhotoInputRef.current?.click()}
           disabled={isScanningSign}
@@ -1181,6 +1235,14 @@ export default function CanvassPage() {
           </div>
         </div>
       )}
+
+      {/* 60-Second Canvass Briefing Onboarding Tour */}
+      <TacticalOnboardingTour
+        tourKey="wardrunner_canvass_tour_v1"
+        steps={CANVASS_TOUR_STEPS}
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+      />
     </main>
   );
 }

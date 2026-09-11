@@ -21,6 +21,7 @@ import {
   Navigation,
   CircleDot,
   X,
+  Sparkles,
 } from 'lucide-react';
 import type { Sign, SignType, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import type { PrecinctInfo } from '@/lib/precinctData';
@@ -68,6 +69,7 @@ interface MobileVipBarProps {
   onSelectPrecinct: (p: PrecinctInfo) => void;
   onFlyToPrecinct: (p: PrecinctInfo) => void;
   onLock: () => void;
+  onOpenTour?: () => void;
   isDark: boolean;
 }
 
@@ -106,6 +108,7 @@ export default function MobileVipBar({
   onSelectPrecinct,
   onFlyToPrecinct,
   onLock,
+  onOpenTour,
   isDark,
 }: MobileVipBarProps) {
   const [isPaletteOpen, setIsPaletteOpen] = useState(true);
@@ -203,6 +206,18 @@ export default function MobileVipBar({
             </div>
           </div>
 
+          {/* Quick Tour Button */}
+          {onOpenTour && (
+            <button
+              onClick={onOpenTour}
+              className="pointer-events-auto px-2.5 py-1.5 rounded-2xl bg-slate-950/80 backdrop-blur-xl border border-emerald-500/40 text-emerald-300 hover:text-white shadow-xl active:scale-95 transition flex items-center gap-1 text-[11px] font-bold"
+              title="60-Second Mission Briefing Tour"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Tour</span>
+            </button>
+          )}
+
           {/* Lock Button */}
           <button
             onClick={onLock}
@@ -249,6 +264,7 @@ export default function MobileVipBar({
 
           {/* Palette Expand / Collapse Toggle Button */}
           <button
+            id="tour-mobile-palette-toggle"
             onClick={() => setIsPaletteOpen(!isPaletteOpen)}
             title={isPaletteOpen ? "Hide Filter Palette" : "Show Filter Palette"}
             className={`w-10 h-10 rounded-xl flex items-center justify-center relative transition-all active:scale-90 ${
@@ -276,6 +292,7 @@ export default function MobileVipBar({
           <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl p-1 flex flex-col items-center gap-1.5 shadow-2xl animate-slide-down max-h-[calc(100vh-210px)] overflow-y-auto no-scrollbar">
             {/* 1. Our Lawn Signs (3-State Cycle: Pins -> Dots -> Off) */}
             <button
+              id="tour-mobile-signs"
               onClick={toggleOurSigns}
               title={
                 showSignsLayer && ownerFilter === 'ours'
@@ -339,6 +356,7 @@ export default function MobileVipBar({
 
             {/* 4. Field Ops & Turf Routes (Consolidated) */}
             <button
+              id="tour-mobile-field-ops"
               onClick={toggleFieldOps}
               title={`Field Ops & Turf Routes (${activeVolunteersCount} active • ${routes.length} loops)`}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${

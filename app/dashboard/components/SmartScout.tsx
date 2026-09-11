@@ -200,6 +200,7 @@ export default function SmartScout({
 
         {/* --- Scout Bar --- */}
         <div
+          id="tour-scout-ai"
           onClick={() => { setExpanded(!expanded); if (!expanded && recs.length === 0 && !loading) fetchRecommendations(); }}
           className="glass rounded-2xl px-3.5 py-2.5 flex items-center justify-between cursor-pointer hover:border-amber-500/30 transition-all group active:scale-[0.98]"
         >
