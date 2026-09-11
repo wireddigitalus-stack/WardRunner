@@ -51,6 +51,8 @@ interface MobileVipBarProps {
   setShowFieldForceLayer: (v: boolean) => void;
   showRoutesLayer: boolean;
   setShowRoutesLayer: (v: boolean) => void;
+  showHeatmap?: boolean;
+  setShowHeatmap?: (v: boolean) => void;
   onSelectPrecinct: (p: PrecinctInfo) => void;
   onFlyToPrecinct: (p: PrecinctInfo) => void;
   onLock: () => void;
@@ -79,6 +81,8 @@ export default function MobileVipBar({
   setShowFieldForceLayer,
   showRoutesLayer,
   setShowRoutesLayer,
+  showHeatmap,
+  setShowHeatmap,
   onSelectPrecinct,
   onFlyToPrecinct,
   onLock,
@@ -259,6 +263,21 @@ export default function MobileVipBar({
               <Compass className="w-3.5 h-3.5" />
               <span>Turf Routes ({routes.length})</span>
             </button>
+
+            {/* Campaign Heatmap Toggle */}
+            {setShowHeatmap && (
+              <button
+                onClick={() => setShowHeatmap(!showHeatmap)}
+                className={`px-3 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 border ${
+                  showHeatmap
+                    ? 'bg-gradient-to-r from-orange-500 to-rose-600 text-white border-orange-400 shadow-lg shadow-rose-600/30'
+                    : 'bg-slate-900/90 text-orange-300 border-orange-500/30 hover:border-orange-500/60'
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5 text-orange-400" />
+                <span>Heatmap {showHeatmap ? 'ON' : 'OFF'}</span>
+              </button>
+            )}
           </div>
 
           {/* Expandable Executive Drawer Content */}

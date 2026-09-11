@@ -843,22 +843,34 @@ export default function DashboardPage() {
     })();
   }, [showPrecincts, selectedPrecinct, is3D, useDotMode, mapReady]);
 
-  /* ---------- Campaign Sign Density Heatmap Layer ---------- */
+  /* ---------- Campaign Field Footprint Heatmap Layer ---------- */
   useEffect(() => {
     const m = mapRef.current;
     if (!m) return;
 
     (async () => {
       const addHeatmap = () => {
-        const geojsonData = {
-          type: 'FeatureCollection',
-          features: signs.filter(s => s.status === 'placed').map(s => ({
+        const signFeatures = signs
+          .filter(s => s.status === 'placed' && !s.is_competitor)
+          .map(s => ({
             type: 'Feature',
             geometry: { type: 'Point', coordinates: [+s.longitude, +s.latitude] },
             properties: {
-              weight: s.sign_type === 'large_sign' || s.sign_type === 'banner' ? 2 : 1,
+              weight: s.sign_type === 'large_sign' || s.sign_type === 'banner' ? 3.0 : 1.8,
             },
-          })),
+          }));
+
+        const canvassFeatures = canvassRecords.map(rec => ({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [+rec.longitude, +rec.latitude] },
+          properties: {
+            weight: rec.result === 'contact' ? 2.4 : 1.2,
+          },
+        }));
+
+        const geojsonData = {
+          type: 'FeatureCollection',
+          features: [...signFeatures, ...canvassFeatures],
         };
 
         if (m.getSource('campaign-signs-heat')) {
@@ -868,28 +880,70 @@ export default function DashboardPage() {
 
         m.addSource('campaign-signs-heat', { type: 'geojson', data: geojsonData as any });
 
+        // Place heatmap UNDER precinct boundaries and road cores so the map stays 100% sharp and readable
+        const beforeLayer = m.getLayer('precincts-line') ? 'precincts-line' : m.getLayer('corridor-core') ? 'corridor-core' : undefined;
+
         m.addLayer({
           id: 'campaign-signs-heatmap',
           type: 'heatmap',
           source: 'campaign-signs-heat',
-          maxzoom: 16,
+          maxzoom: 17,
           paint: {
-            'heatmap-weight': ['interpolate', ['linear'], ['get', 'weight'], 1, 0.5, 2, 1],
-            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 11, 0.8, 15, 2.2],
+            // Point weight scaling
+            'heatmap-weight': ['interpolate', ['linear'], ['get', 'weight'], 1, 0.4, 3, 1],
+
+            // Intensify heat smoothly with zoom
+            'heatmap-intensity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              10, 0.9,
+              13, 1.9,
+              16, 2.7
+            ],
+
+            // Vibrant multi-stop electric neon spectrum with smooth alpha:
+            // 0: transparent (reveals basemap)
+            // 0.12: electric cyan / sky blue aura
+            // 0.32: radiant neon emerald
+            // 0.52: solar amber gold
+            // 0.72: blazing neon orange
+            // 0.88: hot crimson red
+            // 1.0: white-hot center core
             'heatmap-color': [
               'interpolate',
               ['linear'],
               ['heatmap-density'],
               0, 'rgba(0, 0, 0, 0)',
-              0.2, 'rgba(20, 184, 166, 0.35)',
-              0.4, 'rgba(16, 185, 129, 0.55)',
-              0.7, 'rgba(245, 158, 11, 0.75)',
-              1, 'rgba(244, 63, 94, 0.9)'
+              0.12, 'rgba(6, 182, 212, 0.40)',
+              0.32, 'rgba(16, 185, 129, 0.70)',
+              0.52, 'rgba(245, 158, 11, 0.85)',
+              0.72, 'rgba(249, 115, 22, 0.92)',
+              0.88, 'rgba(239, 68, 68, 0.96)',
+              1.0, 'rgba(255, 255, 255, 0.98)'
             ],
-            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 11, 20, 15, 45],
-            'heatmap-opacity': 0.75,
+
+            // Expanding radius for gorgeous ambient blend across neighborhoods
+            'heatmap-radius': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              10, 24,
+              13, 42,
+              16, 58
+            ],
+
+            // Calibrated opacity: vibrant yet translucent so street grid & roads shine through
+            'heatmap-opacity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              11, 0.82,
+              14, 0.70,
+              16, 0.55
+            ],
           },
-        });
+        }, beforeLayer);
 
         const hVis = showHeatmap ? 'visible' : 'none';
         if (m.getLayer('campaign-signs-heatmap')) {
@@ -900,7 +954,7 @@ export default function DashboardPage() {
       if (m.isStyleLoaded()) addHeatmap();
       else m.on('load', addHeatmap);
     })();
-  }, [signs, theme, mapReady, showHeatmap]);
+  }, [signs, canvassRecords, theme, mapReady, showHeatmap]);
 
   /* ---------- Markers ---------- */
   useEffect(() => {
@@ -1885,6 +1939,8 @@ export default function DashboardPage() {
         setShowFieldForceLayer={setShowFieldForceLayer}
         showRoutesLayer={showRoutesLayer}
         setShowRoutesLayer={setShowRoutesLayer}
+        showHeatmap={showHeatmap}
+        setShowHeatmap={setShowHeatmap}
         onSelectPrecinct={(p) => {
           setSelectedPrecinct(p);
           setSelectedSign(null);
@@ -1901,6 +1957,30 @@ export default function DashboardPage() {
         onLock={handleLockCommand}
         isDark={isDark}
       />
+
+      {/* Campaign Heatmap Active Floating Legend Pill */}
+      {showHeatmap && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto animate-slide-up">
+          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-950/90 backdrop-blur-md border border-rose-500/40 text-white text-xs font-semibold shadow-xl">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">🔥</span>
+              <span className="font-extrabold text-[11px] tracking-tight">Campaign Heat</span>
+            </div>
+            <div className="flex items-center gap-1.5 pl-2 border-l border-white/15">
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Cool</span>
+              <div className="w-16 h-2 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 via-amber-400 via-orange-500 via-rose-600 to-white shadow-sm ring-1 ring-white/10" />
+              <span className="text-[9px] text-rose-400 font-bold uppercase tracking-wider">Hot</span>
+            </div>
+            <button
+              onClick={() => setShowHeatmap(false)}
+              className="ml-1 w-4 h-4 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-[10px] text-slate-300 hover:text-white transition"
+              title="Close Heatmap"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Street-Level Dot Mode Active Floating Banner Pill */}
       {useDotMode && (
