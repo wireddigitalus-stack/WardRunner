@@ -2216,6 +2216,25 @@ export default function DashboardPage() {
           >
             <Target className="w-4 h-4" />
           </button>
+          {/* Dot View Toggle (Directly under Sign view) */}
+          <button
+            onClick={() => {
+              if (!showSignsLayer) {
+                setShowSignsLayer(true);
+                setUseDotMode(true);
+              } else {
+                setUseDotMode(!useDotMode);
+              }
+            }}
+            title={useDotMode && showSignsLayer ? "Switch to Standard Pins" : "Switch to Street Dots"}
+            className={`p-2 rounded-xl transition-all ${
+              useDotMode && showSignsLayer
+                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-md shadow-cyan-500/20'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <CircleDot className="w-4 h-4" />
+          </button>
           <button
             onClick={() => setShowCanvassLayer(!showCanvassLayer)}
             title={showCanvassLayer ? "Hide Canvass Knocks & Flyers" : "Show Canvass Knocks & Flyers"}

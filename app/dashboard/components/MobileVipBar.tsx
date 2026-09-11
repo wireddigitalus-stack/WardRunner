@@ -19,6 +19,7 @@ import {
   Landmark,
   Building2,
   Navigation,
+  CircleDot,
   X,
 } from 'lucide-react';
 import type { Sign, SignType, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
@@ -294,6 +295,28 @@ export default function MobileVipBar({
             >
               <Target className="w-4 h-4" />
             </button>
+
+            {/* Dot View Toggle (Directly under Sign view) */}
+            {setUseDotMode && (
+              <button
+                onClick={() => {
+                  if (!showSignsLayer) {
+                    setShowSignsLayer(true);
+                    setUseDotMode(true);
+                  } else {
+                    setUseDotMode(!useDotMode);
+                  }
+                }}
+                title={useDotMode && showSignsLayer ? "Switch to Standard Pins" : "Switch to Street Dots"}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
+                  useDotMode && showSignsLayer
+                    ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/30'
+                    : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
+                }`}
+              >
+                <CircleDot className="w-4 h-4" />
+              </button>
+            )}
 
             {/* 3. Door Knocks / Canvass */}
             <button
