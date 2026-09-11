@@ -2,8 +2,24 @@ import type { Metadata, Viewport } from 'next';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './globals.css';
 
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    const url = process.env.NEXT_PUBLIC_SITE_URL;
+    return url.startsWith('http') ? url : `https://${url}`;
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'https://wardrunner.app';
+};
+
+const baseUrl = getBaseUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://wardrunner.app'),
+  metadataBase: new URL(baseUrl),
   title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
   description: 'Fast, mobile-first field logistics, yard sign intelligence, and campaign operations for political campaigns.',
   manifest: '/manifest.json',
@@ -14,13 +30,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
     description: 'Fast, mobile-first field logistics, yard sign intelligence, and campaign operations for political campaigns.',
-    url: 'https://wardrunner.app',
+    url: baseUrl,
     siteName: 'CampaignOS',
     images: [
       {
         url: '/og-image.jpg',
-        width: 1376,
-        height: 768,
+        width: 1200,
+        height: 630,
         alt: 'CampaignOS - Field Logistics & Yard Sign Intelligence',
       },
     ],
