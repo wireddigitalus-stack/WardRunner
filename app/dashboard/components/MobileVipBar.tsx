@@ -203,7 +203,7 @@ export default function MobileVipBar({
       {/* ============================================================
           2. RIGHT-SIDE MOBILE CONTROL PALETTE (Icons Only, Clunky-Finger Spaced, Toggleable)
           ============================================================ */}
-      <div className="absolute right-3 top-16 z-30 flex flex-col items-center gap-1.5 pointer-events-auto">
+      <div className="absolute right-3 top-32 sm:top-20 z-30 flex flex-col items-center gap-1.5 pointer-events-auto">
         {/* Navigation & Toggle Header Pod */}
         <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl p-1 flex flex-col items-center shadow-2xl">
           {onRecenter && (
