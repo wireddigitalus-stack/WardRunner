@@ -90,9 +90,11 @@ export default function TacticalOnboardingTour({
 
   useEffect(() => {
     updateRect();
+    const timer = setTimeout(updateRect, 200);
     window.addEventListener('resize', updateRect);
     window.addEventListener('scroll', updateRect, true);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('resize', updateRect);
       window.removeEventListener('scroll', updateRect, true);
     };
@@ -185,33 +187,71 @@ export default function TacticalOnboardingTour({
 
   const activeColor = colorMap[step.highlightColor || step.accentColor || 'emerald'];
 
+  // Determine if target element is located in the upper or lower half of the screen
+  const isTargetInTopHalf = targetRect
+    ? targetRect.top + targetRect.height / 2 < (typeof window !== 'undefined' ? window.innerHeight / 2 : 400)
+    : false;
+
   return (
     <div className="fixed inset-0 z-[9999] pointer-events-auto select-none">
-      {/* 1. Dark Backdrop */}
-      <div
+      {/* 1. Transparent Cutout Mask with Gentle Vignette (Zero Blur, Zero Opacity over Target) */}
+      <svg
+        className="fixed inset-0 w-full h-full pointer-events-auto"
         onClick={handleFinish}
-        className="absolute inset-0 bg-slate-950/85 backdrop-blur-[2px] transition-opacity duration-300"
-      />
+      >
+        <defs>
+          <mask id={`tour-mask-${tourKey}`}>
+            {/* White covers the screen with backdrop */}
+            <rect width="100%" height="100%" fill="white" />
+            {/* Black cutout punches a 100% transparent clear aperture over the button */}
+            {targetRect && (
+              <rect
+                x={Math.max(0, targetRect.left - 6)}
+                y={Math.max(0, targetRect.top - 6)}
+                width={targetRect.width + 12}
+                height={targetRect.height + 12}
+                rx={16}
+                ry={16}
+                fill="black"
+              />
+            )}
+          </mask>
+        </defs>
+        {/* Lighter, crisp 45% black tint without any blur filter so surrounding UI is readable */}
+        <rect
+          width="100%"
+          height="100%"
+          fill="rgba(2, 6, 23, 0.45)"
+          mask={`url(#tour-mask-${tourKey})`}
+        />
+      </svg>
 
-      {/* 2. Spotlight Aperture Ring (Target Element Highlight) */}
+      {/* 2. Spotlight Aperture Ring (Vibrant glowing frame around the crystal-clear button) */}
       {targetRect && (
         <div
           style={{
+            position: 'fixed',
             top: targetRect.top - 6,
             left: targetRect.left - 6,
             width: targetRect.width + 12,
             height: targetRect.height + 12,
           }}
-          className={`absolute rounded-2xl pointer-events-none transition-all duration-300 ring-4 ${activeColor.ring} shadow-[0_0_50px_rgba(16,185,129,0.35)] animate-pulse`}
-        >
-          <div className="absolute inset-0 rounded-2xl bg-white/10" />
-        </div>
+          className={`rounded-2xl pointer-events-none transition-all duration-300 ring-4 ${activeColor.ring} shadow-[0_0_35px_rgba(255,255,255,0.35)] animate-pulse`}
+        />
       )}
 
-      {/* 3. Floating Briefing Tooltip Card */}
-      <div className="fixed inset-0 pointer-events-none flex items-center justify-center p-4 sm:p-6">
+      {/* 3. Floating Briefing Tooltip Card - Smartly docked to top or bottom to NEVER overlap the highlighted element */}
+      <div
+        className={`fixed inset-x-0 pointer-events-none flex justify-center px-4 transition-all duration-300 ${
+          targetRect
+            ? isTargetInTopHalf
+              ? 'bottom-4 sm:bottom-8'
+              : 'top-4 sm:top-8'
+            : 'inset-0 items-center justify-center p-4'
+        }`}
+      >
         <div
-          className={`w-full max-w-[420px] bg-slate-900/95 backdrop-blur-xl border-2 ${activeColor.border} rounded-3xl p-5 sm:p-6 shadow-2xl pointer-events-auto animate-scale-in flex flex-col justify-between`}
+          className={`w-full max-w-[420px] bg-slate-950/95 backdrop-blur-md border-2 ${activeColor.border} rounded-3xl p-5 sm:p-6 shadow-2xl pointer-events-auto animate-scale-in flex flex-col justify-between`}
         >
           {/* Header & Step Counter */}
           <div>
