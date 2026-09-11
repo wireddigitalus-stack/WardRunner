@@ -2202,12 +2202,39 @@ export default function DashboardPage() {
 
         {/* Layer Toggles */}
         <div className="glass rounded-2xl p-1 flex flex-col items-center gap-0.5">
+          {/* Yard Signs (3-State Cycle: Pins -> Dots -> Off) */}
           <button
-            onClick={() => setShowSignsLayer(!showSignsLayer)}
-            title={showSignsLayer ? "Hide Yard Signs" : "Show Yard Signs"}
-            className={`p-2 rounded-xl transition-all ${showSignsLayer ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-md shadow-emerald-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+            onClick={() => {
+              if (!showSignsLayer) {
+                setShowSignsLayer(true);
+                setUseDotMode(false);
+              } else if (!useDotMode) {
+                setUseDotMode(true);
+              } else {
+                setShowSignsLayer(false);
+                setUseDotMode(false);
+              }
+            }}
+            title={
+              showSignsLayer
+                ? useDotMode
+                  ? "Yard Signs: Dots Active (tap to hide)"
+                  : "Yard Signs: Pins Active (tap for Dots)"
+                : "Show Yard Signs (Pins)"
+            }
+            className={`p-2 rounded-xl transition-all ${
+              showSignsLayer
+                ? useDotMode
+                  ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-md shadow-cyan-500/20'
+                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
           >
-            <MapPin className="w-4 h-4" />
+            {showSignsLayer && useDotMode ? (
+              <CircleDot className="w-4 h-4" />
+            ) : (
+              <MapPin className="w-4 h-4" />
+            )}
           </button>
           <button
             onClick={() => setShowMissionsLayer(!showMissionsLayer)}
@@ -2215,25 +2242,6 @@ export default function DashboardPage() {
             className={`p-2 rounded-xl transition-all ${showMissionsLayer ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-md shadow-purple-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             <Target className="w-4 h-4" />
-          </button>
-          {/* Dot View Toggle (Directly under Sign view) */}
-          <button
-            onClick={() => {
-              if (!showSignsLayer) {
-                setShowSignsLayer(true);
-                setUseDotMode(true);
-              } else {
-                setUseDotMode(!useDotMode);
-              }
-            }}
-            title={useDotMode && showSignsLayer ? "Switch to Standard Pins" : "Switch to Street Dots"}
-            className={`p-2 rounded-xl transition-all ${
-              useDotMode && showSignsLayer
-                ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-md shadow-cyan-500/20'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <CircleDot className="w-4 h-4" />
           </button>
           <button
             onClick={() => setShowCanvassLayer(!showCanvassLayer)}

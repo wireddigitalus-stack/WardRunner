@@ -142,26 +142,30 @@ export default function MobileVipBar({
   };
 
   const toggleOurSigns = () => {
-    if (!showSignsLayer) {
+    if (!(showSignsLayer && ownerFilter === 'ours')) {
       setShowSignsLayer(true);
       setOwnerFilter('ours');
-    } else if (ownerFilter === 'ours') {
+      setUseDotMode?.(false);
+    } else if (!useDotMode) {
+      setUseDotMode?.(true);
+    } else {
       setShowSignsLayer(false);
       setOwnerFilter('all');
-    } else {
-      setOwnerFilter('ours');
+      setUseDotMode?.(false);
     }
   };
 
   const toggleCompetitorSigns = () => {
-    if (!showSignsLayer) {
+    if (!(showSignsLayer && ownerFilter === 'theirs')) {
       setShowSignsLayer(true);
       setOwnerFilter('theirs');
-    } else if (ownerFilter === 'theirs') {
+      setUseDotMode?.(false);
+    } else if (!useDotMode) {
+      setUseDotMode?.(true);
+    } else {
       setShowSignsLayer(false);
       setOwnerFilter('all');
-    } else {
-      setOwnerFilter('theirs');
+      setUseDotMode?.(false);
     }
   };
 
@@ -270,53 +274,55 @@ export default function MobileVipBar({
         {/* Vertical Icon Palette (Visible when isPaletteOpen is true) */}
         {isPaletteOpen && (
           <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl p-1 flex flex-col items-center gap-1.5 shadow-2xl animate-slide-down max-h-[calc(100vh-210px)] overflow-y-auto no-scrollbar">
-            {/* 1. Our Lawn Signs */}
+            {/* 1. Our Lawn Signs (3-State Cycle: Pins -> Dots -> Off) */}
             <button
               onClick={toggleOurSigns}
-              title={`Our Signs (${stats.ours})`}
+              title={
+                showSignsLayer && ownerFilter === 'ours'
+                  ? useDotMode
+                    ? `Our Signs (${stats.ours}): Dots Active (tap to hide)`
+                    : `Our Signs (${stats.ours}): Pins Active (tap for Dots)`
+                  : `Our Signs (${stats.ours}) (tap to show Pins)`
+              }
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                 showSignsLayer && ownerFilter === 'ours'
-                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/30'
+                  ? useDotMode
+                    ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/30'
+                    : 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/30'
                   : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
-              <MapPin className="w-4 h-4" />
+              {showSignsLayer && ownerFilter === 'ours' && useDotMode ? (
+                <CircleDot className="w-4 h-4" />
+              ) : (
+                <MapPin className="w-4 h-4" />
+              )}
             </button>
 
-            {/* 2. Opponent Signs */}
+            {/* 2. Opponent Signs (3-State Cycle: Pins -> Dots -> Off) */}
             <button
               onClick={toggleCompetitorSigns}
-              title={`Opponent Signs (${stats.theirs})`}
+              title={
+                showSignsLayer && ownerFilter === 'theirs'
+                  ? useDotMode
+                    ? `Opponent Signs (${stats.theirs}): Dots Active (tap to hide)`
+                    : `Opponent Signs (${stats.theirs}): Pins Active (tap for Dots)`
+                  : `Opponent Signs (${stats.theirs}) (tap to show Pins)`
+              }
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                 showSignsLayer && ownerFilter === 'theirs'
-                  ? 'bg-rose-500 text-white border-rose-400 shadow-md shadow-rose-500/30'
+                  ? useDotMode
+                    ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/30'
+                    : 'bg-rose-500 text-white border-rose-400 shadow-md shadow-rose-500/30'
                   : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
-              <Target className="w-4 h-4" />
-            </button>
-
-            {/* Dot View Toggle (Directly under Sign view) */}
-            {setUseDotMode && (
-              <button
-                onClick={() => {
-                  if (!showSignsLayer) {
-                    setShowSignsLayer(true);
-                    setUseDotMode(true);
-                  } else {
-                    setUseDotMode(!useDotMode);
-                  }
-                }}
-                title={useDotMode && showSignsLayer ? "Switch to Standard Pins" : "Switch to Street Dots"}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
-                  useDotMode && showSignsLayer
-                    ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/30'
-                    : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
-                }`}
-              >
+              {showSignsLayer && ownerFilter === 'theirs' && useDotMode ? (
                 <CircleDot className="w-4 h-4" />
-              </button>
-            )}
+              ) : (
+                <Target className="w-4 h-4" />
+              )}
+            </button>
 
             {/* 3. Door Knocks / Canvass */}
             <button
