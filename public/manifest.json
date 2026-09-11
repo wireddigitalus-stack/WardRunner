@@ -9,9 +9,9 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/campaignos-social-icon.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg"
     }
   ]
 }

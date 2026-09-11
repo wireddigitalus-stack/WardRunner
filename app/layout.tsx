@@ -3,12 +3,35 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://wardrunner.app'),
   title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
   description: 'Fast, mobile-first field logistics, yard sign intelligence, and campaign operations for political campaigns.',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
-    apple: '/icon-192.png',
+    apple: '/campaignos-social-icon.jpg',
+  },
+  openGraph: {
+    title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
+    description: 'Fast, mobile-first field logistics, yard sign intelligence, and campaign operations for political campaigns.',
+    url: 'https://wardrunner.app',
+    siteName: 'CampaignOS',
+    images: [
+      {
+        url: '/campaignos-social-icon.jpg',
+        width: 1024,
+        height: 1024,
+        alt: 'CampaignOS Modern Social Share Icon',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
+    description: 'Fast, mobile-first field logistics, yard sign intelligence, and campaign operations for political campaigns.',
+    images: ['/campaignos-social-icon.jpg'],
   },
 };
 
