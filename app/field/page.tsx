@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
-import { compressImage } from '@/lib/imageCompression';
+import { compressImage, compressImageToBase64 } from '@/lib/imageCompression';
 import { SignType, SignStatus, Sign, VolunteerSession, VolunteerAssignment } from '@/lib/types';
 import { getStoredAssignments, markAssignmentComplete } from '@/lib/assignmentData';
 import { addPlacedSign, getStoredSigns, markSignRetrieved } from '@/lib/signData';
@@ -27,6 +27,9 @@ import {
   Send,
   Check,
   Sparkles,
+  Scan,
+  Zap,
+  Eye,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 
@@ -57,6 +60,22 @@ export default function FieldPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // AI Sign Scanner State (Gemini Multimodal Vision)
+  const [isAiScanning, setIsAiScanning] = useState(false);
+  const [aiScanResult, setAiScanResult] = useState<{
+    is_sign: boolean;
+    candidate_name: string;
+    office?: string;
+    is_competitor: boolean;
+    competitor_name: string | null;
+    sign_type: SignType;
+    confidence: number;
+    detected_text: string;
+    condition: string;
+    summary: string;
+  } | null>(null);
+  const [aiScanError, setAiScanError] = useState<string | null>(null);
 
   // Noticeable Sign Dropped Success State for Giant Action Button
   const [justDroppedSuccess, setJustDroppedSuccess] = useState<{
@@ -351,20 +370,79 @@ export default function FieldPage() {
     setSession(null);
   };
 
-  // 3. Photo Capture & Fast Canvas Compression
-  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 3. Photo Capture & Fast AI Sign Scanning (Sub-2s flow)
+  const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setPhotoFile(file);
     const objectUrl = URL.createObjectURL(file);
     setPhotoPreview(objectUrl);
+    setAiScanError(null);
+    setAiScanResult(null);
+
+    // Concurrently trigger GPS lock if not already locked
+    if (!coords) {
+      fetchCurrentLocation();
+    }
+
+    // Trigger Gemini Vision AI Scan
+    setIsAiScanning(true);
+    try {
+      // Compress in browser canvas to ~80-120KB JPEG
+      const { base64 } = await compressImageToBase64(file, 1024, 1024, 0.70);
+
+      const res = await fetch('/api/scan-sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64 }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to analyze sign image');
+      }
+
+      const data = await res.json();
+      if (data.success && data.scan) {
+        const scan = data.scan;
+        setAiScanResult(scan);
+
+        // Auto-apply detection to form
+        if (scan.is_sign) {
+          if (scan.is_competitor) {
+            setIsCompetitor(true);
+            setCompetitorName(scan.competitor_name || scan.candidate_name || 'Competitor');
+          } else {
+            setIsCompetitor(false);
+            setCompetitorName('');
+          }
+
+          if (['yard_sign', 'large_sign', 'banner', 'billboard'].includes(scan.sign_type)) {
+            setSelectedType(scan.sign_type as SignType);
+          }
+
+          // Gentle haptic feedback on successful AI recognition
+          if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+            try { navigator.vibrate([60, 40, 80]); } catch (e) {}
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn('AI sign scan error:', err);
+      setAiScanError(err?.message || 'AI scan unavailable. You can still drop the sign manually.');
+    } finally {
+      setIsAiScanning(false);
+    }
   };
 
   const clearPhoto = () => {
     setPhotoFile(null);
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(null);
+    setAiScanResult(null);
+    setAiScanError(null);
+    setIsAiScanning(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -909,6 +987,33 @@ export default function FieldPage() {
             </div>
           )}
 
+          {/* Quick-Launch AI Photo Sign Scanner Banner */}
+          <div className="relative group">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isAiScanning}
+              className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950/70 border border-emerald-500/40 hover:border-emerald-400 text-left flex items-center justify-between shadow-lg shadow-emerald-950/30 active:scale-[0.99] transition disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black shadow-md shadow-emerald-500/30 shrink-0">
+                  <Scan className="w-5 h-5 text-slate-950 stroke-[2.5]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-black text-white uppercase tracking-wider">AI Photo Sign Scan</span>
+                    <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-0.5">
+                      <Sparkles className="w-2.5 h-2.5 fill-emerald-300" />
+                      Gemini Vision
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">Snap any sign · AI reads candidate, 4×4 vs yard & opponent</p>
+                </div>
+              </div>
+              <Camera className="w-5 h-5 text-emerald-400 shrink-0 ml-2" />
+            </button>
+          </div>
+
           {/* Target Ownership Switch: Brown Campaign vs Competitor Intel */}
           <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
             <div className="text-xs font-bold uppercase text-slate-400 mb-2 flex items-center justify-between">
@@ -1037,8 +1142,65 @@ export default function FieldPage() {
               id="field-camera-upload"
             />
 
+            {/* AI Vision Scanning Indicator */}
+            {isAiScanning && (
+              <div className="mt-2.5 p-3.5 rounded-xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-indigo-950/60 border border-indigo-500/40 text-center animate-pulse flex flex-col items-center justify-center gap-1.5">
+                <div className="flex items-center gap-2 text-indigo-300 font-extrabold text-xs">
+                  <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
+                  <span>Gemini Multimodal AI Scanning Sign...</span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Auto-detecting candidate name, sign dimensions & competitor status
+                </p>
+              </div>
+            )}
+
+            {/* AI Scan Result Intelligence Card */}
+            {aiScanResult && !isAiScanning && (
+              <div
+                className={`mt-2.5 p-3 rounded-xl border animate-fade-in ${
+                  aiScanResult.is_competitor
+                    ? 'bg-rose-950/30 border-rose-500/40 text-rose-200'
+                    : 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
+                    AI Auto-Detected ({Math.round(aiScanResult.confidence * 100)}% Match)
+                  </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded font-black bg-white/10 text-white">
+                    {aiScanResult.sign_type.replace('_', ' ').toUpperCase()}
+                  </span>
+                </div>
+                <p className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                  <span>{aiScanResult.is_competitor ? '⚔️ Competitor Spotted:' : '✅ Supporter Sign:'}</span>
+                  <span className="underline decoration-indigo-400 decoration-2 underline-offset-2">
+                    {aiScanResult.candidate_name || (aiScanResult.is_competitor ? 'Opponent' : 'Melissa K. Brown')}
+                  </span>
+                </p>
+                {aiScanResult.summary && (
+                  <p className="text-[11px] text-slate-300/80 mt-1 italic">
+                    "{aiScanResult.summary}"
+                  </p>
+                )}
+                <div className="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Form auto-configured</span>
+                  <span className="font-black text-emerald-400">Tap Button Below to Drop 📍</span>
+                </div>
+              </div>
+            )}
+
+            {/* AI Scan Fallback / Error Notice */}
+            {aiScanError && !isAiScanning && (
+              <div className="mt-2 p-2 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{aiScanError}</span>
+              </div>
+            )}
+
             {photoPreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-slate-700 h-32 w-full bg-slate-950 flex items-center justify-center">
+              <div className="relative rounded-xl overflow-hidden border border-slate-700 h-36 w-full bg-slate-950 flex items-center justify-center mt-2.5">
                 <img
                   src={photoPreview}
                   alt="Captured sign"
@@ -1046,15 +1208,16 @@ export default function FieldPage() {
                 />
                 <label
                   htmlFor="field-camera-upload"
-                  className="absolute bottom-2 right-2 px-3 py-1 bg-slate-950/80 backdrop-blur rounded-lg text-xs text-white border border-slate-700 cursor-pointer font-medium"
+                  className="absolute bottom-2 right-2 px-3 py-1 bg-slate-950/85 backdrop-blur rounded-lg text-xs text-white border border-slate-700 cursor-pointer font-medium flex items-center gap-1.5 shadow-lg active:scale-95 transition"
                 >
-                  Retake Photo
+                  <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Retake Photo</span>
                 </label>
               </div>
             ) : (
               <label
                 htmlFor="field-camera-upload"
-                className="w-full py-4 px-4 rounded-xl border border-dashed border-slate-700 hover:border-slate-500 bg-slate-950/50 flex items-center justify-center gap-3 cursor-pointer text-slate-400 hover:text-white transition active:scale-[0.99]"
+                className="w-full py-4 px-4 rounded-xl border border-dashed border-slate-700 hover:border-emerald-500/50 bg-slate-950/50 flex items-center justify-center gap-3 cursor-pointer text-slate-400 hover:text-white transition active:scale-[0.99]"
               >
                 <Camera className="w-5 h-5 text-emerald-400" />
                 <span className="text-sm font-semibold">Snap Quick Field Photo</span>
@@ -1066,7 +1229,7 @@ export default function FieldPage() {
           <div className="pt-2">
             <button
               type="button"
-              disabled={isSubmitting || gpsStatus === 'locating'}
+              disabled={isSubmitting || gpsStatus === 'locating' || isAiScanning}
               onClick={handleDropSign}
               className={`w-full py-5 rounded-2xl font-black text-xl tracking-wide shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-300 relative overflow-hidden ${
                 justDroppedSuccess
@@ -1085,6 +1248,11 @@ export default function FieldPage() {
                   <RefreshCw className="w-6 h-6 animate-spin" />
                   <span>UPLOADING SIGN...</span>
                 </>
+              ) : isAiScanning ? (
+                <>
+                  <RefreshCw className="w-6 h-6 animate-spin" />
+                  <span>AI SCANNING SIGN...</span>
+                </>
               ) : justDroppedSuccess ? (
                 <div className="flex flex-col items-center justify-center py-0.5 animate-fade-in">
                   <div className="flex items-center gap-2 text-2xl font-black tracking-wider text-slate-950">
@@ -1100,8 +1268,20 @@ export default function FieldPage() {
                 </div>
               ) : (
                 <>
-                  <MapPin className="w-6 h-6" />
-                  <span>{isCompetitor ? 'LOG COMPETITOR SIGN' : 'DROP OUR SIGN HERE'}</span>
+                  {aiScanResult ? (
+                    <Sparkles className="w-6 h-6 fill-current text-amber-300" />
+                  ) : (
+                    <MapPin className="w-6 h-6" />
+                  )}
+                  <span>
+                    {aiScanResult
+                      ? isCompetitor
+                        ? 'CONFIRM & LOG COMPETITOR'
+                        : 'CONFIRM & DROP SIGN'
+                      : isCompetitor
+                      ? 'LOG COMPETITOR SIGN'
+                      : 'DROP OUR SIGN HERE'}
+                  </span>
                 </>
               )}
             </button>

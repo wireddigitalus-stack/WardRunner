@@ -24,8 +24,12 @@ import {
   Compass,
   Clock,
   ExternalLink,
+  Camera,
+  Scan,
+  RefreshCw,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
+import { compressImageToBase64 } from '@/lib/imageCompression';
 import {
   CanvassRecord,
   CanvassResult,
@@ -87,6 +91,11 @@ export default function CanvassPage() {
   // Active Assigned Turf Route
   const [activeRoute, setActiveRoute] = useState<CanvassRoute | null>(null);
   const [showRouteWaypoints, setShowRouteWaypoints] = useState(false);
+
+  // AI Sign Spotter State
+  const signPhotoInputRef = useRef<HTMLInputElement>(null);
+  const [isScanningSign, setIsScanningSign] = useState(false);
+  const [scannedSignToast, setScannedSignToast] = useState<{ label: string; color: string } | null>(null);
 
   // Sound Chime helper
   const playTactileChime = (tone: 'high' | 'mid' | 'flyer') => {
@@ -401,6 +410,70 @@ export default function CanvassPage() {
     setLastLoggedRecord(null);
     setJustLoggedToast({ label: 'Undone! Knock removed.', color: 'bg-rose-700' });
     setTimeout(() => setJustLoggedToast(null), 2500);
+  };
+
+  // AI Yard Sign Spotter Handler (Fast photo capture & auto-drop)
+  const handleSpotSignCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !session) return;
+
+    setIsScanningSign(true);
+    try {
+      const { base64 } = await compressImageToBase64(file, 1024, 1024, 0.70);
+      const res = await fetch('/api/scan-sign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64 }),
+      });
+
+      if (!res.ok) {
+        throw new Error('AI sign recognition failed');
+      }
+
+      const data = await res.json();
+      if (data.success && data.scan) {
+        const scan = data.scan;
+        const lat = coords?.latitude || 36.5866;
+        const lng = coords?.longitude || -82.1963;
+
+        await addPlacedSign({
+          campaign_id: session.campaignId,
+          latitude: lat,
+          longitude: lng,
+          placed_by_name: session.volunteerName,
+          sign_type: scan.sign_type || 'yard_sign',
+          is_competitor: scan.is_competitor,
+          competitor_name: scan.is_competitor ? (scan.competitor_name || scan.candidate_name || 'Competitor') : null,
+          status: 'placed',
+        });
+
+        playTactileChime('high');
+        if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+          try { navigator.vibrate([80, 50, 100]); } catch (err) {}
+        }
+
+        const candidateName = scan.candidate_name || (scan.is_competitor ? 'Competitor' : 'Melissa K. Brown');
+        const signTypeLabel = scan.sign_type === 'large_sign' ? '4x4 Sign' : 'Yard Sign';
+
+        setScannedSignToast({
+          label: scan.is_competitor
+            ? `⚔️ Competitor Spotted: ${candidateName} (${signTypeLabel}) pinned to map!`
+            : `✅ Supporter Sign Logged: ${candidateName} pinned to map!`,
+          color: scan.is_competitor ? 'bg-rose-600' : 'bg-emerald-600',
+        });
+        setTimeout(() => setScannedSignToast(null), 5000);
+      }
+    } catch (err: any) {
+      console.warn('Canvass AI sign scan error:', err);
+      setScannedSignToast({
+        label: 'Could not auto-detect sign text. Check connection.',
+        color: 'bg-amber-600',
+      });
+      setTimeout(() => setScannedSignToast(null), 4000);
+    } finally {
+      setIsScanningSign(false);
+      if (signPhotoInputRef.current) signPhotoInputRef.current.value = '';
+    }
   };
 
   // Walk Session Stats
@@ -800,10 +873,59 @@ export default function CanvassPage() {
             1 Tap
           </span>
         </button>
+
+        {/* BUTTON 4: SPOT YARD SIGN (AI PHOTO SCAN) */}
+        <button
+          type="button"
+          onClick={() => signPhotoInputRef.current?.click()}
+          disabled={isScanningSign}
+          className="w-full p-4 rounded-3xl bg-gradient-to-r from-purple-900/50 via-slate-900 to-indigo-950/70 hover:from-purple-900/70 hover:to-indigo-900/70 text-white shadow-lg shadow-purple-950/20 active:scale-[0.98] transition border border-purple-500/40 flex items-center justify-between group disabled:opacity-60"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition shrink-0">
+              {isScanningSign ? (
+                <RefreshCw className="w-6 h-6 animate-spin text-purple-300" />
+              ) : (
+                <Scan className="w-6 h-6 text-purple-300 stroke-[2.5]" />
+              )}
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-lg font-black tracking-tight text-white leading-tight">
+                  {isScanningSign ? 'AI Scanning Sign...' : 'Spot Yard Sign'}
+                </h3>
+                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 border border-purple-400/40">
+                  AI Auto-Pin
+                </span>
+              </div>
+              <p className="text-xs text-purple-200/80 font-medium">
+                Snap any sign · AI reads candidate & drops pin
+              </p>
+            </div>
+          </div>
+          <Camera className="w-5 h-5 text-purple-300 shrink-0 mr-1" />
+        </button>
+
+        {/* Hidden Camera Input for Canvass Yard Sign Spotting */}
+        <input
+          ref={signPhotoInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleSpotSignCapture}
+          className="hidden"
+          id="canvass-sign-photo-upload"
+        />
       </div>
 
-      {/* Undo Button & Toast Notification */}
+      {/* Undo Button & Toast Notifications */}
       <div className="px-4 mt-3">
+        {scannedSignToast && (
+          <div className={`${scannedSignToast.color} text-white px-4 py-3 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xl animate-slide-up mb-2 border border-white/20`}>
+            <span>{scannedSignToast.label}</span>
+          </div>
+        )}
+
         {justLoggedToast && (
           <div className={`${justLoggedToast.color} text-white px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center justify-between shadow-lg animate-slide-up mb-2`}>
             <span>✓ {justLoggedToast.label}</span>
