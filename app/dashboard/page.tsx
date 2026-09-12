@@ -28,32 +28,130 @@ import TacticalOnboardingTour, { TourStep } from '@/app/components/TacticalOnboa
 
 const DASHBOARD_TOUR_STEPS: TourStep[] = [
   {
+    targetId: 'tour-stats-hud, tour-mobile-stats-hud',
+    title: 'Live Campaign Stats HUD',
+    description: 'Track real-time field performance: total signs deployed, percentage of goal reached, and live door knocks recorded by canvassers.',
+    accentColor: 'emerald',
+    badge: '1. Campaign HUD',
+  },
+  {
+    targetId: 'tour-ground-force',
+    title: 'Ground Force Filter',
+    description: 'Filter map markers to view the exact activity, breadcrumbs, and doors knocked for any individual volunteer or field team.',
+    accentColor: 'teal',
+    badge: '2. Ground Force',
+  },
+  {
+    targetId: 'tour-missions-btn',
+    title: 'Sign Placement Missions',
+    description: 'Create targeted field missions, set sign quantities and priority intersections, and dispatch runners with 1-click turn-by-turn routes.',
+    accentColor: 'purple',
+    badge: '3. Dispatch',
+  },
+  {
+    targetId: 'tour-roster-btn',
+    title: 'Volunteer Roster & PINs',
+    description: 'Manage campaign volunteers, assign sign runner or canvasser roles, and generate secure 6-digit access PINs for the field apps.',
+    accentColor: 'purple',
+    badge: '4. Team Roster',
+  },
+  {
+    targetId: 'tour-lock-btn',
+    title: 'Lock Command Center',
+    description: 'Secures your strategy room. Locks the dashboard behind Master Security PIN 620620 when stepping away from your desk.',
+    accentColor: 'rose',
+    badge: '5. Security Gate',
+  },
+  {
+    targetId: 'tour-drawer-btn',
+    title: 'Analytics & Settings Drawer',
+    description: 'Slide open full precinct voting breakdowns, inventory stock management, CSV export, and granular map layer controls.',
+    accentColor: 'emerald',
+    badge: '6. Command Drawer',
+  },
+  {
+    targetId: 'tour-recenter-btn',
+    title: 'Recenter Map',
+    description: 'One tap snaps your camera back to the geographic center of Bristol, TN whenever you pan away.',
+    accentColor: 'emerald',
+    badge: '7. Recenter',
+  },
+  {
+    targetId: 'tour-3d-btn',
+    title: '3D Topography Tilt',
+    description: 'Angles the camera into a 50° 3D perspective to visualize Bristol\'s ridges, elevation, and line-of-sight visibility for signage.',
+    accentColor: 'emerald',
+    badge: '8. 3D Terrain',
+  },
+  {
+    targetId: 'tour-zoom-btns',
+    title: 'Map Zoom Controls',
+    description: 'Quickly zoom between street-level yard sign placements and ward-wide regional overview.',
+    accentColor: 'cyan',
+    badge: '9. Zoom Stack',
+  },
+  {
     targetId: 'tour-signs-toggle, tour-mobile-signs, tour-mobile-palette-toggle',
     title: 'Yard Signs Radar',
-    description: 'Toggle between Full Sign Icons, Micro-Dots, or clear the map. Filter between your campaign signs and opponent placements instantly.',
+    description: '3-state cycle: tap for full Sign Icons, tap again for Micro-Dots (high density radar), or tap to clear sign clutter.',
     accentColor: 'emerald',
-    badge: 'Lawn Signs',
+    badge: '10. Sign Radar',
+  },
+  {
+    targetId: 'tour-missions-layer',
+    title: 'Target Missions Layer',
+    description: 'Toggle purple target rings to see active high-priority dispatch missions deployed across Bristol.',
+    accentColor: 'purple',
+    badge: '11. Missions Layer',
+  },
+  {
+    targetId: 'tour-canvass-layer, tour-mobile-doors',
+    title: 'Canvass Knocks & Flyers',
+    description: 'Display teal footprint pins for every household visited, literature flyer dropped, and voter sentiment recorded.',
+    accentColor: 'teal',
+    badge: '12. Canvass Layer',
   },
   {
     targetId: 'tour-field-ops, tour-mobile-field-ops, tour-mobile-palette-toggle',
-    title: 'Live Field Operations',
-    description: 'Track active ground volunteers, live breadcrumb GPS pings, and assigned turf walking loops across all Bristol voting wards.',
+    title: 'Field Ops & Turf Routes',
+    description: 'View live volunteer GPS breadcrumbs, active walk paths, and designated turf loops across Bristol precincts.',
     accentColor: 'teal',
-    badge: 'Ground Force',
+    badge: '13. Field Ops',
+  },
+  {
+    targetId: 'tour-precincts-layer, tour-mobile-precincts',
+    title: 'Voting Precinct Boundaries',
+    description: 'Toggle official Bristol voting ward boundaries with voter registration numbers, turnout targets, and polling locations.',
+    accentColor: 'amber',
+    badge: '14. Voting Wards',
+  },
+  {
+    targetId: 'tour-corridors-layer',
+    title: 'AADT Traffic Corridors',
+    description: 'Highlights TDOT heavy-traffic corridors and key traffic arteries that maximize billboard and banner impressions.',
+    accentColor: 'amber',
+    badge: '15. Traffic Corridors',
+  },
+  {
+    targetId: 'tour-heatmap-layer, tour-mobile-heatmap',
+    title: 'Campaign Density Heatmap',
+    description: 'Visualizes intense sign clusters and cold voter zones in vibrant gradient colors across Bristol neighborhoods.',
+    accentColor: 'rose',
+    badge: '16. Sign Heatmap',
+  },
+  {
+    targetId: 'tour-map-search',
+    title: 'Instant Address Search',
+    description: 'Quickly search any Bristol street name, intersection, or voter address to fly straight to that location on the map.',
+    accentColor: 'cyan',
+    badge: '17. Address Search',
   },
   {
     targetId: 'tour-scout-ai',
     title: 'Scout AI Placement Advisor',
-    description: 'Autonomous AI analyzes TDOT traffic volume (AADT) and major intersections to recommend high-visibility sign and banner locations.',
+    description: 'Autonomous AI cross-references TDOT traffic volume (AADT) with major intersections to recommend high-visibility sign and banner locations.',
     accentColor: 'amber',
-    badge: 'Scout AI',
-  },
-  {
-    targetId: 'tour-missions-btn',
-    title: 'Missions & Volunteer Dispatch',
-    description: 'Deploy field runners to hot spots, create custom turf walking routes, and generate secure volunteer sign-in PINs in one click.',
-    accentColor: 'purple',
-    badge: 'Dispatch',
+    badge: '18. Scout AI',
   },
 ];
 
@@ -2036,7 +2134,7 @@ export default function DashboardPage() {
           </div>
 
           {/* — KPI Pills — */}
-          <div className="hidden lg:flex pointer-events-auto glass rounded-2xl px-1 py-1 items-center gap-1 animate-slide-up" style={{ animationDelay: '80ms' }}>
+          <div id="tour-stats-hud" className="hidden lg:flex pointer-events-auto glass rounded-2xl px-1 py-1 items-center gap-1 animate-slide-up" style={{ animationDelay: '80ms' }}>
             <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
               <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/40" />
               <span className="text-[11px] font-medium opacity-60">Our Signs</span>
@@ -2068,6 +2166,7 @@ export default function DashboardPage() {
           <div className="pointer-events-auto flex items-center gap-2 animate-slide-up" style={{ animationDelay: '160ms' }}>
             {/* Quick Access to Field Force / Volunteer Filter */}
             <button
+              id="tour-ground-force"
               onClick={() => setIsVolunteerFilterOpen(!isVolunteerFilterOpen)}
               className={`glass rounded-2xl px-3 py-2 flex items-center gap-1.5 transition-all text-xs font-bold active:scale-95 ${
                 selectedVolunteerFilter || isVolunteerFilterOpen
@@ -2115,6 +2214,7 @@ export default function DashboardPage() {
 
             {/* Quick Access to Volunteers Modal on all screen sizes */}
             <button
+              id="tour-roster-btn"
               onClick={() => {
                 setModalInitialTab('roster');
                 setModalInitialTarget(null);
@@ -2129,6 +2229,7 @@ export default function DashboardPage() {
 
             {/* Interactive Onboarding Mission Tour */}
             <button
+              id="tour-replay-btn"
               onClick={() => setIsTourOpen(true)}
               className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 active:scale-95 group shadow-sm shadow-emerald-500/10"
               title="Interactive Briefing Tour"
@@ -2139,6 +2240,7 @@ export default function DashboardPage() {
 
             {/* Lock Field Command Security Gate */}
             <button
+              id="tour-lock-btn"
               onClick={handleLockCommand}
               className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 active:scale-95 group"
               title="Lock Field Command Gate (Master PIN: 620620)"
@@ -2149,6 +2251,7 @@ export default function DashboardPage() {
 
             {/* Drawer Toggle */}
             <button
+              id="tour-drawer-btn"
               onClick={() => setDrawerOpen(!drawerOpen)}
               className={`glass rounded-2xl p-2.5 transition-all duration-300 ${drawerOpen ? 'bg-emerald-500 !border-emerald-400 text-white shadow-lg shadow-emerald-500/30' : 'hover:scale-105'}`}
             >
@@ -2248,12 +2351,12 @@ export default function DashboardPage() {
           ============================================================ */}
       <div className="hidden md:flex absolute right-3 sm:right-4 top-20 z-10 flex-col gap-2 pointer-events-auto animate-slide-up" style={{ animationDelay: '200ms' }}>
         {/* Navigation Stack */}
-        <div className="glass rounded-2xl p-1 flex flex-col items-center">
-          <button onClick={recenter} title="Recenter Bristol" className="p-2.5 rounded-xl hover:bg-emerald-500/15 hover:text-emerald-400 active:scale-90 transition-all">
+        <div id="tour-zoom-btns" className="glass rounded-2xl p-1 flex flex-col items-center">
+          <button id="tour-recenter-btn" onClick={recenter} title="Recenter Bristol" className="p-2.5 rounded-xl hover:bg-emerald-500/15 hover:text-emerald-400 active:scale-90 transition-all">
             <Navigation className="w-4 h-4" />
           </button>
           <div className={`w-5 h-px ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-          <button onClick={toggle3D} title="3D Perspective" className={`p-2.5 rounded-xl text-xs font-black transition-all active:scale-90 ${is3D ? 'text-emerald-400 bg-emerald-500/15' : 'hover:bg-white/10'}`}>
+          <button id="tour-3d-btn" onClick={toggle3D} title="3D Perspective" className={`p-2.5 rounded-xl text-xs font-black transition-all active:scale-90 ${is3D ? 'text-emerald-400 bg-emerald-500/15' : 'hover:bg-white/10'}`}>
             3D
           </button>
           <div className={`w-5 h-px ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
@@ -2299,6 +2402,7 @@ export default function DashboardPage() {
             )}
           </button>
           <button
+            id="tour-missions-layer"
             onClick={() => setShowMissionsLayer(!showMissionsLayer)}
             title={showMissionsLayer ? "Hide Target Missions" : "Show Target Missions"}
             className={`p-2 rounded-xl transition-all ${showMissionsLayer ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-md shadow-purple-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
@@ -2306,6 +2410,7 @@ export default function DashboardPage() {
             <Target className="w-4 h-4" />
           </button>
           <button
+            id="tour-canvass-layer"
             onClick={() => setShowCanvassLayer(!showCanvassLayer)}
             title={showCanvassLayer ? "Hide Canvass Knocks & Flyers" : "Show Canvass Knocks & Flyers"}
             className={`p-2 rounded-xl transition-all ${showCanvassLayer ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-md shadow-teal-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
@@ -2339,6 +2444,7 @@ export default function DashboardPage() {
           </button>
           <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
           <button
+            id="tour-precincts-layer"
             onClick={() => setShowPrecincts(!showPrecincts)}
             title="Voting Precincts & Turnout Grid"
             className={`p-2 rounded-xl transition-all ${showPrecincts ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
@@ -2359,6 +2465,7 @@ export default function DashboardPage() {
             <Building2 className="w-4 h-4" />
           </button>
           <button
+            id="tour-corridors-layer"
             onClick={() => setShowCorridors(!showCorridors)}
             title="AADT Corridors"
             className={`p-2 rounded-xl transition-all ${showCorridors ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-md shadow-amber-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
@@ -2366,6 +2473,7 @@ export default function DashboardPage() {
             <TrendingUp className="w-4 h-4" />
           </button>
           <button
+            id="tour-heatmap-layer"
             onClick={() => setShowHeatmap(!showHeatmap)}
             title="Sign Density Heatmap"
             className={`p-2 rounded-xl transition-all ${showHeatmap ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30 shadow-md shadow-rose-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
@@ -3161,14 +3269,16 @@ export default function DashboardPage() {
         recs={scoutRecs}
         setRecs={setScoutRecs}
         searchBar={
-          <MapSearchBar
-            signs={signs}
-            onSelectLocation={handleSearchSelectLocation}
-            onSelectSign={(sign) => {
-              setSelectedSign(sign);
-            }}
-            isDark={isDark}
-          />
+          <div id="tour-map-search" className="w-full">
+            <MapSearchBar
+              signs={signs}
+              onSelectLocation={handleSearchSelectLocation}
+              onSelectSign={(sign) => {
+                setSelectedSign(sign);
+              }}
+              isDark={isDark}
+            />
+          </div>
         }
         onSelectRec={(rec) => {
           setSelectedSign(null);

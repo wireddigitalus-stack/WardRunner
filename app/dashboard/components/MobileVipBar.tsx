@@ -191,7 +191,7 @@ export default function MobileVipBar({
           </div>
 
           {/* Quick Metrics Capsule */}
-          <div className="pointer-events-auto flex items-center gap-1 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-2 py-1 shadow-xl overflow-x-auto max-w-[210px] no-scrollbar">
+          <div id="tour-mobile-stats-hud" className="pointer-events-auto flex items-center gap-1 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-2 py-1 shadow-xl overflow-x-auto max-w-[210px] no-scrollbar">
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300 shrink-0">
               <span>🟢 {stats.ours}</span>
               <span className="text-[9px] font-medium text-emerald-400/70">Ours</span>
@@ -318,6 +318,7 @@ export default function MobileVipBar({
 
             {/* 2. Opponent Signs (3-State Cycle: Pins -> Dots -> Off) */}
             <button
+              id="tour-mobile-opponents"
               onClick={toggleCompetitorSigns}
               title={
                 showSignsLayer && ownerFilter === 'theirs'
@@ -343,6 +344,7 @@ export default function MobileVipBar({
 
             {/* 3. Door Knocks / Canvass */}
             <button
+              id="tour-mobile-doors"
               onClick={() => setShowCanvassLayer(!showCanvassLayer)}
               title={`Door Knocks (${canvassRecords.length})`}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
@@ -370,6 +372,7 @@ export default function MobileVipBar({
 
             {/* 6. Voting Precincts */}
             <button
+              id="tour-mobile-precincts"
               onClick={() => setShowPrecincts(!showPrecincts)}
               title={`Voting Precincts (${precincts.length})`}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
@@ -402,6 +405,7 @@ export default function MobileVipBar({
             {/* 8. Vibrant Heatmap */}
             {setShowHeatmap && (
               <button
+                id="tour-mobile-heatmap"
                 onClick={() => setShowHeatmap(!showHeatmap)}
                 title="Sign Density Heatmap"
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${

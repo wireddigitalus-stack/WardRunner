@@ -44,25 +44,60 @@ import TacticalOnboardingTour, { TourStep } from '@/app/components/TacticalOnboa
 
 const FIELD_TOUR_STEPS: TourStep[] = [
   {
+    targetId: 'tour-field-session',
+    title: 'Field Operator Badge',
+    description: 'Displays your confirmed volunteer name and campaign identity for all logged sign drops.',
+    accentColor: 'emerald',
+    badge: '1. Operator ID',
+  },
+  {
+    targetId: 'tour-field-gps',
+    title: 'High-Accuracy GPS Strip',
+    description: 'Shows live satellite positioning accuracy in meters. Tap the refresh icon anytime to force a fresh GPS coordinate fix.',
+    accentColor: 'teal',
+    badge: '2. GPS Precision',
+  },
+  {
+    targetId: 'tour-field-modetabs',
+    title: 'Place vs. Retrieve Mode',
+    description: 'Switch between dropping new signs during the race and retrieving signs for post-election cleanup or damaged signs.',
+    accentColor: 'amber',
+    badge: '3. Mode Switch',
+  },
+  {
     targetId: 'tour-field-camera',
-    title: 'AI Sign Scanner',
-    description: 'Point your camera at any yard sign or billboard. AI immediately identifies the candidate, sign format, and compresses the photo to save mobile data.',
+    title: 'AI Photo Sign Scanner',
+    description: 'Point your camera at any sign: AI automatically recognizes candidate, sign dimensions, and whether it belongs to an opponent.',
     accentColor: 'purple',
-    badge: 'AI Vision',
+    badge: '4. AI Camera',
+  },
+  {
+    targetId: 'tour-field-ownership',
+    title: 'Whose Sign Is This?',
+    description: '1-tap toggle between our campaign (Melissa K. Brown) and competitor intel sightings without typing.',
+    accentColor: 'emerald',
+    badge: '5. Ownership',
   },
   {
     targetId: 'tour-field-signtype',
-    title: 'Touchscreen Sign Selector',
-    description: 'McDonald\'s-style buttons allow easy 1-tap switching between Yard Signs, Large 4x4s, Banners, and Competitor signs.',
+    title: 'Sign Format Buttons',
+    description: 'McDonald\'s register buttons to pick Yard Sign, Roadside 4x4, Overpass Banner, or High-Impact Billboard.',
     accentColor: 'cyan',
-    badge: 'Sign Format',
+    badge: '6. Sign Format',
   },
   {
     targetId: 'tour-field-drop-btn',
-    title: 'Giant 1-Tap Sign Drop',
-    description: 'Punch the giant button to lock your GPS coordinates and log the sign onto CampaignOS in less than 2 seconds.',
+    title: 'Giant 1-Tap Drop Button',
+    description: 'Punch the giant button to lock your GPS coordinates and log the placement to CampaignOS in under 2 seconds.',
     accentColor: 'emerald',
-    badge: '1-Tap Drop',
+    badge: '7. Drop Sign',
+  },
+  {
+    targetId: 'tour-field-canvass-link',
+    title: 'Switch to Door Canvassing',
+    description: 'Transition directly to the Door Knocker portal without having to re-enter your volunteer PIN.',
+    accentColor: 'teal',
+    badge: '8. Canvass Switch',
   },
 ];
 
@@ -798,7 +833,7 @@ export default function FieldPage() {
       {/* 1. Header Bar with Volunteer & GPS Status */}
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div id="tour-field-session" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs tracking-tight">
               COS
             </div>
@@ -823,6 +858,7 @@ export default function FieldPage() {
             </button>
 
             <Link
+              id="tour-field-canvass-link"
               href="/canvass"
               className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1 transition"
               title="Switch to Door Canvassing"
@@ -842,7 +878,7 @@ export default function FieldPage() {
         </div>
 
         {/* GPS Sensor Strip */}
-        <div className="mt-2.5 flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800/80 text-xs">
+        <div id="tour-field-gps" className="mt-2.5 flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800/80 text-xs">
           <div className="flex items-center gap-2">
             <span
               className={`w-2.5 h-2.5 rounded-full ${
@@ -873,7 +909,7 @@ export default function FieldPage() {
 
       {/* 2. Mode Selector: Placement Mode vs Cleanup / Retrieval Mode */}
       <div className="p-4 pb-1">
-        <div className="grid grid-cols-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div id="tour-field-modetabs" className="grid grid-cols-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
           <button
             type="button"
             onClick={() => setActiveTab('place')}
@@ -1086,7 +1122,7 @@ export default function FieldPage() {
           </div>
 
           {/* Target Ownership Switch - Giant POS Selector Tiles */}
-          <div className="p-4 rounded-3xl bg-slate-900/90 border-2 border-slate-800 shadow-xl">
+          <div id="tour-field-ownership" className="p-4 rounded-3xl bg-slate-900/90 border-2 border-slate-800 shadow-xl">
             <div className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
               <span>Step 1: Whose Sign is This?</span>
               <span className="text-[11px] font-bold text-slate-500">Tap to switch</span>

@@ -52,25 +52,60 @@ import TacticalOnboardingTour, { TourStep } from '@/app/components/TacticalOnboa
 
 const CANVASS_TOUR_STEPS: TourStep[] = [
   {
-    targetId: 'tour-canvass-contact',
-    title: 'Voter Contact (Spoke)',
-    description: 'When a resident answers the door, tap here to record their sentiment (Strong Support, Undecided, Opposed), request a lawn sign, or dictate notes.',
+    targetId: 'tour-canvass-session',
+    title: 'Canvasser Identity & Beacon',
+    description: 'Displays your confirmed volunteer name, active door canvasser role, live GPS tracking beacon, and screen awake status.',
     accentColor: 'emerald',
-    badge: 'Voter Spoke',
+    badge: '1. Identity & Beacon',
   },
   {
-    targetId: 'tour-canvass-flyer, tour-canvass-not-home',
-    title: '1-Tap Not Home & Flyer',
-    description: 'Zero typing required while walking. Simply tap once to log that literature was hung or nobody answered. GPS fixes the house immediately.',
+    targetId: 'tour-canvass-hud',
+    title: 'Walk Session HUD',
+    description: 'Tracks doors knocked, contacts made, conversation rate, and literature flyers left during your active walking shift.',
+    accentColor: 'teal',
+    badge: '2. Session HUD',
+  },
+  {
+    targetId: 'tour-canvass-route-card',
+    title: 'Assigned Turf Route',
+    description: 'Shows your designated precinct walking route. Tap "Walk" to open turn-by-turn walking navigation directly in Apple Maps.',
+    accentColor: 'cyan',
+    badge: '3. Turf Route',
+  },
+  {
+    targetId: 'tour-canvass-contact',
+    title: 'Voter Contact (Spoke)',
+    description: 'When a voter opens the door, tap here to record their sentiment (Strong Support, Undecided, Opposed), lawn sign requests, and notes.',
+    accentColor: 'emerald',
+    badge: '4. Spoke to Voter',
+  },
+  {
+    targetId: 'tour-canvass-not-home',
+    title: 'Not Home / No Answer',
+    description: 'Fast 1-tap logging when nobody answers the door. Instantly drops a pin with your GPS coordinates without typing.',
+    accentColor: 'cyan',
+    badge: '5. Not Home',
+  },
+  {
+    targetId: 'tour-canvass-flyer',
+    title: 'Left Flyer / Door Lit',
+    description: 'Fast 1-tap logging when hanging a campaign door hanger or literature packet on the handle.',
     accentColor: 'amber',
-    badge: '1-Tap Lit',
+    badge: '6. Left Lit',
   },
   {
     targetId: 'tour-canvass-spot-sign',
     title: 'Spot Yard Signs On Foot',
-    description: 'Notice a campaign or competitor sign in a yard while walking? Snap a quick picture and AI logs the lawn sign directly to the command map.',
+    description: 'See a yard sign while walking? Snap a photo and AI automatically classifies the candidate and pins it to the command map.',
     accentColor: 'purple',
-    badge: 'AI Spotter',
+    badge: '7. AI Sign Spotter',
+  },
+  {
+    targetId: 'tour-canvass-signs-link',
+    title: 'Switch to Sign Runner',
+    description: 'Quickly switch to the Field Sign Runner portal without having to re-authenticate with your PIN.',
+    accentColor: 'emerald',
+    badge: '8. Sign Runner Switch',
   },
 ];
 
@@ -655,7 +690,7 @@ export default function CanvassPage() {
       {/* 1. Header Bar with Volunteer & GPS Status */}
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div id="tour-canvass-session" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs tracking-tight">
               COS
             </div>
@@ -683,6 +718,7 @@ export default function CanvassPage() {
 
             {/* Direct Switch to Yard Sign Drop */}
             <Link
+              id="tour-canvass-signs-link"
               href="/field"
               className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-emerald-400 flex items-center gap-1 transition"
               title="Switch to Yard Signs"
@@ -741,7 +777,7 @@ export default function CanvassPage() {
 
       {/* 1.5 Active Assigned Turf Route (Scout Walking Loop) */}
       {activeRoute && (
-        <div className="mx-4 mt-3 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 shadow-xl shadow-indigo-950/20">
+        <div id="tour-canvass-route-card" className="mx-4 mt-3 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 border border-indigo-500/30 rounded-2xl p-4 shadow-xl shadow-indigo-950/20">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shrink-0">
@@ -840,7 +876,7 @@ export default function CanvassPage() {
       )}
 
       {/* 2. Walk Session HUD (Doors, Contacts, Flyers) */}
-      <div className="p-4">
+      <div id="tour-canvass-hud" className="p-4">
         <div className="grid grid-cols-3 gap-2.5">
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-center">
             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Doors Knocked</p>
