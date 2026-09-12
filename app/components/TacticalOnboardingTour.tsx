@@ -189,10 +189,16 @@ export default function TacticalOnboardingTour({
 
   const activeColor = colorMap[step.highlightColor || step.accentColor || 'emerald'];
 
-  // Determine if target element is located in the upper or lower half of the screen
-  const isTargetInTopHalf = targetRect
-    ? targetRect.top + targetRect.height / 2 < (typeof window !== 'undefined' ? window.innerHeight / 2 : 400)
-    : false;
+  // Check if target element would be obstructed by a bottom-docked card (bottom 290px of horizontal center zone)
+  const wouldObstructBottomCard = Boolean(
+    targetRect && typeof window !== 'undefined' && (
+      // Target extends into the bottom 290px zone of screen
+      targetRect.bottom > window.innerHeight - 290 &&
+      // Target overlaps horizontally with the centered 460px card zone
+      targetRect.right > (window.innerWidth - 460) / 2 &&
+      targetRect.left < (window.innerWidth + 460) / 2
+    )
+  );
 
   return (
     <div className="fixed inset-0 z-[9999] pointer-events-auto select-none">
@@ -242,14 +248,14 @@ export default function TacticalOnboardingTour({
         />
       )}
 
-      {/* 3. Floating Briefing Tooltip Card - Smartly docked to top or bottom to NEVER overlap the highlighted element, or cleanly centered */}
+      {/* 3. Floating Briefing Tooltip Card - Stays comfortably anchored at bottom, only docks to top if target is in bottom center */}
       <div
         className={`fixed inset-x-0 pointer-events-none flex justify-center px-4 transition-all duration-300 ${
           forceCentered || !targetRect
             ? 'inset-0 items-center justify-center p-4'
-            : isTargetInTopHalf
-              ? 'bottom-4 sm:bottom-8'
-              : 'top-4 sm:top-8'
+            : wouldObstructBottomCard
+              ? 'top-4 sm:top-8'
+              : 'bottom-4 sm:bottom-8'
         }`}
       >
         <div
