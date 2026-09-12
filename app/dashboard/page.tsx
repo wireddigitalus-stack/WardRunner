@@ -207,6 +207,7 @@ import {
   X,
   SlidersHorizontal,
   MapPin,
+  Home,
   Footprints,
   UserCheck,
   Activity,
@@ -373,6 +374,22 @@ export default function DashboardPage() {
   const [selectedRoute, setSelectedRoute] = useState<CanvassRoute | null>(null);
   const [showRoutesLayer, setShowRoutesLayer] = useState(false);
   const routeMarkersRef = useRef<any[]>([]);
+
+  const handleToggleCanvassLayer = useCallback((force?: boolean) => {
+    const next = force !== undefined ? force : !showCanvassLayer;
+    setShowCanvassLayer(next);
+    if (next) {
+      setShowFieldForceLayer(true);
+      if (mapRef.current) {
+        mapRef.current.flyTo({
+          center: [-82.1952, 36.5858],
+          zoom: 16.2,
+          pitch: is3D ? 45 : 0,
+          duration: 900,
+        });
+      }
+    }
+  }, [showCanvassLayer, is3D]);
 
   // Drawer Active Tab ('signs' | 'inventory' | 'precincts' | 'missions')
   const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts' | 'missions'>('signs');
@@ -1176,7 +1193,7 @@ export default function DashboardPage() {
     const cVis = showCorridors ? 'visible' : 'none';
     const hVis = showHeatmap ? 'visible' : 'none';
     const pVis = showPrecincts ? 'visible' : 'none';
-    const vVis = showFieldForceLayer ? 'visible' : 'none';
+    const vVis = (showFieldForceLayer || showCanvassLayer) ? 'visible' : 'none';
     const rVis = (showRoutesLayer || selectedRoute) ? 'visible' : 'none';
     ['boundary-fill', 'boundary-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', bVis));
     if (bristolWatermarkRef.current) {
@@ -1187,7 +1204,7 @@ export default function DashboardPage() {
     ['precincts-fill', 'precincts-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', pVis));
     ['volunteer-trails-glow', 'volunteer-trails-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', vVis));
     ['canvass-turf-glow', 'canvass-turf-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', rVis));
-  }, [showBoundary, showCorridors, showHeatmap, showPrecincts, showFieldForceLayer, showRoutesLayer, selectedRoute, mapReady]);
+  }, [showBoundary, showCorridors, showHeatmap, showPrecincts, showFieldForceLayer, showCanvassLayer, showRoutesLayer, selectedRoute, mapReady]);
 
   /* ---------- Precinct Center Badges on Map ---------- */
   useEffect(() => {
@@ -1824,7 +1841,7 @@ export default function DashboardPage() {
     })();
   }, [assignments, selectedMission, is3D, useDotMode, showMissionsLayer]);
 
-  /* ---------- Ground Canvass Markers ---------- */
+  /* ---------- Ground Canvass Markers (House Pins) ---------- */
   useEffect(() => {
     (async () => {
       const m = mapRef.current;
@@ -1863,25 +1880,88 @@ export default function DashboardPage() {
         const isFlyer = rec.result === 'left_flyer';
 
         const bg = isContact ? '#059669' : isFlyer ? '#d97706' : '#475569';
-        const icon = isContact ? '🤝' : isFlyer ? '📰' : '🚪';
+        const bgDark = isContact ? '#047857' : isFlyer ? '#b45309' : '#334155';
+        const glowColor = isContact ? 'rgba(16, 185, 129, 0.45)' : isFlyer ? 'rgba(245, 158, 11, 0.45)' : 'rgba(100, 116, 139, 0.4)';
         const label = isContact ? (rec.sentiment ? rec.sentiment.replace('_', ' ').toUpperCase() : 'CONTACT') : isFlyer ? 'FLYER' : 'NO CONTACT';
+        const houseLabel = rec.street_address ? rec.street_address.split(',')[0] : 'House';
 
         if (useDotMode) {
           el.innerHTML = `
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;width:20px;height:20px;" title="${rec.street_address || rec.volunteer_name}">
-              <div style="width:10px;height:10px;border-radius:50%;background:${bg};border:2px solid #ffffff;box-shadow:0 0 10px ${bg};"></div>
+            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;width:22px;height:22px;" title="${rec.street_address || 'Canvass Stop'} · ${label}">
+              <div style="width:12px;height:12px;border-radius:4px;background:${bg};border:2px solid #ffffff;box-shadow:0 0 10px ${bg};"></div>
             </div>
           `;
         } else {
           el.innerHTML = `
-            <div style="position:relative;display:flex;flex-direction:column;align-items:center;cursor:pointer;">
-              <div style="position:absolute;bottom:28px;background:${bg};color:white;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;gap:4px;">
-                <span>${icon}</span>
-                <span>${label}</span>
+            <div class="canvass-house-marker flex flex-col items-center group cursor-pointer" style="width: 44px; position: relative;">
+              <!-- Top Address & Outcome Badge -->
+              <div style="
+                position: absolute;
+                bottom: 46px;
+                background: rgba(15, 23, 42, 0.95);
+                color: white;
+                padding: 3px 8px;
+                border-radius: 9999px;
+                font-size: 10px;
+                font-weight: 800;
+                white-space: nowrap;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+                border: 1.5px solid ${bg};
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                letter-spacing: 0.2px;
+                pointer-events: none;
+              ">
+                <span style="font-size: 11px;">🏠</span>
+                <span style="color: #f1f5f9;">${houseLabel}</span>
+                <span style="
+                  background: ${bg};
+                  color: white;
+                  font-size: 9px;
+                  font-weight: 900;
+                  padding: 1px 5px;
+                  border-radius: 6px;
+                  text-transform: uppercase;
+                ">${label}</span>
               </div>
-              <div style="width:24px;height:24px;border-radius:50%;background:${bg};border:2px solid #ffffff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.5);font-size:11px;">
-                ${icon}
+
+              <!-- House Silhouette Pin Head -->
+              <div class="house-pin-head" style="
+                width: 38px;
+                height: 38px;
+                background: linear-gradient(135deg, ${bg}, ${bgDark});
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2.5px solid rgba(255, 255, 255, 0.95);
+                box-shadow: 0 4px 14px ${glowColor}, 0 2px 4px rgba(0,0,0,0.25);
+                position: relative;
+                transform-origin: center bottom;
+                transform: ${isSel ? 'scale(1.2)' : 'scale(1)'};
+                transition: transform 0.15s ease;
+              ">
+                <!-- Pulse radar ring -->
+                <div class="animate-radar pointer-events-none" style="width: 38px; height: 38px; background: ${glowColor}; z-index: -1;"></div>
+
+                <!-- House SVG Icon -->
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
               </div>
+
+              <!-- Pin Pointer to ground -->
+              <div style="
+                width: 0;
+                height: 0;
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-top: 7px solid ${bgDark};
+                margin-top: -1px;
+                filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+              "></div>
             </div>
           `;
         }
@@ -1904,7 +1984,7 @@ export default function DashboardPage() {
 
         const marker = new mgl.Marker({
           element: el,
-          anchor: 'center',
+          anchor: 'bottom',
           pitchAlignment: 'viewport',
           rotationAlignment: 'viewport',
         }).setLngLat([rec.longitude, rec.latitude]).addTo(m);
@@ -1912,7 +1992,7 @@ export default function DashboardPage() {
         canvassMarkersRef.current.push({ marker, id: rec.id });
       });
     })();
-  }, [canvassRecords, showCanvassLayer, selectedVolunteerFilter, selectedVolunteerGroup, selectedCanvassRecord, useDotMode]);
+  }, [canvassRecords, showCanvassLayer, selectedVolunteerFilter, selectedVolunteerGroup, selectedCanvassRecord, useDotMode, mapReady]);
 
   /* ---------- Live Volunteer Markers & Walking Trails ---------- */
   useEffect(() => {
@@ -1926,7 +2006,49 @@ export default function DashboardPage() {
 
       const trailFeatures: any[] = [];
 
-      if (showFieldForceLayer) {
+      if (showFieldForceLayer || showCanvassLayer) {
+        // 1. Trails from volunteer GPS pings (e.g. Sarah Jenkins on 9th St, Marcus Taylor on Virginia Ave)
+        for (const vol of volunteerPings) {
+          if (vol.breadcrumbs && vol.breadcrumbs.length >= 2) {
+            const streetCoords = await snapWalkingPathToStreets(vol.breadcrumbs);
+            trailFeatures.push({
+              type: 'Feature',
+              properties: { volunteer_name: vol.volunteer_name },
+              geometry: {
+                type: 'LineString',
+                coordinates: streetCoords,
+              },
+            });
+          }
+        }
+
+        // 2. Also construct breadcrumb trails connecting all knocked houses for each volunteer
+        const knocksByVol = new Map<string, CanvassRecord[]>();
+        canvassRecords.forEach(rec => {
+          const name = rec.volunteer_name || 'Volunteer';
+          if (!knocksByVol.has(name)) knocksByVol.set(name, []);
+          knocksByVol.get(name)!.push(rec);
+        });
+
+        for (const [name, knocks] of knocksByVol.entries()) {
+          const hasPingTrail = volunteerPings.some(p => p.volunteer_name.toLowerCase().trim() === name.toLowerCase().trim() && p.breadcrumbs && p.breadcrumbs.length >= 2);
+          if (hasPingTrail) continue;
+
+          if (knocks.length >= 2) {
+            const sorted = [...knocks].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+            const coords: [number, number][] = sorted.map(k => [k.longitude, k.latitude]);
+            const streetCoords = await snapWalkingPathToStreets(coords);
+            trailFeatures.push({
+              type: 'Feature',
+              properties: { volunteer_name: name },
+              geometry: {
+                type: 'LineString',
+                coordinates: streetCoords,
+              },
+            });
+          }
+        }
+
         const activeVolunteers = volunteerPings.filter(ping => {
           if (selectedVolunteerFilter) {
             const v1 = ping.volunteer_name.toLowerCase().trim();
@@ -1944,36 +2066,6 @@ export default function DashboardPage() {
         });
 
         for (const vol of activeVolunteers) {
-          if (vol.breadcrumbs && vol.breadcrumbs.length >= 2) {
-            const streetCoords = await snapWalkingPathToStreets(vol.breadcrumbs);
-            trailFeatures.push({
-              type: 'Feature',
-              properties: { volunteer_name: vol.volunteer_name },
-              geometry: {
-                type: 'LineString',
-                coordinates: streetCoords,
-              },
-            });
-          } else {
-            // Check if volunteer has canvass knocks; if so, connect along the street!
-            const volKnocks = canvassRecords
-              .filter(r => r.volunteer_name.toLowerCase().trim() === vol.volunteer_name.toLowerCase().trim())
-              .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-            if (volKnocks.length >= 2) {
-              const knockCoords: [number, number][] = volKnocks.map(r => [r.longitude, r.latitude]);
-              const streetCoords = await snapWalkingPathToStreets(knockCoords);
-              trailFeatures.push({
-                type: 'Feature',
-                properties: { volunteer_name: vol.volunteer_name },
-                geometry: {
-                  type: 'LineString',
-                  coordinates: streetCoords,
-                },
-              });
-            }
-          }
-
           const el = document.createElement('div');
           el.className = 'volunteer-live-marker';
           el.style.cursor = 'pointer';
@@ -2031,7 +2123,7 @@ export default function DashboardPage() {
         }
       } catch {}
     })();
-  }, [volunteerPings, canvassRecords, showFieldForceLayer, selectedVolunteerFilter, selectedVolunteerGroup]);
+  }, [volunteerPings, canvassRecords, showFieldForceLayer, showCanvassLayer, selectedVolunteerFilter, selectedVolunteerGroup, mapReady]);
 
   /* ---------- Canvass Turf Routes Rendering ---------- */
   useEffect(() => {
@@ -2442,6 +2534,7 @@ export default function DashboardPage() {
         setShowPrecincts={setShowPrecincts}
         showCanvassLayer={showCanvassLayer}
         setShowCanvassLayer={setShowCanvassLayer}
+        onToggleCanvass={handleToggleCanvassLayer}
         showFieldForceLayer={showFieldForceLayer}
         setShowFieldForceLayer={setShowFieldForceLayer}
         showRoutesLayer={showRoutesLayer}
@@ -2583,13 +2676,14 @@ export default function DashboardPage() {
           >
             <Target className="w-4 h-4" />
           </button>
+          {/* Canvass Houses & Breadcrumbs */}
           <button
             id="tour-canvass-layer"
-            onClick={() => setShowCanvassLayer(!showCanvassLayer)}
-            title={showCanvassLayer ? "Hide Canvass Knocks & Flyers" : "Show Canvass Knocks & Flyers"}
-            className={`p-2 rounded-xl transition-all ${showCanvassLayer ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-md shadow-teal-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
+            onClick={() => handleToggleCanvassLayer()}
+            title={showCanvassLayer ? "Hide Canvass Houses & Breadcrumbs" : "Show Canvass Houses & Breadcrumbs"}
+            className={`p-2 rounded-xl transition-all ${showCanvassLayer ? 'bg-teal-500/25 text-teal-300 border border-teal-500/40 shadow-md shadow-teal-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
-            <Footprints className="w-4 h-4" />
+            <Home className="w-4 h-4" />
           </button>
           {/* Consolidated Field Ops & Turf Routes */}
           <button

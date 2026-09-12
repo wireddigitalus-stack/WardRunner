@@ -23,6 +23,7 @@ import {
   X,
   Sparkles,
   RotateCw,
+  Home,
 } from 'lucide-react';
 import type { Sign, SignType, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import type { PrecinctInfo } from '@/lib/precinctData';
@@ -72,6 +73,7 @@ interface MobileVipBarProps {
   onSelectPrecinct: (p: PrecinctInfo) => void;
   onFlyToPrecinct: (p: PrecinctInfo) => void;
   onLock: () => void;
+  onToggleCanvass?: () => void;
   isDark: boolean;
 }
 
@@ -112,6 +114,7 @@ export default function MobileVipBar({
   onSelectPrecinct,
   onFlyToPrecinct,
   onLock,
+  onToggleCanvass,
   isDark,
 }: MobileVipBarProps) {
   const [isPaletteOpen, setIsPaletteOpen] = useState(true);
@@ -350,18 +353,24 @@ export default function MobileVipBar({
               )}
             </button>
 
-            {/* 3. Door Knocks / Canvass */}
+            {/* 3. Door Knocks / Canvass Houses & Breadcrumbs */}
             <button
               id="tour-mobile-doors"
-              onClick={() => setShowCanvassLayer(!showCanvassLayer)}
-              title={`Door Knocks (${canvassRecords.length})`}
+              onClick={() => {
+                if (onToggleCanvass) {
+                  onToggleCanvass();
+                } else {
+                  setShowCanvassLayer(!showCanvassLayer);
+                }
+              }}
+              title={`Canvass Houses & Breadcrumbs (${canvassRecords.length})`}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 border ${
                 showCanvassLayer
                   ? 'bg-teal-500 text-slate-950 border-teal-400 shadow-md shadow-teal-500/30'
                   : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/5'
               }`}
             >
-              <Footprints className="w-4 h-4" />
+              <Home className="w-4 h-4" />
             </button>
 
             {/* 4. Field Ops & Turf Routes (Consolidated) */}
