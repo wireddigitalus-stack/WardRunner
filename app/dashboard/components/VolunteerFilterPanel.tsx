@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Users,
   UserCheck,
@@ -18,6 +18,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { VolunteerLocationPing, CanvassRecord, Sign } from '@/lib/types';
+import { useDraggable } from '@/lib/useDraggable';
 
 interface VolunteerFilterPanelProps {
   isOpen: boolean;
@@ -57,8 +58,13 @@ export default function VolunteerFilterPanel({
   setShowRoutesLayer,
 }: VolunteerFilterPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const { isDragging, resetPosition, dragProps, style: dragStyle } = useDraggable();
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      resetPosition();
+    }
+  }, [isOpen, resetPosition]);
 
   // Calculate statistics per volunteer
   const volunteerStats = useMemo(() => {
@@ -123,33 +129,50 @@ export default function VolunteerFilterPanel({
     setSearchQuery('');
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-      <div className="w-full max-w-[430px] max-h-[85vh] glass rounded-3xl p-4 sm:p-5 shadow-2xl border border-white/10 flex flex-col animate-slide-up backdrop-blur-2xl pointer-events-auto overflow-hidden">
+      <div 
+        style={dragStyle} 
+        className="w-full max-w-[430px] max-h-[85vh] glass rounded-3xl p-4 sm:p-5 shadow-2xl border border-white/10 flex flex-col animate-slide-up backdrop-blur-2xl pointer-events-auto overflow-hidden transition-shadow"
+      >
         
-        {/* Pinned Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-              <Users className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">
-                Field Force Intelligence
-              </h3>
-              <p className="text-[11px] text-slate-400 font-medium">
-                {volunteerStats.length} registered field volunteers
-              </p>
-            </div>
+        {/* Pinned Header & Drag Handle */}
+        <div 
+          {...dragProps}
+          onDoubleClick={resetPosition}
+          className="pb-3 border-b border-white/10 shrink-0 select-none md:cursor-grab md:active:cursor-grabbing"
+          title="Drag to move panel • Double click to center"
+        >
+          {/* Subtle Desktop Drag Handle Pill */}
+          <div className="hidden md:flex items-center justify-center -mt-1 mb-2.5">
+            <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition border border-white/5 active:scale-95"
-            title="Close panel"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">
+                  Field Force Intelligence
+                </h3>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  {volunteerStats.length} registered field volunteers
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition border border-white/5 active:scale-95"
+              title="Close panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Clean Filter Grid (No Side Scroll) */}

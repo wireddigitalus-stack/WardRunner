@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Vote, Users, TrendingUp, X, Navigation, ShieldCheck, MapPin, Sparkles, AlertCircle } from 'lucide-react';
 import { PrecinctInfo, calculatePrecinctStats } from '@/lib/precinctData';
 import { Sign } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
+import { useDraggable } from '@/lib/useDraggable';
 
 interface PrecinctDetailCardProps {
   precinct: PrecinctInfo | null;
@@ -23,6 +24,12 @@ export default function PrecinctDetailCard({
   onAssignMission,
   isDark = true,
 }: PrecinctDetailCardProps) {
+  const { isDragging, resetPosition, dragProps, style: dragStyle } = useDraggable();
+
+  useEffect(() => {
+    if (precinct) resetPosition();
+  }, [precinct?.id, resetPosition]);
+
   if (!precinct) return null;
 
   const stats = calculatePrecinctStats(precinct, signs);
@@ -31,7 +38,10 @@ export default function PrecinctDetailCard({
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-      <div className="w-full max-w-[440px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+      <div 
+        style={dragStyle} 
+        className="w-full max-w-[440px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up"
+      >
         <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl border border-white/15">
         {/* Accent Edge */}
         <div
@@ -47,20 +57,31 @@ export default function PrecinctDetailCard({
           <X className="w-3.5 h-3.5" />
         </button>
 
-        {/* Header */}
-        <div className="flex items-start gap-3.5">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shrink-0"
-            style={{
-              backgroundColor: `${precinct.color}25`,
-              color: precinct.color,
-              border: `2px solid ${precinct.color}50`,
-            }}
-          >
-            {precinct.code}
+        {/* Desktop Drag Handle & Header */}
+        <div
+          {...dragProps}
+          onDoubleClick={resetPosition}
+          className="select-none md:cursor-grab md:active:cursor-grabbing pb-1"
+          title="Drag to move card • Double click to center"
+        >
+          {/* Subtle Drag Handle Pill */}
+          <div className="hidden md:flex items-center justify-center -mt-2 mb-2.5">
+            <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
           </div>
 
-          <div className="flex-1 min-w-0 pr-6">
+          <div className="flex items-start gap-3.5">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shrink-0"
+              style={{
+                backgroundColor: `${precinct.color}25`,
+                color: precinct.color,
+                border: `2px solid ${precinct.color}50`,
+              }}
+            >
+              {precinct.code}
+            </div>
+
+            <div className="flex-1 min-w-0 pr-6">
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-slate-300">
                 Sullivan County VTD
@@ -83,6 +104,7 @@ export default function PrecinctDetailCard({
               {precinct.corridorFocus}
             </p>
           </div>
+        </div>
         </div>
 
         {/* Key Metrics Grid */}

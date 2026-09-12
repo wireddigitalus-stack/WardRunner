@@ -23,6 +23,7 @@ import { getStoredCanvassRecords, getStoredVolunteerPings, snapWalkingPathToStre
 import { getStoredCanvassRoutes, saveStoredCanvassRoutes, assignCanvassRoute, updateCanvassRouteStatus } from '@/lib/canvassRouteData';
 import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
+import { useDraggable } from '@/lib/useDraggable';
 import DictateButton from '@/app/components/DictateButton';
 import TacticalOnboardingTour, { TourStep } from '@/app/components/TacticalOnboardingTour';
 
@@ -374,6 +375,23 @@ export default function DashboardPage() {
   const [selectedRoute, setSelectedRoute] = useState<CanvassRoute | null>(null);
   const [showRoutesLayer, setShowRoutesLayer] = useState(false);
   const routeMarkersRef = useRef<any[]>([]);
+
+  // Draggable popup cards on desktop
+  const signDrag = useDraggable();
+  const canvassDrag = useDraggable();
+  const recDrag = useDraggable();
+
+  useEffect(() => {
+    if (selectedSign) signDrag.resetPosition();
+  }, [selectedSign?.id]);
+
+  useEffect(() => {
+    if (selectedCanvassRecord) canvassDrag.resetPosition();
+  }, [selectedCanvassRecord?.id]);
+
+  useEffect(() => {
+    if (selectedRec) recDrag.resetPosition();
+  }, [selectedRec?.rank]);
 
   const handleToggleCanvassLayer = useCallback((force?: boolean) => {
     const next = force !== undefined ? force : !showCanvassLayer;
@@ -2758,7 +2776,10 @@ export default function DashboardPage() {
           ============================================================ */}
       {selectedSign && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-          <div className="w-full max-w-[380px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+          <div 
+            style={signDrag.style} 
+            className="w-full max-w-[380px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up"
+          >
             <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
               {/* Accent edge */}
               <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${selectedSign.is_competitor ? 'from-rose-500 to-pink-500' : 'from-emerald-400 to-teal-400'}`} />
@@ -2767,20 +2788,33 @@ export default function DashboardPage() {
                 <X className="w-3.5 h-3.5 opacity-50" />
               </button>
 
-              <div className="flex items-start gap-4">
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${selectedSign.is_competitor ? 'from-rose-500 to-pink-600' : 'from-emerald-400 to-teal-500'} flex items-center justify-center text-2xl shadow-lg ${selectedSign.is_competitor ? 'shadow-rose-500/30' : 'shadow-emerald-500/30'}`}>
-                  {SIGN_TYPE_META[selectedSign.sign_type]?.emoji || '📍'}
+              {/* Desktop Drag Handle & Header */}
+              <div
+                {...signDrag.dragProps}
+                onDoubleClick={signDrag.resetPosition}
+                className="select-none md:cursor-grab md:active:cursor-grabbing pb-1"
+                title="Drag to move card • Double click to center"
+              >
+                {/* Subtle Drag Handle Pill */}
+                <div className="hidden md:flex items-center justify-center -mt-2 mb-2.5">
+                  <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${selectedSign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
-                    {selectedSign.is_competitor ? 'Opponent Sighting' : 'Official Campaign'}
-                  </span>
-                  <h3 className="font-extrabold text-base mt-1 truncate">
-                    {selectedSign.is_competitor ? selectedSign.competitor_name : 'Melissa K. Brown'}
-                  </h3>
-                  <p className="text-xs opacity-50 capitalize mt-0.5">
-                    {selectedSign.sign_type.replace('_', ' ')} · <span className={selectedSign.is_competitor ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{selectedSign.is_competitor ? 'Reported' : (selectedSign.status === 'placed' ? 'Placed' : selectedSign.status.replace('_', ' '))}</span> {relativeTime(selectedSign.created_at)}
-                  </p>
+
+                <div className="flex items-start gap-4">
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${selectedSign.is_competitor ? 'from-rose-500 to-pink-600' : 'from-emerald-400 to-teal-500'} flex items-center justify-center text-2xl shadow-lg ${selectedSign.is_competitor ? 'shadow-rose-500/30' : 'shadow-emerald-500/30'}`}>
+                    {SIGN_TYPE_META[selectedSign.sign_type]?.emoji || '📍'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${selectedSign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+                      {selectedSign.is_competitor ? 'Opponent Sighting' : 'Official Campaign'}
+                    </span>
+                    <h3 className="font-extrabold text-base mt-1 truncate">
+                      {selectedSign.is_competitor ? selectedSign.competitor_name : 'Melissa K. Brown'}
+                    </h3>
+                    <p className="text-xs opacity-50 capitalize mt-0.5">
+                      {selectedSign.sign_type.replace('_', ' ')} · <span className={selectedSign.is_competitor ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{selectedSign.is_competitor ? 'Reported' : (selectedSign.status === 'placed' ? 'Placed' : selectedSign.status.replace('_', ' '))}</span> {relativeTime(selectedSign.created_at)}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -2839,7 +2873,10 @@ export default function DashboardPage() {
           ============================================================ */}
       {selectedCanvassRecord && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-          <div className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+          <div 
+            style={canvassDrag.style} 
+            className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up"
+          >
             <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
               {/* Accent top edge */}
               <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${
@@ -2857,36 +2894,49 @@ export default function DashboardPage() {
                 <X className="w-3.5 h-3.5 opacity-50" />
               </button>
 
-              <div className="flex items-start gap-3.5">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg ${
-                  selectedCanvassRecord.result === 'contact'
-                    ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
-                    : selectedCanvassRecord.result === 'left_flyer'
-                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
-                    : 'bg-slate-800 border border-slate-700 text-slate-300'
-                }`}>
-                  {selectedCanvassRecord.result === 'contact' ? '🤝' : selectedCanvassRecord.result === 'left_flyer' ? '📰' : '🚪'}
+              {/* Desktop Drag Handle & Header */}
+              <div
+                {...canvassDrag.dragProps}
+                onDoubleClick={canvassDrag.resetPosition}
+                className="select-none md:cursor-grab md:active:cursor-grabbing pb-1"
+                title="Drag to move card • Double click to center"
+              >
+                {/* Subtle Drag Handle Pill */}
+                <div className="hidden md:flex items-center justify-center -mt-2 mb-2.5">
+                  <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-                      selectedCanvassRecord.result === 'contact'
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : selectedCanvassRecord.result === 'left_flyer'
-                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        : 'bg-slate-700/50 text-slate-300 border border-slate-600'
-                    }`}>
-                      {selectedCanvassRecord.result === 'contact' ? 'Spoke With Voter' : selectedCanvassRecord.result === 'left_flyer' ? 'Left Campaign Flyer' : 'No Contact / Not Home'}
-                    </span>
+                <div className="flex items-start gap-3.5">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg ${
+                    selectedCanvassRecord.result === 'contact'
+                      ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                      : selectedCanvassRecord.result === 'left_flyer'
+                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                      : 'bg-slate-800 border border-slate-700 text-slate-300'
+                  }`}>
+                    {selectedCanvassRecord.result === 'contact' ? '🤝' : selectedCanvassRecord.result === 'left_flyer' ? '📰' : '🚪'}
                   </div>
 
-                  <h3 className="font-extrabold text-base mt-1 truncate">
-                    {selectedCanvassRecord.voter_name || 'Voter Contact'}
-                  </h3>
-                  <p className="text-xs text-slate-400 truncate mt-0.5 font-medium">
-                    Canvasser: <span className="text-white font-semibold">{selectedCanvassRecord.volunteer_name || 'Field Team'}</span> · {relativeTime(selectedCanvassRecord.created_at)}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
+                        selectedCanvassRecord.result === 'contact'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : selectedCanvassRecord.result === 'left_flyer'
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          : 'bg-slate-700/50 text-slate-300 border border-slate-600'
+                      }`}>
+                        {selectedCanvassRecord.result === 'contact' ? 'Spoke With Voter' : selectedCanvassRecord.result === 'left_flyer' ? 'Left Campaign Flyer' : 'No Contact / Not Home'}
+                      </span>
+                    </div>
+
+                    <h3 className="font-extrabold text-base mt-1 truncate">
+                      {selectedCanvassRecord.voter_name || 'Voter Contact'}
+                    </h3>
+                    <p className="text-xs text-slate-400 truncate mt-0.5 font-medium">
+                      Canvasser: <span className="text-white font-semibold">{selectedCanvassRecord.volunteer_name || 'Field Team'}</span> · {relativeTime(selectedCanvassRecord.created_at)}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -2960,7 +3010,10 @@ export default function DashboardPage() {
           ============================================================ */}
       {selectedRec && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-          <div className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+          <div 
+            style={recDrag.style} 
+            className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up"
+          >
             <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl shadow-amber-500/10">
             {/* Amber glowing top edge */}
             <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300" />
@@ -2969,26 +3022,38 @@ export default function DashboardPage() {
               <X className="w-3.5 h-3.5 opacity-50" />
             </button>
 
-            {/* Header Badge & Title */}
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl text-white font-black shadow-lg shadow-amber-500/30 shrink-0">
-                ★
+            {/* Desktop Drag Handle & Header */}
+            <div
+              {...recDrag.dragProps}
+              onDoubleClick={recDrag.resetPosition}
+              className="select-none md:cursor-grab md:active:cursor-grabbing pb-1"
+              title="Drag to move card • Double click to center"
+            >
+              {/* Subtle Drag Handle Pill */}
+              <div className="hidden md:flex items-center justify-center -mt-2 mb-2.5">
+                <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                    selectedRec.priority === 'critical' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-                    selectedRec.priority === 'high' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                    'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                  }`}>
-                    {selectedRec.priority} Priority
-                  </span>
-                  <span className="text-[10px] font-black text-amber-400">★ {selectedRec.score}/10 Score</span>
+
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl text-white font-black shadow-lg shadow-amber-500/30 shrink-0">
+                  ★
                 </div>
-                <h3 className="font-extrabold text-base mt-1 truncate">{selectedRec.street}</h3>
-                <p className="text-xs opacity-60 mt-0.5 font-medium">
-                  {selectedRec.aadt ? `${selectedRec.aadt.toLocaleString()} vehicles/day` : 'High-impact corridor'}
-                </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                      selectedRec.priority === 'critical' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                      selectedRec.priority === 'high' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                      'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                    }`}>
+                      {selectedRec.priority} Priority
+                    </span>
+                    <span className="text-[10px] font-black text-amber-400">★ {selectedRec.score}/10 Score</span>
+                  </div>
+                  <h3 className="font-extrabold text-base mt-1 truncate">{selectedRec.street}</h3>
+                  <p className="text-xs opacity-60 mt-0.5 font-medium">
+                    {selectedRec.aadt ? `${selectedRec.aadt.toLocaleString()} vehicles/day` : 'High-impact corridor'}
+                  </p>
+                </div>
               </div>
             </div>
 

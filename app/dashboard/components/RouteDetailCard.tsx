@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDraggable } from '@/lib/useDraggable';
 import {
   X,
   Navigation,
@@ -38,6 +39,11 @@ export default function RouteDetailCard({
   isDark = true,
 }: RouteDetailCardProps) {
   const [showAssignDropdown, setShowAssignDropdown] = useState(false);
+  const { isDragging, resetPosition, dragProps, style: dragStyle } = useDraggable();
+
+  useEffect(() => {
+    if (route) resetPosition();
+  }, [route?.id, resetPosition]);
 
   if (!route) return null;
 
@@ -49,7 +55,10 @@ export default function RouteDetailCard({
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-      <div className="w-full max-w-[440px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
+      <div 
+        style={dragStyle} 
+        className="w-full max-w-[440px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up"
+      >
         <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl border border-white/10">
         {/* Top Gradient Accent Bar */}
         <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${isCompleted ? 'from-emerald-400 to-teal-400' : isAssigned ? 'from-purple-500 to-indigo-500' : 'from-amber-400 to-orange-500'}`} />
@@ -62,17 +71,28 @@ export default function RouteDetailCard({
           <X className="w-4 h-4" />
         </button>
 
-        {/* Header Title & Badges */}
-        <div className="flex items-start gap-3.5">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-lg ${
-            isCompleted
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-emerald-500/20'
-              : isAssigned
-              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-purple-500/20'
-              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-amber-500/20'
-          }`}>
-            <Footprints className="w-6 h-6" />
+        {/* Desktop Drag Handle & Header */}
+        <div
+          {...dragProps}
+          onDoubleClick={resetPosition}
+          className="select-none md:cursor-grab md:active:cursor-grabbing pb-1"
+          title="Drag to move card • Double click to center"
+        >
+          {/* Subtle Drag Handle Pill */}
+          <div className="hidden md:flex items-center justify-center -mt-2 mb-2.5">
+            <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
           </div>
+
+          <div className="flex items-start gap-3.5">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-lg ${
+              isCompleted
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-emerald-500/20'
+                : isAssigned
+                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-purple-500/20'
+                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-amber-500/20'
+            }`}>
+              <Footprints className="w-6 h-6" />
+            </div>
 
           <div className="flex-1 min-w-0 pr-6">
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -105,6 +125,7 @@ export default function RouteDetailCard({
               <span className="text-emerald-400 font-bold">{route.target_doors} Target Doors</span>
             </p>
           </div>
+        </div>
         </div>
 
         {/* Live Knock Progress Meter */}
