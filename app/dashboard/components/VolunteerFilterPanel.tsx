@@ -16,6 +16,8 @@ import {
   Filter,
   Search,
   RotateCcw,
+  Radio,
+  DoorOpen,
 } from 'lucide-react';
 import { VolunteerLocationPing, CanvassRecord, Sign } from '@/lib/types';
 import { useDraggable } from '@/lib/useDraggable';
@@ -83,7 +85,12 @@ export default function VolunteerFilterPanel({
     });
   }, [volunteerPings, canvassRecords, signs]);
 
-  // Compute live counts per role
+  // Compute aggregate live counts
+  const totalDoorsKnocked = canvassRecords.length;
+  const totalSignsPlaced = useMemo(() => signs.filter(s => !s.is_competitor).length, [signs]);
+  const activeNowCount = useMemo(() => volunteerStats.filter(v => v.is_active || v.isRecent).length, [volunteerStats]);
+
+  // Compute counts per role
   const groupCounts = useMemo(() => {
     const counts: Record<string, number> = {
       all: volunteerStats.length,
@@ -129,273 +136,363 @@ export default function VolunteerFilterPanel({
     setSearchQuery('');
   };
 
+  const handleFlyAndClose = (lat: number, lng: number, volName: string) => {
+    onSelectVolunteer(volName);
+    if (onFlyToVolunteer) {
+      onFlyToVolunteer(lat, lng);
+    }
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animate-fade-in pointer-events-auto">
+      {/* Dark Blurred Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Pop Card (Styled like Missions Modal) */}
       <div 
         style={dragStyle} 
-        className="w-full max-w-[430px] max-h-[85vh] glass rounded-3xl p-4 sm:p-5 shadow-2xl border border-white/10 flex flex-col animate-slide-up backdrop-blur-2xl pointer-events-auto overflow-hidden transition-shadow"
+        className="relative z-10 w-full max-w-3xl lg:max-w-4xl max-h-[90vh] flex flex-col glass-heavy rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-slide-up"
       >
-        
-        {/* Pinned Header & Drag Handle */}
+        {/* Top Accent Gradient Edge */}
+        <div className="h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-400 shrink-0" />
+
+        {/* Modal Header */}
         <div 
           {...dragProps}
           onDoubleClick={resetPosition}
-          className="pb-3 border-b border-white/10 shrink-0 select-none md:cursor-grab md:active:cursor-grabbing"
-          title="Drag to move panel • Double click to center"
+          className="p-5 sm:p-6 border-b border-white/10 flex items-start justify-between gap-4 shrink-0 select-none md:cursor-grab md:active:cursor-grabbing"
+          title="Drag to move modal • Double click to center"
         >
-          {/* Subtle Desktop Drag Handle Pill */}
-          <div className="hidden md:flex items-center justify-center -mt-1 mb-2.5">
-            <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-                <Users className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">
-                  Field Force Intelligence
-                </h3>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  {volunteerStats.length} registered field volunteers
-                </p>
-              </div>
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/25 shrink-0">
+              <Users className="w-6 h-6" />
             </div>
-
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition border border-white/5 active:scale-95"
-              title="Close panel"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="min-w-0">
+              {/* Subtle Desktop Drag Handle Pill */}
+              <div className="hidden md:flex items-center -mt-1 mb-1.5">
+                <div className="w-10 h-1 rounded-full bg-white/20 hover:bg-white/40 transition-colors" />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-black tracking-tight text-white">Ground Force Intelligence</h2>
+                <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  {volunteerStats.length} Volunteers • {activeNowCount} Live In Field
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5 truncate">
+                Track live field personnel, filter map breadcrumbs, and inspect door-knocking performance.
+              </p>
+            </div>
           </div>
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition active:scale-95 shrink-0"
+            title="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Clean Filter Grid (No Side Scroll) */}
-        <div className="shrink-0 pt-2.5 space-y-2">
-          {/* 2-Column Responsive Grid */}
-          <div className="grid grid-cols-2 gap-1.5">
-            {/* Full Team Button (Spans 2 columns) */}
-            <button
-              type="button"
-              onClick={() => onSelectGroup('all')}
-              className={`col-span-2 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between border active:scale-[0.99] ${
-                selectedGroup === 'all'
-                  ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/25 font-black'
-                  : 'bg-slate-900/80 hover:bg-slate-800/90 text-slate-300 border-white/10'
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <span className="text-sm">👥</span>
-                <span>All Field Personnel</span>
-              </span>
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-extrabold ${
-                selectedGroup === 'all'
-                  ? 'bg-slate-950/20 text-slate-950'
-                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-              }`}>
-                {groupCounts.all} Active
-              </span>
-            </button>
+        {/* Role Filter Navigation Tabs */}
+        <div className="flex border-b border-white/10 px-5 sm:px-6 bg-white/[0.02] shrink-0 overflow-x-auto no-scrollbar gap-1">
+          {GROUPS.map(g => {
+            const isSel = selectedGroup === g.id;
+            const count = groupCounts[g.id] ?? 0;
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => onSelectGroup(g.id)}
+                className={`py-3.5 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                  isSel
+                    ? 'border-emerald-400 text-emerald-300 font-black'
+                    : 'border-transparent text-slate-400 hover:text-white'
+                }`}
+              >
+                <span className="text-sm">{g.icon}</span>
+                <span>{g.label}</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-extrabold ${
+                  isSel ? 'bg-emerald-500/25 text-emerald-200 border border-emerald-500/30' : 'bg-white/10 text-slate-300'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-            {/* Role-Specific Filter Buttons */}
-            {GROUPS.filter(g => g.id !== 'all').map(g => {
-              const isSel = selectedGroup === g.id;
-              const count = groupCounts[g.id] ?? 0;
-              return (
-                <button
-                  key={g.id}
-                  type="button"
-                  onClick={() => onSelectGroup(g.id)}
-                  className={`px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between border active:scale-[0.98] ${
-                    isSel
-                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/25 font-black'
-                      : 'bg-slate-900/60 hover:bg-slate-800 text-slate-300 border-white/5 hover:border-white/15'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5 truncate">
-                    <span>{g.icon}</span>
-                    <span className="truncate">{g.short}</span>
-                  </span>
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                    isSel ? 'bg-slate-950/20 text-slate-950 font-black' : 'text-slate-400 bg-white/5'
-                  }`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+        {/* Modal Body (Scrollable) */}
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 custom-scrollbar flex-1">
+          
+          {/* Quick HUD Metrics Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                <span>Field Crew</span>
+                <Users className="w-3.5 h-3.5 text-teal-400" />
+              </div>
+              <div className="mt-1 flex items-baseline gap-1.5">
+                <span className="text-xl font-black text-white">{volunteerStats.length}</span>
+                <span className="text-[10px] text-emerald-400 font-bold">({activeNowCount} active)</span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-0.5">Registered volunteers</p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                <span>Doors Knocked</span>
+                <DoorOpen className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <div className="mt-1">
+                <span className="text-xl font-black text-emerald-300">{totalDoorsKnocked}</span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-0.5">Voter contacts logged</p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                <span>Official Signs</span>
+                <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+              </div>
+              <div className="mt-1">
+                <span className="text-xl font-black text-cyan-300">{totalSignsPlaced}</span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-0.5">Signs deployed in field</p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                <span>Map Filter</span>
+                <Radio className="w-3.5 h-3.5 text-purple-400" />
+              </div>
+              <div className="mt-1 truncate">
+                <span className="text-sm font-black text-purple-300 truncate block">
+                  {selectedVolunteer ? selectedVolunteer.split(' ')[0] : selectedGroup === 'all' ? 'All Personnel' : selectedGroup}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 mt-0.5">Active map isolation</p>
+            </div>
           </div>
 
-          {/* Search Filter Bar */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search volunteers by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-8 pl-8 pr-7 text-xs bg-slate-900/80 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/50 transition"
-            />
-            {searchQuery && (
+          {/* Search Bar & Map Layer Controls */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search field volunteers by name, role, or action..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-10 pl-10 pr-9 text-xs bg-slate-900/80 border border-white/10 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/50 transition shadow-inner"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Quick Option: Turf Walking Loops */}
+            {setShowRoutesLayer && (
               <button
                 type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5"
-                title="Clear search"
+                onClick={() => setShowRoutesLayer(!showRoutesLayer)}
+                className={`h-10 px-3.5 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 border shrink-0 ${
+                  showRoutesLayer
+                    ? 'bg-purple-500/20 text-purple-200 border-purple-500/40 shadow-sm'
+                    : 'bg-slate-900/70 text-slate-400 hover:text-white border-white/10'
+                }`}
               >
-                <X className="w-3.5 h-3.5" />
+                <Footprints className="w-3.5 h-3.5 text-purple-400" />
+                <span>Turf Routes: {showRoutesLayer ? 'Visible' : 'Hidden'}</span>
+              </button>
+            )}
+
+            {(selectedGroup !== 'all' || selectedVolunteer || searchQuery) && (
+              <button
+                type="button"
+                onClick={handleResetAll}
+                className="h-10 px-3.5 rounded-2xl text-xs font-bold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 transition flex items-center justify-center gap-1.5 border border-white/5 shrink-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
               </button>
             )}
           </div>
 
-          {/* Active Volunteer Banner */}
+          {/* Active Volunteer Isolation Banner */}
           {selectedVolunteer && (
-            <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between text-xs animate-fade-in">
-              <div className="flex items-center gap-2 truncate">
-                <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs animate-fade-in shadow-lg shadow-emerald-500/5">
+              <div className="flex items-center gap-2.5 truncate">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-300 shrink-0">
+                  <UserCheck className="w-4 h-4" />
+                </div>
                 <div className="truncate">
-                  <span className="text-slate-300 text-[11px]">Map filtered to: </span>
-                  <span className="text-emerald-300 font-extrabold">{selectedVolunteer}</span>
+                  <span className="text-slate-300 text-xs">Map currently filtered to: </span>
+                  <span className="text-emerald-300 font-extrabold text-sm">{selectedVolunteer}</span>
+                  <p className="text-[11px] text-slate-400">Only showing their live location, breadcrumb trail, and knocked doors.</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => onSelectVolunteer(null)}
-                className="px-2 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-[10px] uppercase tracking-wider transition shrink-0 ml-2"
+                className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs uppercase tracking-wider transition shrink-0 border border-emerald-500/30"
               >
-                Clear
+                Clear Filter
               </button>
             </div>
           )}
 
-          {/* Quick Option: Turf Walking Loops */}
-          {setShowRoutesLayer && (
-            <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5 text-slate-300 font-medium text-[11px]">
-                <span>🚩</span> Show Turf Walking Loops
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowRoutesLayer(!showRoutesLayer)}
-                className={`px-2 py-0.5 rounded-lg font-bold text-[10px] uppercase tracking-wider transition border ${
-                  showRoutesLayer
-                    ? 'bg-purple-500/25 text-purple-300 border-purple-500/40 shadow-sm'
-                    : 'bg-slate-800 text-slate-400 border-white/5 hover:text-white'
-                }`}
-              >
-                {showRoutesLayer ? 'Visible' : 'Hidden'}
-              </button>
+          {/* Volunteer Roster Cards Grid (Responsive 2-Column on Desktop) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
+              <span>Field Personnel ({filteredVolunteers.length})</span>
+              <span>Performance & Navigation</span>
             </div>
-          )}
-        </div>
 
-        {/* Scrollable Volunteer List (Vertical Only, Never Side Scrolls) */}
-        <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 mt-2.5 min-h-0 no-scrollbar">
-          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-1">
-            <span>Roster & Activity ({filteredVolunteers.length})</span>
-            <span>Doors / Signs</span>
-          </div>
-
-          {filteredVolunteers.length === 0 ? (
-            <div className="p-5 text-center text-xs text-slate-500 bg-slate-900/40 rounded-2xl border border-dashed border-white/5 flex flex-col items-center gap-1">
-              <span className="text-base">🔍</span>
-              <span>No volunteers found matching your criteria.</span>
-            </div>
-          ) : (
-            filteredVolunteers.map(v => {
-              const isSelected = selectedVolunteer?.toLowerCase().trim() === v.volunteer_name.toLowerCase().trim();
-
-              return (
-                <div
-                  key={v.volunteer_name}
-                  onClick={() => {
-                    if (isSelected) {
-                      onSelectVolunteer(null);
-                    } else {
-                      onSelectVolunteer(v.volunteer_name);
-                      if (onFlyToVolunteer) {
-                        onFlyToVolunteer(v.latitude, v.longitude);
-                      }
-                    }
-                  }}
-                  className={`p-2.5 rounded-2xl border transition cursor-pointer flex items-center justify-between active:scale-[0.99] ${
-                    isSelected
-                      ? 'bg-emerald-500/20 border-emerald-400/50 shadow-lg shadow-emerald-500/10'
-                      : 'bg-slate-900/70 hover:bg-slate-800/80 border-white/5'
-                  }`}
+            {filteredVolunteers.length === 0 ? (
+              <div className="p-10 text-center text-xs text-slate-400 bg-slate-900/40 rounded-3xl border border-dashed border-white/10 flex flex-col items-center justify-center gap-2">
+                <span className="text-3xl">🔍</span>
+                <span className="font-bold text-sm text-slate-200">No field volunteers match your search</span>
+                <p className="text-slate-500 max-w-sm">Try clearing your search query or selecting &ldquo;All Field Force&rdquo; to see all registered campaign personnel.</p>
+                <button
+                  type="button"
+                  onClick={handleResetAll}
+                  className="mt-2 px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-xs"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                    {/* Status Avatar */}
-                    <div className="relative shrink-0">
-                      <div className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-white">
-                        {v.volunteer_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                      </div>
-                      {v.is_active && (
-                        <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse" />
-                      )}
-                    </div>
+                  Reset All Filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {filteredVolunteers.map(v => {
+                  const isSelected = selectedVolunteer?.toLowerCase().trim() === v.volunteer_name.toLowerCase().trim();
 
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-bold text-xs text-white leading-tight truncate">
-                          {v.volunteer_name}
-                        </p>
-                        {isSelected && (
-                          <span className="text-[8px] font-black px-1 py-0.2 rounded bg-emerald-500 text-slate-950 shrink-0">
-                            ACTIVE
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5 truncate">
-                        {v.role} • {v.current_action || (v.is_active ? 'In Field' : 'Offline')}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <div className="flex items-center gap-1 text-xs font-bold text-white justify-end">
-                      <span className="text-emerald-400" title="Doors Visited">{v.doorsKnocked}</span>
-                      <span className="text-slate-500">/</span>
-                      <span className="text-teal-300" title="Signs Placed">{v.signsPlaced}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onFlyToVolunteer) {
-                          onFlyToVolunteer(v.latitude, v.longitude);
+                  return (
+                    <div
+                      key={v.volunteer_name}
+                      onClick={() => {
+                        if (isSelected) {
+                          onSelectVolunteer(null);
+                        } else {
+                          onSelectVolunteer(v.volunteer_name);
                         }
                       }}
-                      className="text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5 mt-0.5 font-medium ml-auto transition"
+                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.99] ${
+                        isSelected
+                          ? 'bg-emerald-500/15 border-emerald-400/50 shadow-xl shadow-emerald-500/10'
+                          : 'bg-slate-900/70 hover:bg-slate-800/80 border-white/5 hover:border-white/15'
+                      }`}
                     >
-                      <Navigation className="w-2.5 h-2.5" /> Fly to
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          )}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          {/* Avatar with Status Pulse */}
+                          <div className="relative shrink-0 mt-0.5">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 flex items-center justify-center font-black text-xs text-white shadow-inner">
+                              {v.volunteer_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </div>
+                            {v.is_active && (
+                              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-extrabold text-sm text-white truncate leading-tight">
+                                {v.volunteer_name}
+                              </h4>
+                              {isSelected && (
+                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 shrink-0">
+                                  ISOLATED
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white/10 text-slate-300">
+                                {v.role}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {v.is_active ? '🟢 Live' : '⚪ Offline'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1.5 line-clamp-1">
+                              {v.current_action || 'Field Volunteer'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Performance KPIs & Quick Fly Action */}
+                      <div className="pt-2.5 border-t border-white/5 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-3 text-xs font-bold">
+                          <span className="flex items-center gap-1 text-emerald-400" title="Doors Visited">
+                            <DoorOpen className="w-3.5 h-3.5" />
+                            <span>{v.doorsKnocked} doors</span>
+                          </span>
+                          <span className="text-slate-600">•</span>
+                          <span className="flex items-center gap-1 text-teal-300" title="Signs Placed">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>{v.signsPlaced} signs</span>
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFlyAndClose(v.latitude, v.longitude, v.volunteer_name);
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 text-[11px] font-bold flex items-center gap-1 transition shadow-sm"
+                            title="Fly to volunteer location on map and close modal"
+                          >
+                            <Navigation className="w-3 h-3" />
+                            <span>Fly to</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Pinned Footer */}
-        <div className="mt-2.5 pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Live GPS Beacon
-          </span>
-          <button
-            type="button"
-            onClick={handleResetAll}
-            className="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 transition"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>Reset All</span>
-          </button>
+        {/* Modal Footer */}
+        <div className="p-4 sm:p-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-white/[0.02] shrink-0">
+          <div className="flex items-center gap-2 text-slate-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span>Live GPS locations synchronize automatically from field volunteer devices.</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleResetAll}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition"
+            >
+              Reset Filters
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-extrabold hover:shadow-lg hover:shadow-emerald-500/20 transition active:scale-95"
+            >
+              View on Map
+            </button>
+          </div>
         </div>
       </div>
     </div>
