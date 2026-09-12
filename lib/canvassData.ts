@@ -1,4 +1,5 @@
 import { CanvassRecord, VolunteerLocationPing, GroundVolunteerRole } from './types';
+import { supabase } from './supabaseClient';
 
 export const CANVASS_STORAGE_KEY = 'wardrunner_canvass_records';
 export const CANVASS_PING_KEY = 'wardrunner_canvass_ping';
@@ -272,6 +273,19 @@ export function addCanvassRecord(payload: Partial<CanvassRecord>): CanvassRecord
 
   const updated = [newRecord, ...current];
   saveStoredCanvassRecords(updated);
+
+  // Asynchronously sync to Supabase in background if available
+  try {
+    const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your-publishable-key');
+    if (!isPlaceholder) {
+      supabase.from('canvass_records').insert([newRecord]).then(({ error }) => {
+        if (error) console.warn('Supabase remote canvass sync error:', error);
+      });
+    }
+  } catch (err) {
+    console.warn('Supabase remote canvass sync offline/deferred:', err);
+  }
+
   return newRecord;
 }
 
@@ -279,6 +293,17 @@ export function deleteCanvassRecord(id: string): void {
   const current = getStoredCanvassRecords();
   const filtered = current.filter(r => r.id !== id);
   saveStoredCanvassRecords(filtered);
+
+  try {
+    const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your-publishable-key');
+    if (!isPlaceholder) {
+      supabase.from('canvass_records').delete().eq('id', id).then(({ error }) => {
+        if (error) console.warn('Supabase remote canvass delete error:', error);
+      });
+    }
+  } catch (err) {
+    console.warn('Supabase remote canvass delete offline/deferred:', err);
+  }
 }
 
 /* =========================================================================

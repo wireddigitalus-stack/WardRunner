@@ -390,9 +390,25 @@ export default function DashboardPage() {
     window.addEventListener('wardrunner_assignments_updated', loadAssigns);
 
     // Ground Campaign Data Loaders
-    const loadGroundData = () => {
-      setCanvassRecords(getStoredCanvassRecords());
+    const loadGroundData = async () => {
+      const localRecords = getStoredCanvassRecords();
+      setCanvassRecords(localRecords);
       setVolunteerPings(getStoredVolunteerPings());
+
+      try {
+        const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your-publishable-key');
+        if (!isPlaceholder) {
+          const { data, error } = await supabase.from('canvass_records').select('*').order('created_at', { ascending: false });
+          if (data && data.length > 0 && !error) {
+            const localIds = new Set(data.map((d: any) => d.id));
+            const onlyLocal = localRecords.filter(s => !localIds.has(s.id));
+            const merged = [...onlyLocal, ...data];
+            setCanvassRecords(merged);
+          }
+        }
+      } catch (err) {
+        console.warn('Remote canvass records sync offline/deferred:', err);
+      }
     };
     loadGroundData();
     window.addEventListener('wardrunner_canvass_updated', loadGroundData);
