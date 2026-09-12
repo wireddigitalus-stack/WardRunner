@@ -110,9 +110,10 @@ export default function FieldPage() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
 
-  // Auto-launch field briefing for first-time session
+  // Auto-launch field briefing for first-time session (Desktop only for now)
   useEffect(() => {
     if (!session) return;
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return;
     try {
       const seen = localStorage.getItem('wardrunner_tour_completed_wardrunner_field_tour_v1');
       if (!seen) {
@@ -849,13 +850,14 @@ export default function FieldPage() {
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Mission Briefing Tour Button (Desktop Only for now) */}
             <button
               onClick={() => setIsTourOpen(true)}
-              className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1 transition"
+              className="hidden md:flex px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 items-center gap-1 transition"
               title="Interactive Briefing Tour"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Tour</span>
+              <span>Tour</span>
             </button>
 
             <Link
@@ -1539,11 +1541,11 @@ export default function FieldPage() {
         </div>
       )}
 
-      {/* 60-Second Field Sign Runner Briefing Tour */}
+      {/* 60-Second Field Sign Runner Briefing Tour (Desktop Only for now) */}
       <TacticalOnboardingTour
         tourKey="wardrunner_field_tour_v1"
         steps={FIELD_TOUR_STEPS}
-        isOpen={isTourOpen && !!session}
+        isOpen={isTourOpen && !!session && (typeof window !== 'undefined' ? window.innerWidth >= 768 : false)}
         onClose={() => setIsTourOpen(false)}
       />
     </main>

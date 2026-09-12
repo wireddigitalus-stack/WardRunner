@@ -450,20 +450,22 @@ export default function DashboardPage() {
   const [isMobileScreen, setIsMobileScreen] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobileScreen(window.innerWidth < 768);
+    const checkMobile = () => {
+      const isMob = window.innerWidth < 768;
+      setIsMobileScreen(isMob);
+      if (isMob) setIsTourOpen(false);
+    };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Auto-launch Onboarding Briefing for first-time dashboard visitors ONLY AFTER successful PIN login
+  // Auto-launch Onboarding Briefing for first-time dashboard visitors ONLY AFTER successful PIN login (Desktop only)
   useEffect(() => {
     if (!checkedAuth || !isCommandAuthorized) return;
+    if (isMobileScreen || (typeof window !== 'undefined' && window.innerWidth < 768)) return;
     try {
-      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-      const key = isMobile
-        ? 'wardrunner_tour_completed_wardrunner_dashboard_tour_mobile_v1'
-        : 'wardrunner_tour_completed_wardrunner_dashboard_tour_v1';
+      const key = 'wardrunner_tour_completed_wardrunner_dashboard_tour_v1';
       const seen = localStorage.getItem(key);
       if (!seen) {
         const timer = setTimeout(() => {
@@ -474,7 +476,7 @@ export default function DashboardPage() {
     } catch {
       // ignore
     }
-  }, [checkedAuth, isCommandAuthorized]);
+  }, [checkedAuth, isCommandAuthorized, isMobileScreen]);
 
   // Reverse geocoding for street names
   const [streetAddress, setStreetAddress] = useState<string>('');
@@ -2429,7 +2431,6 @@ export default function DashboardPage() {
         volunteerPings={volunteerPings}
         routes={routes}
         precincts={BRISTOL_PRECINCTS}
-        onOpenTour={() => setIsTourOpen(true)}
         signs={signs}
         showSignsLayer={showSignsLayer}
         setShowSignsLayer={setShowSignsLayer}
@@ -3734,14 +3735,15 @@ export default function DashboardPage() {
         isDark={isDark}
       />
 
-      {/* Tactical Mission Briefing Onboarding Tour (Adaptive 18-step desktop or 4-step centered mobile VIP) */}
-      <TacticalOnboardingTour
-        tourKey={isMobileScreen ? 'wardrunner_dashboard_tour_mobile_v1' : 'wardrunner_dashboard_tour_v1'}
-        steps={isMobileScreen ? DASHBOARD_MOBILE_STEPS : DASHBOARD_TOUR_STEPS}
-        isOpen={isTourOpen && isCommandAuthorized && checkedAuth}
-        onClose={() => setIsTourOpen(false)}
-        forceCentered={isMobileScreen}
-      />
+      {/* Tactical Mission Briefing Onboarding Tour (Desktop Only) */}
+      {!isMobileScreen && (
+        <TacticalOnboardingTour
+          tourKey="wardrunner_dashboard_tour_v1"
+          steps={DASHBOARD_TOUR_STEPS}
+          isOpen={isTourOpen && isCommandAuthorized && checkedAuth}
+          onClose={() => setIsTourOpen(false)}
+        />
+      )}
     </div>
   );
 }

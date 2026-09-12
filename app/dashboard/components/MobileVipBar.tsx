@@ -72,7 +72,6 @@ interface MobileVipBarProps {
   onSelectPrecinct: (p: PrecinctInfo) => void;
   onFlyToPrecinct: (p: PrecinctInfo) => void;
   onLock: () => void;
-  onOpenTour?: () => void;
   isDark: boolean;
 }
 
@@ -113,7 +112,6 @@ export default function MobileVipBar({
   onSelectPrecinct,
   onFlyToPrecinct,
   onLock,
-  onOpenTour,
   isDark,
 }: MobileVipBarProps) {
   const [isPaletteOpen, setIsPaletteOpen] = useState(true);
@@ -452,21 +450,6 @@ export default function MobileVipBar({
             </button>
 
             <div className="flex items-center gap-1.5">
-              {onOpenTour && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenTour();
-                  }}
-                  className="flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/30 px-2.5 py-1 rounded-full border border-emerald-500/40 transition active:scale-95 shadow-sm"
-                  title="VIP Mobile Primer Tour"
-                >
-                  <Sparkles className="w-3 h-3 text-emerald-400" />
-                  <span>Tour</span>
-                </button>
-              )}
-
               <button
                 type="button"
                 onClick={() => setIsTrayExpanded(!isTrayExpanded)}
