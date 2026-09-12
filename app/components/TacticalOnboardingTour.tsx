@@ -189,17 +189,6 @@ export default function TacticalOnboardingTour({
 
   const activeColor = colorMap[step.highlightColor || step.accentColor || 'emerald'];
 
-  // Check if target element would be obstructed by a bottom-docked card (bottom 290px of horizontal center zone)
-  const wouldObstructBottomCard = Boolean(
-    targetRect && typeof window !== 'undefined' && (
-      // Target extends into the bottom 290px zone of screen
-      targetRect.bottom > window.innerHeight - 290 &&
-      // Target overlaps horizontally with the centered 460px card zone
-      targetRect.right > (window.innerWidth - 460) / 2 &&
-      targetRect.left < (window.innerWidth + 460) / 2
-    )
-  );
-
   return (
     <div className="fixed inset-0 z-[9999] pointer-events-auto select-none">
       {/* 1. Transparent Cutout Mask with Gentle Vignette (Zero Blur, Zero Opacity over Target) */}
@@ -248,16 +237,8 @@ export default function TacticalOnboardingTour({
         />
       )}
 
-      {/* 3. Floating Briefing Tooltip Card - Stays comfortably anchored at bottom, only docks to top if target is in bottom center */}
-      <div
-        className={`fixed inset-x-0 pointer-events-none flex justify-center px-4 transition-all duration-300 ${
-          forceCentered || !targetRect
-            ? 'inset-0 items-center justify-center p-4'
-            : wouldObstructBottomCard
-              ? 'top-4 sm:top-8'
-              : 'bottom-4 sm:bottom-8'
-        }`}
-      >
+      {/* 3. Floating Briefing Tooltip Card - Always dead center for rock-solid stability */}
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center p-4 z-50">
         <div
           className={`w-full max-w-[420px] bg-slate-950/95 backdrop-blur-md border-2 ${activeColor.border} rounded-3xl p-5 sm:p-6 shadow-2xl pointer-events-auto animate-scale-in flex flex-col justify-between`}
         >
