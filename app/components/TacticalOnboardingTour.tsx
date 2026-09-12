@@ -18,6 +18,7 @@ interface TacticalOnboardingTourProps {
   steps: TourStep[];
   isOpen: boolean;
   onClose: () => void;
+  forceCentered?: boolean;
 }
 
 export default function TacticalOnboardingTour({
@@ -25,6 +26,7 @@ export default function TacticalOnboardingTour({
   steps,
   isOpen,
   onClose,
+  forceCentered = false,
 }: TacticalOnboardingTourProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -240,14 +242,14 @@ export default function TacticalOnboardingTour({
         />
       )}
 
-      {/* 3. Floating Briefing Tooltip Card - Smartly docked to top or bottom to NEVER overlap the highlighted element */}
+      {/* 3. Floating Briefing Tooltip Card - Smartly docked to top or bottom to NEVER overlap the highlighted element, or cleanly centered */}
       <div
         className={`fixed inset-x-0 pointer-events-none flex justify-center px-4 transition-all duration-300 ${
-          targetRect
-            ? isTargetInTopHalf
+          forceCentered || !targetRect
+            ? 'inset-0 items-center justify-center p-4'
+            : isTargetInTopHalf
               ? 'bottom-4 sm:bottom-8'
               : 'top-4 sm:top-8'
-            : 'inset-0 items-center justify-center p-4'
         }`}
       >
         <div
@@ -292,25 +294,40 @@ export default function TacticalOnboardingTour({
 
           {/* Progress Indicators & Navigation Controls */}
           <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
-            {/* Dots */}
-            <div className="flex items-center gap-1.5">
-              {steps.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setCurrentStepIndex(idx);
-                    playStepTone('step');
-                  }}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    idx === currentStepIndex
-                      ? 'w-6 bg-emerald-400'
-                      : 'w-2 bg-slate-700 hover:bg-slate-600'
-                  }`}
-                  title={`Go to step ${idx + 1}`}
-                />
-              ))}
-            </div>
+            {/* Step Indicators: Compact Dots if <= 6, sleek progress bar if > 6 to prevent wrapping */}
+            {steps.length <= 6 ? (
+              <div className="flex items-center gap-1.5">
+                {steps.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setCurrentStepIndex(idx);
+                      playStepTone('step');
+                    }}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      idx === currentStepIndex
+                        ? 'w-6 bg-emerald-400'
+                        : 'w-2 bg-slate-700 hover:bg-slate-600'
+                    }`}
+                    title={`Go to step ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1 min-w-[90px]">
+                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 font-mono">
+                  <span>Step {currentStepIndex + 1}/{steps.length}</span>
+                  <span>{Math.round(((currentStepIndex + 1) / steps.length) * 100)}%</span>
+                </div>
+                <div className="w-24 sm:w-28 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-400 rounded-full transition-all duration-300"
+                    style={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2">

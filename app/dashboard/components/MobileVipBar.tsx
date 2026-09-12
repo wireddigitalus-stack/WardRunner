@@ -206,18 +206,6 @@ export default function MobileVipBar({
             </div>
           </div>
 
-          {/* Quick Tour Button */}
-          {onOpenTour && (
-            <button
-              onClick={onOpenTour}
-              className="pointer-events-auto px-2.5 py-1.5 rounded-2xl bg-slate-950/80 backdrop-blur-xl border border-emerald-500/40 text-emerald-300 hover:text-white shadow-xl active:scale-95 transition flex items-center gap-1 text-[11px] font-bold"
-              title="60-Second Mission Briefing Tour"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Tour</span>
-            </button>
-          )}
-
           {/* Lock Button */}
           <button
             onClick={onLock}
@@ -234,7 +222,7 @@ export default function MobileVipBar({
           ============================================================ */}
       <div className="absolute right-3 top-[188px] sm:top-20 z-30 flex flex-col items-center gap-1.5 pointer-events-auto">
         {/* Navigation & Toggle Header Pod */}
-        <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl p-1 flex flex-col items-center shadow-2xl">
+        <div id="tour-mobile-nav-pod" className="bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-2xl p-1 flex flex-col items-center shadow-2xl">
           {onRecenter && (
             <button
               onClick={onRecenter}
@@ -428,20 +416,45 @@ export default function MobileVipBar({
         <div className="max-w-md mx-auto bg-slate-950/90 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-2xl overflow-hidden transition-all duration-300">
           
           {/* Drawer Toggle Header Button */}
-          <button
-            type="button"
-            onClick={() => setIsTrayExpanded(!isTrayExpanded)}
-            className="w-full py-2.5 px-4 flex items-center justify-between text-slate-300 hover:text-white active:scale-[0.99] transition"
+          <div
+            id="tour-mobile-drawer-header"
+            className="w-full py-2.5 px-3.5 flex items-center justify-between text-slate-300 transition"
           >
-            <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsTrayExpanded(!isTrayExpanded)}
+              className="flex items-center gap-2 hover:text-white active:scale-95 transition"
+            >
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-black tracking-wider uppercase text-white">VIP Intel & SitRep</span>
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {onOpenTour && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenTour();
+                  }}
+                  className="flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/30 px-2.5 py-1 rounded-full border border-emerald-500/40 transition active:scale-95 shadow-sm"
+                  title="VIP Mobile Primer Tour"
+                >
+                  <Sparkles className="w-3 h-3 text-emerald-400" />
+                  <span>Tour</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsTrayExpanded(!isTrayExpanded)}
+                className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300 bg-white/10 hover:bg-white/15 px-2.5 py-1 rounded-full border border-white/10 active:scale-95 transition"
+              >
+                <span>{isTrayExpanded ? 'Close' : 'Precincts'}</span>
+                <ChevronUp className={`w-3 h-3 transition-transform duration-300 ${isTrayExpanded ? 'rotate-180' : ''}`} />
+              </button>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-300 bg-white/10 px-2.5 py-1 rounded-full border border-white/10">
-              <span>{isTrayExpanded ? 'Close Drawer' : 'Precincts & Pulse'}</span>
-              <ChevronUp className={`w-3 h-3 transition-transform duration-300 ${isTrayExpanded ? 'rotate-180' : ''}`} />
-            </div>
-          </button>
+          </div>
 
           {/* Expandable Executive Drawer Content */}
           {isTrayExpanded && (

@@ -155,6 +155,41 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
   },
 ];
 
+const DASHBOARD_MOBILE_STEPS: TourStep[] = [
+  {
+    targetId: 'tour-mobile-stats-hud',
+    title: 'Live VIP SitRep Pulse',
+    description: 'Instant glance at campaign operations: our yard signs, opponent sign intelligence, and total doors knocked across Bristol.',
+    accentColor: 'emerald',
+    badge: '1. VIP METRICS',
+    icon: '⚡',
+  },
+  {
+    targetId: 'tour-mobile-nav-pod',
+    title: 'Map Orientation & 3D Tilt',
+    description: 'Tap the compass needle to snap back to Bristol HQ. Tap 3D to rotate perspective and inspect hillside sign visibility.',
+    accentColor: 'teal',
+    badge: '2. NAVIGATION',
+    icon: '🧭',
+  },
+  {
+    targetId: 'tour-mobile-palette-toggle',
+    title: 'Field Layers Palette',
+    description: 'Tap this icon to expand quick map toggles: switch between yard signs, opponent intel, canvass doors, voter wards, and traffic heatmaps.',
+    accentColor: 'cyan',
+    badge: '3. MAP LAYERS',
+    icon: '🗺️',
+  },
+  {
+    targetId: 'tour-mobile-drawer-header',
+    title: 'VIP SitRep & Precinct Intel',
+    description: 'Slide up this bottom tray to review voting precinct turnout, ground force activity, and filter maps by neighborhood.',
+    accentColor: 'purple',
+    badge: '4. SITREP INTEL',
+    icon: '📊',
+  },
+];
+
 import {
   Vote,
   Users,
@@ -394,11 +429,23 @@ export default function DashboardPage() {
   const [ownerFilter, setOwnerFilter] = useState<'all' | 'ours' | 'theirs'>('all');
   const [searchQ, setSearchQ] = useState('');
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
 
-  // Auto-launch Onboarding Briefing for first-time dashboard visitors
+  useEffect(() => {
+    const checkMobile = () => setIsMobileScreen(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Auto-launch Onboarding Briefing for first-time dashboard visitors (separate desktop vs mobile)
   useEffect(() => {
     try {
-      const seen = localStorage.getItem('wardrunner_tour_completed_wardrunner_dashboard_tour_v1');
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      const key = isMobile
+        ? 'wardrunner_tour_completed_wardrunner_dashboard_tour_mobile_v1'
+        : 'wardrunner_tour_completed_wardrunner_dashboard_tour_v1';
+      const seen = localStorage.getItem(key);
       if (!seen) {
         const timer = setTimeout(() => {
           setIsTourOpen(true);
@@ -3561,12 +3608,13 @@ export default function DashboardPage() {
         isDark={isDark}
       />
 
-      {/* 60-Second Tactical Mission Briefing Onboarding Tour */}
+      {/* Tactical Mission Briefing Onboarding Tour (Adaptive 18-step desktop or 4-step centered mobile VIP) */}
       <TacticalOnboardingTour
-        tourKey="wardrunner_dashboard_tour_v1"
-        steps={DASHBOARD_TOUR_STEPS}
+        tourKey={isMobileScreen ? 'wardrunner_dashboard_tour_mobile_v1' : 'wardrunner_dashboard_tour_v1'}
+        steps={isMobileScreen ? DASHBOARD_MOBILE_STEPS : DASHBOARD_TOUR_STEPS}
         isOpen={isTourOpen}
         onClose={() => setIsTourOpen(false)}
+        forceCentered={isMobileScreen}
       />
     </div>
   );
