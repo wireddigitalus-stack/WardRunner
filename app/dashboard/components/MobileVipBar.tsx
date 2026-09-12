@@ -22,6 +22,7 @@ import {
   CircleDot,
   X,
   Sparkles,
+  RotateCw,
 } from 'lucide-react';
 import type { Sign, SignType, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import type { PrecinctInfo } from '@/lib/precinctData';
@@ -65,6 +66,8 @@ interface MobileVipBarProps {
   onRecenter?: () => void;
   onToggle3D?: () => void;
   is3D?: boolean;
+  onToggleOrbit?: () => void;
+  isOrbiting?: boolean;
   onOpenBristolFacts?: () => void;
   onSelectPrecinct: (p: PrecinctInfo) => void;
   onFlyToPrecinct: (p: PrecinctInfo) => void;
@@ -104,6 +107,8 @@ export default function MobileVipBar({
   onRecenter,
   onToggle3D,
   is3D,
+  onToggleOrbit,
+  isOrbiting,
   onOpenBristolFacts,
   onSelectPrecinct,
   onFlyToPrecinct,
@@ -240,10 +245,27 @@ export default function MobileVipBar({
                 onClick={onToggle3D}
                 title="3D Perspective"
                 className={`w-10 h-10 rounded-xl text-[11px] font-black flex items-center justify-center transition-all active:scale-90 ${
-                  is3D ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-300 hover:bg-white/10'
+                  is3D && !isOrbiting ? 'text-emerald-400 bg-emerald-500/20' : 'text-slate-300 hover:bg-white/10'
                 }`}
               >
                 3D
+              </button>
+            </>
+          )}
+
+          {onToggleOrbit && (
+            <>
+              <div className="w-5 h-px bg-white/10 my-0.5" />
+              <button
+                onClick={onToggleOrbit}
+                title={isOrbiting ? "Stop Orbit & Reset Default" : "3D Cinematic Orbit (Slow Rotate)"}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90 relative ${
+                  isOrbiting
+                    ? 'text-cyan-300 bg-cyan-500/25 border border-cyan-500/40 shadow-lg shadow-cyan-500/30 ring-2 ring-cyan-400/40'
+                    : 'text-slate-300 hover:bg-white/10'
+                }`}
+              >
+                <RotateCw className={`w-4 h-4 ${isOrbiting ? 'animate-spin' : ''}`} style={isOrbiting ? { animationDuration: '3.5s' } : undefined} />
               </button>
             </>
           )}

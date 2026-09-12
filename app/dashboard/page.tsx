@@ -77,11 +77,11 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
     badge: '7. Recenter',
   },
   {
-    targetId: 'tour-3d-btn',
-    title: '3D Topography Tilt',
-    description: 'Angles the camera into a 50° 3D perspective to visualize Bristol\'s ridges, elevation, and line-of-sight visibility for signage.',
+    targetId: 'tour-3d-btn, tour-orbit-btn',
+    title: '3D Tilt & Cinematic Orbit',
+    description: 'Angles into a 3D perspective to visualize Bristol terrain. Tap the Rotate button below it to slowly orbit the map in 3D (tap again to reset default view).',
     accentColor: 'emerald',
-    badge: '8. 3D Terrain',
+    badge: '8. 3D & Orbit',
   },
   {
     targetId: 'tour-zoom-btns',
@@ -109,42 +109,42 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
     title: 'Canvass Knocks & Flyers',
     description: 'Display teal footprint pins for every household visited, literature flyer dropped, and voter sentiment recorded.',
     accentColor: 'teal',
-    badge: '12. Canvass Layer',
+    badge: '12. Canvass Doors',
   },
   {
-    targetId: 'tour-field-ops, tour-mobile-field-ops, tour-mobile-palette-toggle',
+    targetId: 'tour-field-ops, tour-mobile-field-ops',
     title: 'Field Ops & Turf Routes',
-    description: 'View live volunteer GPS breadcrumbs, active walk paths, and designated turf loops across Bristol precincts.',
-    accentColor: 'teal',
-    badge: '13. Field Ops',
+    description: 'Live GPS volunteer tracks, walking breadcrumbs, and assigned canvass neighborhood walking loops.',
+    accentColor: 'emerald',
+    badge: '13. Field Force',
   },
   {
     targetId: 'tour-precincts-layer, tour-mobile-precincts',
-    title: 'Voting Precinct Boundaries',
-    description: 'Toggle official Bristol voting ward boundaries with voter registration numbers, turnout targets, and polling locations.',
-    accentColor: 'amber',
-    badge: '14. Voting Wards',
+    title: 'Voting Precincts & Wards',
+    description: 'Color-coded boundaries for all 12 Bristol voting precincts with turnout history and sign density benchmarks.',
+    accentColor: 'emerald',
+    badge: '14. Precincts',
   },
   {
     targetId: 'tour-corridors-layer',
-    title: 'AADT Traffic Corridors',
-    description: 'Highlights TDOT heavy-traffic corridors and key traffic arteries that maximize billboard and banner impressions.',
+    title: 'TDOT Traffic Corridors (AADT)',
+    description: 'Heat-mapped highway segments showing Annual Average Daily Traffic counts to prioritize high-visibility sign corridors.',
     accentColor: 'amber',
     badge: '15. Traffic Corridors',
   },
   {
     targetId: 'tour-heatmap-layer, tour-mobile-heatmap',
-    title: 'Campaign Density Heatmap',
-    description: 'Visualizes intense sign clusters and cold voter zones in vibrant gradient colors across Bristol neighborhoods.',
+    title: 'Sign Density Heatmap',
+    description: 'High-visibility visual gradient showing campaign saturation hot spots versus underserved neighborhoods.',
     accentColor: 'rose',
-    badge: '16. Sign Heatmap',
+    badge: '16. Heatmap',
   },
   {
     targetId: 'tour-map-search',
-    title: 'Instant Address Search',
-    description: 'Quickly search any Bristol street name, intersection, or voter address to fly straight to that location on the map.',
+    title: 'Address & Voter Search',
+    description: 'Quickly find any Bristol street address, intersection, or voter location and jump the camera directly there.',
     accentColor: 'cyan',
-    badge: '17. Address Search',
+    badge: '17. Map Search',
   },
   {
     targetId: 'tour-scout-ai',
@@ -166,8 +166,8 @@ const DASHBOARD_MOBILE_STEPS: TourStep[] = [
   },
   {
     targetId: 'tour-mobile-nav-pod',
-    title: 'Map Orientation & 3D Tilt',
-    description: 'Tap the compass needle to snap back to Bristol HQ. Tap 3D to rotate perspective and inspect hillside sign visibility.',
+    title: 'Navigation, 3D & Slow Orbit',
+    description: 'Tap compass to snap to Bristol HQ, 3D for terrain tilt, or Rotate to slowly orbit the map in 3D. Tap again to jump back to default view.',
     accentColor: 'teal',
     badge: '2. NAVIGATION',
     icon: '🧭',
@@ -219,6 +219,7 @@ import {
   Eye,
   EyeOff,
   RotateCcw,
+  RotateCw,
   Flame,
   Check,
   Package,
@@ -2089,13 +2090,105 @@ export default function DashboardPage() {
   }, [routes, selectedRoute, showRoutesLayer, mapReady]);
 
   /* ---------- Actions ---------- */
+  const [isOrbiting, setIsOrbiting] = useState(false);
+  const isOrbitingRef = useRef(false);
+  const orbitAnimRef = useRef<number | null>(null);
+
+  const stopOrbitAndResetDefault = useCallback(() => {
+    isOrbitingRef.current = false;
+    setIsOrbiting(false);
+    if (orbitAnimRef.current) {
+      cancelAnimationFrame(orbitAnimRef.current);
+      orbitAnimRef.current = null;
+    }
+    setIs3D(false);
+
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (isMobile) {
+      mapRef.current?.fitBounds(BRISTOL_ALL_PRECINCTS_BOUNDS, {
+        padding: { top: 95, bottom: 85, left: 24, right: 64 },
+        pitch: 0,
+        bearing: 0,
+        maxZoom: 12.0,
+        duration: 900,
+      });
+    } else {
+      mapRef.current?.flyTo({
+        center: BRISTOL_CENTER,
+        zoom: 13.2,
+        pitch: 0,
+        bearing: 0,
+        duration: 900,
+      });
+    }
+  }, []);
+
+  const toggleOrbit = useCallback(() => {
+    const m = mapRef.current;
+    if (!m) return;
+
+    if (isOrbitingRef.current) {
+      // Toggle off: Stop rotation and jump back to default view
+      stopOrbitAndResetDefault();
+    } else {
+      // Toggle on: Activate 3D mode and start smooth slow orbit
+      isOrbitingRef.current = true;
+      setIsOrbiting(true);
+      setIs3D(true);
+
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      // Animate pitch into 3D
+      m.easeTo({
+        pitch: isMobile ? 38 : 55,
+        duration: 700,
+      });
+
+      let lastTime = performance.now();
+      const rotateCamera = (now: number) => {
+        if (!isOrbitingRef.current || !mapRef.current) return;
+        const delta = now - lastTime;
+        lastTime = now;
+        // ~6 degrees per second = ~60 seconds per 360 degree smooth revolution
+        const currentBearing = mapRef.current.getBearing();
+        const nextBearing = (currentBearing + (delta * 0.006)) % 360;
+        mapRef.current.setBearing(nextBearing);
+        orbitAnimRef.current = requestAnimationFrame(rotateCamera);
+      };
+
+      const startTimer = setTimeout(() => {
+        lastTime = performance.now();
+        orbitAnimRef.current = requestAnimationFrame(rotateCamera);
+      }, 250);
+
+      return () => clearTimeout(startTimer);
+    }
+  }, [stopOrbitAndResetDefault]);
+
+  // Clean up orbit animation on unmount
+  useEffect(() => {
+    return () => {
+      isOrbitingRef.current = false;
+      if (orbitAnimRef.current) {
+        cancelAnimationFrame(orbitAnimRef.current);
+      }
+    };
+  }, []);
+
   const toggle3D = useCallback(() => {
     const m = mapRef.current; if (!m) return;
+    if (isOrbitingRef.current) {
+      stopOrbitAndResetDefault();
+      return;
+    }
     const next = !is3D; setIs3D(next);
     m.easeTo({ pitch: next ? 55 : 0, bearing: next ? -15 : 0, duration: 800 });
-  }, [is3D]);
+  }, [is3D, stopOrbitAndResetDefault]);
 
   const recenter = useCallback(() => {
+    if (isOrbitingRef.current) {
+      stopOrbitAndResetDefault();
+      return;
+    }
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     if (isMobile) {
       mapRef.current?.fitBounds(BRISTOL_ALL_PRECINCTS_BOUNDS, {
@@ -2108,7 +2201,7 @@ export default function DashboardPage() {
     } else {
       mapRef.current?.flyTo({ center: BRISTOL_CENTER, zoom: 13.2, pitch: is3D ? 52 : 0, bearing: is3D ? -15 : 0, duration: 900 });
     }
-  }, [is3D]);
+  }, [is3D, stopOrbitAndResetDefault]);
 
   const exportCSV = () => {
     const h = ['ID','Type','Competitor','Competitor Name','Lat','Lng','Placed / Reported By','Status','Date'];
@@ -2343,6 +2436,8 @@ export default function DashboardPage() {
         onRecenter={recenter}
         onToggle3D={toggle3D}
         is3D={is3D}
+        onToggleOrbit={toggleOrbit}
+        isOrbiting={isOrbiting}
         onOpenBristolFacts={() => {
           setSelectedSign(null);
           setSelectedRec(null);
@@ -2403,8 +2498,21 @@ export default function DashboardPage() {
             <Navigation className="w-4 h-4" />
           </button>
           <div className={`w-5 h-px ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-          <button id="tour-3d-btn" onClick={toggle3D} title="3D Perspective" className={`p-2.5 rounded-xl text-xs font-black transition-all active:scale-90 ${is3D ? 'text-emerald-400 bg-emerald-500/15' : 'hover:bg-white/10'}`}>
+          <button id="tour-3d-btn" onClick={toggle3D} title="3D Perspective" className={`p-2.5 rounded-xl text-xs font-black transition-all active:scale-90 ${is3D && !isOrbiting ? 'text-emerald-400 bg-emerald-500/15' : 'hover:bg-white/10'}`}>
             3D
+          </button>
+          <div className={`w-5 h-px ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
+          <button
+            id="tour-orbit-btn"
+            onClick={toggleOrbit}
+            title={isOrbiting ? "Stop 3D Orbit & Reset to Default View" : "3D Cinematic Orbit (Slow Rotate)"}
+            className={`p-2.5 rounded-xl transition-all active:scale-90 relative ${
+              isOrbiting
+                ? 'text-cyan-300 bg-cyan-500/25 border border-cyan-500/40 shadow-lg shadow-cyan-500/30 ring-2 ring-cyan-400/40'
+                : 'hover:bg-white/10 text-slate-300 hover:text-white'
+            }`}
+          >
+            <RotateCw className={`w-4 h-4 ${isOrbiting ? 'animate-spin' : ''}`} style={isOrbiting ? { animationDuration: '3.5s' } : undefined} />
           </button>
           <div className={`w-5 h-px ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
           <button onClick={() => mapRef.current?.zoomIn()} className="p-2.5 rounded-xl hover:bg-white/10 text-sm font-bold active:scale-90 transition-all leading-none">+</button>
