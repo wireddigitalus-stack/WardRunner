@@ -268,7 +268,7 @@ export default function DashboardPage() {
   const theme = 'dark' as const;
 
   // Security Gate Authentication (Master PIN: 620620)
-  const [isCommandAuthorized, setIsCommandAuthorized] = useState<boolean>(true);
+  const [isCommandAuthorized, setIsCommandAuthorized] = useState<boolean>(false);
   const [checkedAuth, setCheckedAuth] = useState<boolean>(false);
 
   useEffect(() => {
@@ -287,6 +287,7 @@ export default function DashboardPage() {
       localStorage.removeItem('wardrunner_field_command_auth');
     }
     setIsCommandAuthorized(false);
+    setIsTourOpen(false);
   }, []);
 
   const [signs, setSigns] = useState<Sign[]>([]);
@@ -455,8 +456,9 @@ export default function DashboardPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Auto-launch Onboarding Briefing for first-time dashboard visitors (separate desktop vs mobile)
+  // Auto-launch Onboarding Briefing for first-time dashboard visitors ONLY AFTER successful PIN login
   useEffect(() => {
+    if (!checkedAuth || !isCommandAuthorized) return;
     try {
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
       const key = isMobile
@@ -466,13 +468,13 @@ export default function DashboardPage() {
       if (!seen) {
         const timer = setTimeout(() => {
           setIsTourOpen(true);
-        }, 1500);
+        }, 1000);
         return () => clearTimeout(timer);
       }
     } catch {
       // ignore
     }
-  }, []);
+  }, [checkedAuth, isCommandAuthorized]);
 
   // Reverse geocoding for street names
   const [streetAddress, setStreetAddress] = useState<string>('');
@@ -3736,7 +3738,7 @@ export default function DashboardPage() {
       <TacticalOnboardingTour
         tourKey={isMobileScreen ? 'wardrunner_dashboard_tour_mobile_v1' : 'wardrunner_dashboard_tour_v1'}
         steps={isMobileScreen ? DASHBOARD_MOBILE_STEPS : DASHBOARD_TOUR_STEPS}
-        isOpen={isTourOpen}
+        isOpen={isTourOpen && isCommandAuthorized && checkedAuth}
         onClose={() => setIsTourOpen(false)}
         forceCentered={isMobileScreen}
       />

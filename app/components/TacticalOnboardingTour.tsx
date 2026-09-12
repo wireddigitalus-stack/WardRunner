@@ -190,7 +190,7 @@ export default function TacticalOnboardingTour({
   const activeColor = colorMap[step.highlightColor || step.accentColor || 'emerald'];
 
   return (
-    <div className="fixed inset-0 z-[9999] pointer-events-auto select-none">
+    <div className="fixed inset-0 z-[9000] pointer-events-auto select-none">
       {/* 1. Transparent Cutout Mask with Gentle Vignette (Zero Blur, Zero Opacity over Target) */}
       <svg
         className="fixed inset-0 w-full h-full pointer-events-auto"

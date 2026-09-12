@@ -101,7 +101,7 @@ export default function CommandPinGate({ onUnlock, masterPin = '620620' }: Comma
   }, [pin, handleVerify]);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 text-white select-none">
+    <div className="fixed inset-0 z-[10000] bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 text-white select-none">
       {/* Background Ambient Glows */}
       <div className="absolute w-96 h-96 rounded-full bg-blue-600/10 blur-3xl pointer-events-none -top-20 -left-20" />
       <div className="absolute w-96 h-96 rounded-full bg-emerald-600/10 blur-3xl pointer-events-none -bottom-20 -right-20" />

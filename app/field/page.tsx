@@ -444,6 +444,7 @@ export default function FieldPage() {
     }
     localStorage.removeItem('wardrunner_session');
     setSession(null);
+    setIsTourOpen(false);
   };
 
   // 3. Photo Capture & Fast AI Sign Scanning (Sub-2s flow)
@@ -1542,7 +1543,7 @@ export default function FieldPage() {
       <TacticalOnboardingTour
         tourKey="wardrunner_field_tour_v1"
         steps={FIELD_TOUR_STEPS}
-        isOpen={isTourOpen}
+        isOpen={isTourOpen && !!session}
         onClose={() => setIsTourOpen(false)}
       />
     </main>

@@ -384,6 +384,7 @@ export default function CanvassPage() {
     }
     localStorage.removeItem('wardrunner_session');
     setSession(null);
+    setIsTourOpen(false);
   };
 
   // Quick Action Handlers
@@ -1276,7 +1277,7 @@ export default function CanvassPage() {
       <TacticalOnboardingTour
         tourKey="wardrunner_canvass_tour_v1"
         steps={CANVASS_TOUR_STEPS}
-        isOpen={isTourOpen}
+        isOpen={isTourOpen && !!session}
         onClose={() => setIsTourOpen(false)}
       />
     </main>
