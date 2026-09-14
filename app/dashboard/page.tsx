@@ -2834,7 +2834,8 @@ export default function DashboardPage() {
             },
             {
               id: 'tour-boundary',
-              label: 'Boundary',
+              label: 'Bristol',
+              tip: 'Bristol TN City Boundary',
               icon: <Building2 className="w-3.5 h-3.5" />,
               active: showBoundary,
               color: 'sky',
@@ -2842,7 +2843,8 @@ export default function DashboardPage() {
             },
             {
               id: 'tour-corridors-layer',
-              label: 'AADT',
+              label: 'Traffic',
+              tip: 'Traffic Volume Corridors (AADT)',
               icon: <TrendingUp className="w-3.5 h-3.5" />,
               active: showCorridors,
               color: 'amber',
@@ -2850,7 +2852,8 @@ export default function DashboardPage() {
             },
             {
               id: 'tour-heatmap-layer',
-              label: 'Heat',
+              label: 'Heat Map',
+              tip: 'Sign Density Heat Map',
               icon: <Flame className="w-3.5 h-3.5" />,
               active: showHeatmap,
               color: 'rose',
@@ -2880,7 +2883,7 @@ export default function DashboardPage() {
                     ? `${c.bg} ${c.text} border ${c.border} shadow-md ${c.shadow} ring-1 ${c.glow}`
                     : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5 border border-transparent'
                 }`}
-                title={item.label}
+                title={item.tip || item.label}
               >
                 <span className={`text-[10px] font-black uppercase tracking-wider transition-colors duration-200 ${item.active ? c.text : 'text-zinc-500'}`}>
                   {item.label}
