@@ -1397,29 +1397,61 @@ export default function FieldPage() {
                 </button>
               </div>
 
-              {/* Competitor Name Input Drawer */}
+              {/* Competitor Details Drawer */}
               {isCompetitor && (
-                <div className="mt-3 pt-2.5 border-t border-slate-800 animate-fadeIn">
-                  <label className="block text-[11px] font-black text-rose-400 uppercase tracking-wider mb-1.5">
-                    Competitor Candidate / Slate Name
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="e.g. Bob Reynolds or Common Sense Slate"
-                      value={competitorName}
-                      onChange={(e) => setCompetitorName(e.target.value)}
-                      spellCheck={true}
-                      autoCorrect="on"
-                      autoCapitalize="words"
-                      className="flex-1 h-11 px-3 bg-slate-950 border-2 border-rose-500/50 rounded-xl text-white text-sm font-bold focus:outline-none focus:border-rose-400 transition"
-                      autoFocus
-                    />
-                    <DictateButton
-                      onTranscript={(dictated) => setCompetitorName(dictated)}
-                      size="md"
-                      title="Push to dictate competitor candidate name"
-                    />
+                <div className="mt-3 pt-2.5 border-t border-slate-800 animate-fadeIn space-y-3">
+                  {/* Opponent Sign Type Picker */}
+                  <div>
+                    <label className="block text-[11px] font-black text-rose-400 uppercase tracking-wider mb-1.5">
+                      What Type of Opponent Sign?
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {SIGN_TYPES.map((type) => {
+                        const isSelected = selectedType === type.id;
+                        return (
+                          <button
+                            key={type.id}
+                            type="button"
+                            onClick={() => setSelectedType(type.id)}
+                            className={`py-2 px-1.5 rounded-xl border-2 text-center flex flex-col items-center justify-center transition-all duration-150 active:scale-95 ${
+                              isSelected
+                                ? 'bg-rose-500/25 border-rose-400 text-white shadow-lg shadow-rose-500/20 ring-2 ring-rose-500/30'
+                                : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700'
+                            }`}
+                          >
+                            <span className="text-xl mb-0.5">{type.icon}</span>
+                            <span className="text-[10px] font-black leading-tight truncate max-w-full">
+                              {type.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Competitor Candidate Name */}
+                  <div>
+                    <label className="block text-[11px] font-black text-rose-400 uppercase tracking-wider mb-1.5">
+                      Competitor Candidate / Slate Name
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="e.g. Bob Reynolds or Common Sense Slate"
+                        value={competitorName}
+                        onChange={(e) => setCompetitorName(e.target.value)}
+                        spellCheck={true}
+                        autoCorrect="on"
+                        autoCapitalize="words"
+                        className="flex-1 h-11 px-3 bg-slate-950 border-2 border-rose-500/50 rounded-xl text-white text-sm font-bold focus:outline-none focus:border-rose-400 transition"
+                        autoFocus
+                      />
+                      <DictateButton
+                        onTranscript={(dictated) => setCompetitorName(dictated)}
+                        size="md"
+                        title="Push to dictate competitor candidate name"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
