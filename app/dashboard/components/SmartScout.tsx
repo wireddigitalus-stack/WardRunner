@@ -162,6 +162,45 @@ export default function SmartScout({
     return { badge: 'bg-sky-500/20 text-sky-400 border-sky-500/30', glow: 'shadow-sky-500/20' };
   };
 
+  // Format chat responses: clean bolding, indented bullets, strip markdown noise
+  const formatChatBubbleText = (text: string) => {
+    const cleaned = text
+      .replace(/^#+\s+/gm, '')
+      .replace(/^---+$/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    const lines = cleaned.split('\n');
+
+    return (
+      <div className="space-y-1 text-[11px] leading-relaxed break-words [overflow-wrap:anywhere]">
+        {lines.map((line, idx) => {
+          const trimmed = line.trim();
+          if (!trimmed) return null;
+
+          const isBullet = trimmed.startsWith('•') || trimmed.startsWith('* ') || trimmed.startsWith('- ');
+          const displayLine = isBullet ? trimmed.replace(/^[\*\-]\s+/, '• ') : trimmed;
+          const parts = displayLine.split(/(\*\*.*?\*\*)/g);
+
+          return (
+            <p key={idx} className={isBullet ? 'pl-2 text-slate-300' : ''}>
+              {parts.map((part, pIdx) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  return (
+                    <strong key={pIdx} className="font-bold text-white">
+                      {part.slice(2, -2)}
+                    </strong>
+                  );
+                }
+                return <span key={pIdx}>{part}</span>;
+              })}
+            </p>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <>
       {/* ============================================
@@ -585,12 +624,16 @@ export default function SmartScout({
 
                   {chatMessages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full min-w-0`}>
-                      <div className={`max-w-[85%] px-3 py-2 rounded-xl text-[11px] leading-relaxed break-words overflow-hidden ${
+                      <div className={`max-w-[88%] px-3 py-2 rounded-xl text-[11px] leading-relaxed break-words overflow-hidden ${
                         msg.role === 'user'
                           ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-br-sm'
                           : 'bg-white/[0.06] border border-white/[0.06] rounded-bl-sm'
                       }`}>
-                        <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{msg.text}</div>
+                        {msg.role === 'user' ? (
+                          <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{msg.text}</div>
+                        ) : (
+                          formatChatBubbleText(msg.text)
+                        )}
                       </div>
                     </div>
                   ))}

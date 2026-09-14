@@ -170,11 +170,28 @@ Respond ONLY with a valid JSON array matching this exact schema:
       // Chat mode — conversational Q&A
       const userMessage = message || 'What are the best locations for signs?';
 
+      const chatPrompt = `${campaignContext}
+
+User Question: "${userMessage}"
+
+FORMAT INSTRUCTIONS FOR SCOUT CHAT:
+You are chatting inside a small mobile widget with a busy campaign director.
+Keep your response SHORT, SWEET, AND ULTRA-TACTICAL (maximum 110-130 words total).
+
+CRITICAL FORMAT RULES:
+1. NO long essays, NO markdown headers (never use ### or ##), NO horizontal divider lines (never use ---).
+2. Start with 1 brief intro sentence (e.g. "Top spots near Downtown Bristol (TN side):").
+3. For each recommended location (maximum 2-3 spots only), format as a tight bullet:
+   📍 **[Street & Intersection]** · [Est. AADT] cars/day · Score: [X]/10
+   • [1 punchy sentence explaining high dwell time, commuter flow, or competitor counter]
+4. End with 1 short, actionable takeaway starting with ⚡ (e.g. "⚡ **Action:** Secure Volunteer & Anderson corner first for highest traffic dwell.")
+5. Strictly stay on the Tennessee side of Bristol. Never write multiple long explanatory paragraphs.`;
+
       const result = await runGenerate({
         contents: [
           { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
-          { role: 'model', parts: [{ text: 'I understand. I am Scout, ready to help with sign placement strategy in Bristol TN.' }] },
-          { role: 'user', parts: [{ text: `${campaignContext}\n\nUser question: ${userMessage}\n\nProvide a helpful, strategic response. If you recommend specific locations, include approximate GPS coordinates. Keep your response concise and actionable — this is for a busy campaign manager checking from their phone.` }] },
+          { role: 'model', parts: [{ text: 'I understand. I am Scout. I will deliver short, sweet, compact tactical sign placement intel formatted for a quick mobile chat.' }] },
+          { role: 'user', parts: [{ text: chatPrompt }] },
         ],
       });
 
