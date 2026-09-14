@@ -48,6 +48,7 @@ import {
 } from '@/lib/canvassData';
 import { getVolunteerActiveRoute } from '@/lib/canvassRouteData';
 import { addPlacedSign } from '@/lib/signData';
+import { validatePin } from '@/lib/auth';
 import TacticalOnboardingTour, { TourStep } from '@/app/components/TacticalOnboardingTour';
 
 const CANVASS_TOUR_STEPS: TourStep[] = [
@@ -340,14 +341,13 @@ export default function CanvassPage() {
   }, [session, isLiveBroadcasting, volunteerRole, sessionHistory.length]);
 
   // Handle Authentication
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsAuthenticating(true);
     setAuthError(null);
 
-    const validPin = pinInput.trim() === '620620' || pinInput.trim().length >= 4;
-    if (!validPin) {
-      setAuthError('Invalid PIN code. Use campaign PIN 620620.');
+    if (pinInput.trim().length < 4) {
+      setAuthError('Please enter a valid 4-6 digit Campaign PIN.');
       setIsAuthenticating(false);
       return;
     }
@@ -358,17 +358,30 @@ export default function CanvassPage() {
       return;
     }
 
-    const newSession: VolunteerSession = {
-      campaignId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-      campaignName: 'Melissa K. Brown for City Council',
-      pin: pinInput.trim(),
-      volunteerName: nameInput.trim(),
-    };
+    try {
+      const result = await validatePin(pinInput.trim());
 
-    localStorage.setItem('wardrunner_session', JSON.stringify(newSession));
-    setSession(newSession);
-    setIsAuthenticating(false);
-    requestWakeLock();
+      if (!result.valid) {
+        setAuthError('Invalid PIN. Contact your Field Director for the campaign PIN.');
+        setIsAuthenticating(false);
+        return;
+      }
+
+      const newSession: VolunteerSession = {
+        campaignId: result.session?.campaignId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        campaignName: result.session?.campaignName || 'Melissa K. Brown for City Council',
+        pin: pinInput.trim(),
+        volunteerName: result.session?.volunteerName || nameInput.trim(),
+      };
+
+      localStorage.setItem('wardrunner_session', JSON.stringify(newSession));
+      setSession(newSession);
+      requestWakeLock();
+    } catch (err: any) {
+      setAuthError(err?.message || 'Authentication failed. Check your connection.');
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   const handleLogout = () => {
@@ -598,7 +611,7 @@ export default function CanvassPage() {
                   maxLength={6}
                   value={pinInput}
                   onChange={(e) => setPinInput(e.target.value)}
-                  placeholder="Master PIN: 620620"
+                  placeholder="Enter Campaign PIN"
                   className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3.5 text-center font-mono text-xl tracking-widest text-white focus:outline-none transition shadow-inner"
                   autoFocus
                 />
@@ -649,19 +662,6 @@ export default function CanvassPage() {
                 <ChevronRight className="w-4 h-4" />
               </button>
 
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPinInput('620620');
-                    setNameInput('Door Canvasser');
-                  }}
-                  className="w-full py-3 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-xs font-bold text-emerald-400 border border-emerald-500/30 flex items-center justify-center gap-1.5 active:scale-95 transition"
-                >
-                  <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                  <span>⚡ 1-Tap Canvasser Auto-Fill (PIN: 620620)</span>
-                </button>
-              </div>
             </form>
 
             <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">

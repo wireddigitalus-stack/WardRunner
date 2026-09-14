@@ -63,7 +63,7 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
   {
     targetId: 'tour-lock-btn',
     title: 'Lock Command Center',
-    description: 'Secures your strategy room. Locks the dashboard behind Master Security PIN 620620 when stepping away from your desk.',
+    description: 'Secures your strategy room. Locks the dashboard behind Campaign Security PIN when stepping away from your desk.',
     accentColor: 'rose',
     badge: '5. Security Gate',
   },
@@ -273,7 +273,7 @@ const MAP_STYLES = {
 export default function DashboardPage() {
   const theme = 'dark' as const;
 
-  // Security Gate Authentication (Master PIN: 620620)
+  // Security Gate Authentication
   const [isCommandAuthorized, setIsCommandAuthorized] = useState<boolean>(false);
   const [checkedAuth, setCheckedAuth] = useState<boolean>(false);
 
@@ -2369,7 +2369,7 @@ export default function DashboardPage() {
   return (
     <div className={`h-screen w-screen overflow-hidden relative font-sans transition-colors duration-500 ${isDark ? 'dark bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-900'}`}>
 
-      {/* Security Gate Overlay (Master PIN: 620620) */}
+      {/* Security Gate Overlay */}
       {(!checkedAuth || !isCommandAuthorized) && (
         <CommandPinGate
           onUnlock={() => {
@@ -2378,7 +2378,6 @@ export default function DashboardPage() {
               mapRef.current?.resize?.();
             }, 100);
           }}
-          masterPin="620620"
         />
       )}
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
+import { validatePin } from '@/lib/auth';
 import { compressImage, compressImageToBase64 } from '@/lib/imageCompression';
 import { SignType, SignStatus, Sign, VolunteerSession, VolunteerAssignment } from '@/lib/types';
 import { getStoredAssignments, markAssignmentComplete } from '@/lib/assignmentData';
@@ -359,7 +360,7 @@ export default function FieldPage() {
     return () => clearInterval(interval);
   }, [session]);
 
-  // 2. Frictionless PIN Login
+  // 2. Frictionless PIN Login (Server-side validated)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
@@ -375,58 +376,25 @@ export default function FieldPage() {
 
     setIsAuthenticating(true);
     try {
-      // Query campaign by access_pin
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('id, name')
-        .eq('access_pin', pinInput.trim())
-        .maybeSingle();
+      const result = await validatePin(pinInput.trim());
 
-      if (error || !data) {
-        // Fallback for pilot campaign demo / local roster
-        const storedMasterPin = (typeof window !== 'undefined' && localStorage.getItem('wardrunner_campaign_pin')) || '620620';
-        let matchedVolunteer: any = null;
-        if (typeof window !== 'undefined') {
-          try {
-            const rawVols = localStorage.getItem('wardrunner_volunteers');
-            if (rawVols) {
-              const vols = JSON.parse(rawVols);
-              matchedVolunteer = vols.find(
-                (v: any) => v.active && (v.pin === pinInput.trim() || (!v.pin && pinInput.trim() === storedMasterPin))
-              );
-            }
-          } catch (e) {}
-        }
-
-        if (pinInput.trim() === '620620' || pinInput.trim() === '246810' || pinInput.trim() === storedMasterPin || matchedVolunteer) {
-          const fallbackSession: VolunteerSession = {
-            campaignId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-            campaignName: 'Melissa K. Brown for Bristol TN City Council',
-            pin: pinInput.trim(),
-            volunteerName: matchedVolunteer?.name || nameInput.trim(),
-          };
-          localStorage.setItem('wardrunner_session', JSON.stringify(fallbackSession));
-          setSession(fallbackSession);
-          setIsAuthenticating(false);
-          return;
-        }
-
-        setAuthError('Invalid PIN. Contact Campaign Headquarters for the PIN.');
+      if (!result.valid) {
+        setAuthError('Invalid PIN. Contact your Field Director for the campaign PIN.');
         setIsAuthenticating(false);
         return;
       }
 
       const newSession: VolunteerSession = {
-        campaignId: data.id,
-        campaignName: data.name,
+        campaignId: result.session?.campaignId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        campaignName: result.session?.campaignName || 'Melissa K. Brown for Bristol TN City Council',
         pin: pinInput.trim(),
-        volunteerName: nameInput.trim(),
+        volunteerName: result.session?.volunteerName || nameInput.trim(),
       };
 
       localStorage.setItem('wardrunner_session', JSON.stringify(newSession));
       setSession(newSession);
     } catch (err: any) {
-      setAuthError(err?.message || 'Authentication failed');
+      setAuthError(err?.message || 'Authentication failed. Check your connection.');
     } finally {
       setIsAuthenticating(false);
     }
@@ -752,14 +720,14 @@ export default function FieldPage() {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={6}
-                  placeholder="e.g. 620620"
+                  placeholder="Enter 6-digit PIN"
                   value={pinInput}
                   onChange={(e) => setPinInput(e.target.value)}
                   className="w-full h-14 px-4 text-center text-2xl font-mono tracking-widest bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-white placeholder:text-slate-600 transition"
                   autoFocus
                   required
                 />
-                <p className="text-[11px] text-slate-500 mt-1">Campaign Master PIN: 620620</p>
+                <p className="text-[11px] text-slate-500 mt-1">Contact your Field Director for access</p>
               </div>
 
               <div>
@@ -801,19 +769,6 @@ export default function FieldPage() {
                 )}
               </button>
 
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPinInput('620620');
-                    setNameInput('Field Volunteer');
-                  }}
-                  className="w-full py-3 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-xs font-bold text-emerald-400 border border-emerald-500/30 flex items-center justify-center gap-1.5 active:scale-95 transition"
-                >
-                  <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                  <span>⚡ 1-Tap Volunteer Auto-Fill (PIN: 620620)</span>
-                </button>
-              </div>
             </form>
           </div>
         </div>

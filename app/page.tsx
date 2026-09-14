@@ -95,7 +95,7 @@ export default function HomePage() {
                 </div>
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-blue-500/15 text-blue-300 border border-blue-500/30">
                   <ShieldCheck className="w-3 h-3 text-blue-400" />
-                  PIN 620620
+                  PIN PROTECTED
                 </span>
               </div>
               <h3 className="text-xl font-bold text-white group-hover:text-blue-300 transition">

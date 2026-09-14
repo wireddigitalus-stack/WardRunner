@@ -59,14 +59,14 @@ interface VolunteerManagerModalProps {
   } | null;
 }
 
-const DEFAULT_MASTER_PIN = '620620';
+const DEFAULT_MASTER_PIN = process.env.NEXT_PUBLIC_DEFAULT_PIN || '246810';
 
 const DEFAULT_VOLUNTEERS: Volunteer[] = [
   {
     id: 'vol-1',
     name: 'Campaign Volunteer',
     role: 'Field Volunteer',
-    pin: '620620',
+    pin: DEFAULT_MASTER_PIN,
     phone: '(423) 555-0142',
     created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
     active: true,
@@ -84,7 +84,7 @@ const DEFAULT_VOLUNTEERS: Volunteer[] = [
     id: 'vol-3',
     name: 'Marcus Taylor',
     role: 'Field Scout',
-    pin: '620620',
+    pin: DEFAULT_MASTER_PIN,
     phone: '(423) 555-0199',
     created_at: new Date(Date.now() - 3600000 * 20).toISOString(),
     active: true,
