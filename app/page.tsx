@@ -7,7 +7,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="pt-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-sm tracking-tight">
+          <div className="w-10 h-10 min-w-10 min-h-10 shrink-0 aspect-square rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-black text-sm leading-none tracking-tight select-none">
             COS
           </div>
           <div>

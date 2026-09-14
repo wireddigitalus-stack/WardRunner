@@ -585,7 +585,7 @@ export default function CanvassPage() {
       <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 max-w-md mx-auto select-none">
         <div className="pt-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-emerald-500/20">
+            <div className="w-12 h-12 min-w-12 min-h-12 shrink-0 aspect-square rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-lg leading-none shadow-lg shadow-emerald-500/20 select-none">
               COS
             </div>
             <div>
@@ -697,7 +697,7 @@ export default function CanvassPage() {
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
         <div className="flex items-center justify-between">
           <div id="tour-canvass-session" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs tracking-tight">
+            <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 aspect-square rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs leading-none tracking-tight select-none">
               COS
             </div>
             <div>

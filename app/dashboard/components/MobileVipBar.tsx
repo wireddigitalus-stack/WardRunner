@@ -187,7 +187,7 @@ export default function MobileVipBar({
         <div className="flex items-center justify-between gap-2">
           {/* Brand Monogram */}
           <div className="pointer-events-auto flex items-center gap-2 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-2.5 py-1.5 shadow-xl">
-            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-slate-950 font-black text-xs shadow-md">
+            <div className="w-7 h-7 min-w-7 min-h-7 shrink-0 aspect-square rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-slate-950 font-black text-xs leading-none tracking-wider shadow-md select-none">
               COS
             </div>
             <div className="flex items-center gap-1.5 pr-1">

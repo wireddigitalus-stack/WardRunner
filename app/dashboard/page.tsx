@@ -2423,8 +2423,8 @@ export default function DashboardPage() {
 
           {/* — Brand Capsule — */}
           <div className="pointer-events-auto glass rounded-2xl px-4 py-2.5 flex items-center gap-3 animate-slide-up">
-            <div className="w-9 h-9 rounded-[12px] bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <span className="text-white font-black text-xs tracking-tight">COS</span>
+            <div className="w-9 h-9 min-w-9 min-h-9 shrink-0 aspect-square rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+              <span className="text-white font-black text-xs leading-none tracking-wider select-none">COS</span>
             </div>
             <div className="hidden sm:block">
               <div className="flex items-center gap-2">

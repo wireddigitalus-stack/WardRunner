@@ -691,7 +691,7 @@ export default function FieldPage() {
       <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-5 max-w-md mx-auto">
         <div className="pt-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-sm tracking-tight shadow-lg shadow-emerald-500/10">
+            <div className="w-10 h-10 min-w-10 min-h-10 shrink-0 aspect-square rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-sm leading-none tracking-tight shadow-lg shadow-emerald-500/10 select-none">
               COS
             </div>
             <div>
@@ -797,7 +797,7 @@ export default function FieldPage() {
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
         <div className="flex items-center justify-between">
           <div id="tour-field-session" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs tracking-tight">
+            <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 aspect-square rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs leading-none tracking-tight select-none">
               COS
             </div>
             <div>
