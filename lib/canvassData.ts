@@ -8,7 +8,7 @@ export const VOLUNTEER_PINGS_STORAGE_KEY = 'campaignos_volunteer_pings';
 export const VOLUNTEER_PINGS_PING_KEY = 'campaignos_volunteer_pings_tick';
 
 export const SEED_CANVASS_RECORDS: CanvassRecord[] = [
-  // Sarah Jenkins - Precinct 3A (Anderson / 9th St)
+  // Sarah Jenkins - Precinct 3A (Anderson Street Historic Residential Grid)
   {
     id: 'canvass-1',
     campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
@@ -17,9 +17,9 @@ export const SEED_CANVASS_RECORDS: CanvassRecord[] = [
     activity_type: 'door_knock',
     result: 'contact',
     sentiment: 'strong_support',
-    latitude: 36.5866,
-    longitude: -82.1963,
-    street_address: '901 9th St',
+    latitude: 36.5910,
+    longitude: -82.1945,
+    street_address: '916 Anderson St',
     voter_name: 'Linda Campbell',
     wants_yard_sign: true,
     notes: 'Very excited about Melissa. Requested a yard sign for the front lawn.',
@@ -32,9 +32,9 @@ export const SEED_CANVASS_RECORDS: CanvassRecord[] = [
     volunteer_role: 'Door Canvasser',
     activity_type: 'door_knock',
     result: 'no_contact',
-    latitude: 36.5862,
-    longitude: -82.1958,
-    street_address: '915 9th St',
+    latitude: 36.5908,
+    longitude: -82.1965,
+    street_address: '1008 Anderson St',
     created_at: new Date(Date.now() - 3600000 * 1.3).toISOString(),
   },
   {
@@ -44,10 +44,10 @@ export const SEED_CANVASS_RECORDS: CanvassRecord[] = [
     volunteer_role: 'Door Canvasser',
     activity_type: 'flyer_hang',
     result: 'left_flyer',
-    latitude: 36.5858,
-    longitude: -82.1952,
-    street_address: '923 9th St',
-    notes: 'Left full candidate platform door hanger on screen door handle.',
+    latitude: 36.5905,
+    longitude: -82.1985,
+    street_address: '1032 Anderson St',
+    notes: 'Left full candidate municipal platform door hanger on screen door handle.',
     created_at: new Date(Date.now() - 3600000 * 1.1).toISOString(),
   },
   {
@@ -58,9 +58,9 @@ export const SEED_CANVASS_RECORDS: CanvassRecord[] = [
     activity_type: 'door_knock',
     result: 'contact',
     sentiment: 'undecided',
-    latitude: 36.5854,
-    longitude: -82.1947,
-    street_address: '931 9th St',
+    latitude: 36.5902,
+    longitude: -82.2005,
+    street_address: '1118 Anderson St',
     voter_name: 'Robert Vance Jr.',
     wants_yard_sign: false,
     notes: 'Friendly conversation. Focused on local street paving and downtown parking.',
@@ -74,9 +74,9 @@ export const SEED_CANVASS_RECORDS: CanvassRecord[] = [
     activity_type: 'door_knock',
     result: 'contact',
     sentiment: 'strong_support',
-    latitude: 36.5850,
-    longitude: -82.1940,
-    street_address: '942 9th St',
+    latitude: 36.5899,
+    longitude: -82.2025,
+    street_address: '1206 Anderson St',
     voter_name: 'Doris Jenkins',
     wants_yard_sign: true,
     notes: 'Loves our infrastructure plan. Put her on volunteer list for phone banks.',
@@ -143,26 +143,25 @@ export const SEED_VOLUNTEER_PINGS: VolunteerLocationPing[] = [
   {
     volunteer_name: 'Sarah Jenkins',
     role: 'Door Canvasser',
-    latitude: 36.5850,
-    longitude: -82.1940,
+    latitude: 36.5897,
+    longitude: -82.2038,
     accuracy: 6,
     last_ping_at: new Date(Date.now() - 1000 * 45).toISOString(),
     is_active: true,
-    current_action: 'Canvassing 9th St / Precinct 3A',
+    current_action: 'Canvassing Anderson St / Precinct 3A',
     breadcrumbs: [
-      [-82.196396, 36.586331],
-      [-82.196339, 36.586256],
-      [-82.196323, 36.586149],
-      [-82.196296, 36.585973],
-      [-82.196279, 36.585790],
-      [-82.196165, 36.585626],
-      [-82.195726, 36.585367],
-      [-82.195367, 36.585009],
-      [-82.195192, 36.584898],
-      [-82.194751, 36.584619],
-      [-82.194678, 36.584650],
-      [-82.194411, 36.584672],
-      [-82.194003, 36.584670],
+      [-82.1935, 36.5912],
+      [-82.1945, 36.5910],
+      [-82.1955, 36.5909],
+      [-82.1965, 36.5908],
+      [-82.1975, 36.5906],
+      [-82.1985, 36.5905],
+      [-82.1995, 36.5903],
+      [-82.2005, 36.5902],
+      [-82.2015, 36.5900],
+      [-82.2025, 36.5899],
+      [-82.2032, 36.5898],
+      [-82.2038, 36.5897],
     ],
   },
   {
@@ -233,6 +232,14 @@ export function getStoredCanvassRecords(): CanvassRecord[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      // Auto-upgrade legacy 9th St Sarah Jenkins canvass records to Anderson St
+      const sjRec = parsed.find((r: any) => r.id === 'canvass-1');
+      if (sjRec && (sjRec.street_address === '901 9th St' || (sjRec.latitude && sjRec.latitude < 36.588))) {
+        const userKnocks = parsed.filter((r: any) => !['canvass-1', 'canvass-2', 'canvass-3', 'canvass-4', 'canvass-5'].includes(r.id));
+        const updated = [...SEED_CANVASS_RECORDS.slice(0, 5), ...userKnocks];
+        localStorage.setItem(CANVASS_STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      }
       return parsed;
     }
     return SEED_CANVASS_RECORDS;
@@ -323,9 +330,11 @@ export function getStoredVolunteerPings(): VolunteerLocationPing[] {
         return SEED_VOLUNTEER_PINGS;
       }
       const sj = parsed.find((p: any) => p.volunteer_name === 'Sarah Jenkins');
-      if (sj && sj.breadcrumbs && sj.breadcrumbs.length === 5) {
-        localStorage.setItem(VOLUNTEER_PINGS_STORAGE_KEY, JSON.stringify(SEED_VOLUNTEER_PINGS));
-        return SEED_VOLUNTEER_PINGS;
+      if (sj && (sj.latitude < 36.587 || (sj.current_action && sj.current_action.includes('9th St')) || (sj.breadcrumbs && (sj.breadcrumbs.length === 5 || sj.breadcrumbs.length === 13)))) {
+        const otherPings = parsed.filter((p: any) => p.volunteer_name !== 'Sarah Jenkins');
+        const updated = [SEED_VOLUNTEER_PINGS[0], ...otherPings];
+        localStorage.setItem(VOLUNTEER_PINGS_STORAGE_KEY, JSON.stringify(updated));
+        return updated;
       }
       return parsed;
     }

@@ -191,8 +191,9 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.canvass_records (
     id, campaign_id, volunteer_name, volunteer_role, activity_type, result, sentiment, latitude, longitude, street_address, voter_name, wants_yard_sign, notes, created_at
 ) VALUES
-('canvass-1', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'contact', 'strong_support', 36.5866, -82.1963, '901 9th St', 'Linda Campbell', true, 'Very excited about Melissa. Requested a yard sign for the front lawn.', now() - interval '90 minutes'),
-('canvass-2', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'no_contact', NULL, 36.5862, -82.1958, '915 9th St', NULL, false, NULL, now() - interval '80 minutes'),
-('canvass-3', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'flyer_hang', 'left_flyer', NULL, 36.5858, -82.1952, '923 9th St', NULL, false, 'Left full candidate platform door hanger on screen door handle.', now() - interval '70 minutes'),
-('canvass-4', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'contact', 'undecided', 36.5854, -82.1947, '935 9th St', 'Robert Miller', false, 'Concerned about road paving on 9th St. Left candidate cell phone card.', now() - interval '50 minutes')
+('canvass-1', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'contact', 'strong_support', 36.5910, -82.1945, '916 Anderson St', 'Linda Campbell', true, 'Very excited about Melissa. Requested a yard sign for the front lawn.', now() - interval '90 minutes'),
+('canvass-2', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'no_contact', NULL, 36.5908, -82.1965, '1008 Anderson St', NULL, false, NULL, now() - interval '80 minutes'),
+('canvass-3', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'flyer_hang', 'left_flyer', NULL, 36.5905, -82.1985, '1032 Anderson St', NULL, false, 'Left full candidate platform door hanger on screen door handle.', now() - interval '70 minutes'),
+('canvass-4', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'contact', 'undecided', 36.5902, -82.2005, '1118 Anderson St', 'Robert Miller', false, 'Concerned about local street paving. Left candidate cell phone card.', now() - interval '50 minutes'),
+('canvass-5', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'contact', 'strong_support', 36.5899, -82.2025, '1206 Anderson St', 'Doris Jenkins', true, 'Loves our infrastructure plan. Put her on volunteer list for phone banks.', now() - interval '25 minutes')
 ON CONFLICT (id) DO NOTHING;

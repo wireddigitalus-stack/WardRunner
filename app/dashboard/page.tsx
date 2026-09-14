@@ -408,8 +408,8 @@ export default function DashboardPage() {
       setShowFieldForceLayer(true);
       if (mapRef.current) {
         mapRef.current.flyTo({
-          center: [-82.1952, 36.5858],
-          zoom: 16.2,
+          center: [-82.1985, 36.5905],
+          zoom: 16.0,
           pitch: is3D ? 45 : 0,
           duration: 900,
         });
@@ -1949,6 +1949,8 @@ export default function DashboardPage() {
               <div style="
                 position: absolute;
                 bottom: 46px;
+                left: 50%;
+                transform: translateX(-50%);
                 background: rgba(15, 23, 42, 0.95);
                 color: white;
                 padding: 3px 8px;
@@ -2058,7 +2060,7 @@ export default function DashboardPage() {
       const trailFeatures: any[] = [];
 
       if (showFieldForceLayer || showCanvassLayer) {
-        // 1. Trails from volunteer GPS pings (e.g. Sarah Jenkins on 9th St, Marcus Taylor on Virginia Ave)
+        // 1. Trails from volunteer GPS pings (e.g. Sarah Jenkins on Anderson St, Marcus Taylor on Virginia Ave)
         for (const vol of volunteerPings) {
           if (vol.breadcrumbs && vol.breadcrumbs.length >= 2) {
             const streetCoords = await snapWalkingPathToStreets(vol.breadcrumbs);

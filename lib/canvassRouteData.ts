@@ -12,7 +12,7 @@ export const SEED_CANVASS_ROUTES: CanvassRoute[] = [
   {
     id: 'route-3a-1',
     campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-    name: 'Turf 3A: Anderson & 9th St Loop',
+    name: 'Turf 3A: Anderson Street Residential Corridor',
     precinct_code: '3A',
     precinct_name: 'Anderson Neighborhood Grid',
     assigned_volunteer_name: 'Sarah Jenkins',
@@ -21,32 +21,31 @@ export const SEED_CANVASS_ROUTES: CanvassRoute[] = [
     estimated_walk_minutes: 45,
     distance_miles: 1.1,
     start_point: {
-      lat: 36.5866,
-      lng: -82.1963,
-      address: '901 9th St (Anderson Elementary)',
+      lat: 36.5912,
+      lng: -82.1935,
+      address: '9th St & Anderson St',
     },
     waypoints: [
-      { street: '9th Street', lat: 36.5866, lng: -82.1963, house_range: '901 – 945 9th St', target_doors: 15, notes: 'Even side of 9th St towards Anderson St' },
-      { street: 'Anderson Street', lat: 36.5888, lng: -82.1982, house_range: '1000 – 1150 Anderson St', target_doors: 15, notes: 'Residential lots approaching 11th St' },
-      { street: 'Windsor Avenue', lat: 36.5875, lng: -82.1945, house_range: '820 – 890 Windsor Ave', target_doors: 10, notes: 'Loop back south towards 9th St' },
+      { street: 'Anderson Street (900 Block)', lat: 36.5910, lng: -82.1945, house_range: '900 – 998 Anderson St', target_doors: 15, notes: 'Westbound residential corridor towards 11th St' },
+      { street: 'Anderson Street (1000 Block)', lat: 36.5906, lng: -82.1975, house_range: '1000 – 1098 Anderson St', target_doors: 15, notes: 'High-density swing voter single family homes' },
+      { street: 'Anderson Street (1100–1200 Block)', lat: 36.5900, lng: -82.2015, house_range: '1100 – 1250 Anderson St', target_doors: 10, notes: 'Continuing west towards 14th St' },
     ],
     path_coordinates: [
-      [-82.196396, 36.586331],
-      [-82.196339, 36.586256],
-      [-82.196323, 36.586149],
-      [-82.196296, 36.585973],
-      [-82.196279, 36.585790],
-      [-82.196165, 36.585626],
-      [-82.195726, 36.585367],
-      [-82.195367, 36.585009],
-      [-82.195192, 36.584898],
-      [-82.194751, 36.584619],
-      [-82.194678, 36.584650],
-      [-82.194411, 36.584672],
-      [-82.194003, 36.584670],
-      [-82.194200, 36.586000],
-      [-82.195000, 36.587200],
-      [-82.196396, 36.586331],
+      [-82.1935, 36.5912],
+      [-82.1945, 36.5910],
+      [-82.1955, 36.5909],
+      [-82.1965, 36.5908],
+      [-82.1975, 36.5906],
+      [-82.1985, 36.5905],
+      [-82.1995, 36.5903],
+      [-82.2005, 36.5902],
+      [-82.2015, 36.5900],
+      [-82.2025, 36.5899],
+      [-82.2038, 36.5897],
+      [-82.2038, 36.5885],
+      [-82.1985, 36.5890],
+      [-82.1935, 36.5895],
+      [-82.1935, 36.5912],
     ],
     strategic_reasoning: 'Dense residential grid with 41.5% historical turnout. Key swing precinct with high percentage of undecided municipal voters.',
     created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
@@ -143,6 +142,14 @@ export function getStoredCanvassRoutes(): CanvassRoute[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      // Auto-upgrade legacy route-3a-1 on 9th St to Anderson St corridor
+      const r3a = parsed.find((r: any) => r.id === 'route-3a-1');
+      if (r3a && (r3a.start_point?.lat < 36.590 || r3a.start_point?.address?.includes('901 9th St') || r3a.name?.includes('9th St Loop'))) {
+        const others = parsed.filter((r: any) => r.id !== 'route-3a-1');
+        const updated = [SEED_CANVASS_ROUTES[0], ...others];
+        localStorage.setItem(CANVASS_ROUTES_STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      }
       return parsed;
     }
     return SEED_CANVASS_ROUTES;
