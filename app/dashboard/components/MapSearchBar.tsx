@@ -130,10 +130,12 @@ export default function MapSearchBar({
     const timer = setTimeout(async () => {
       setIsLoading(true);
       try {
-        // Search Bristol TN bounding box
+        // Search Bristol TN+VA bounding box (twin city straddles state line)
+        const viewbox = '-82.30,36.50,-82.08,36.66';
+        // Try without state suffix first so both TN and VA results appear
         const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-          q + ', Bristol, TN'
-        )}&format=json&addressdetails=1&limit=3&viewbox=-82.26,36.54,-82.11,36.65`;
+          q + ', Bristol'
+        )}&format=json&addressdetails=1&limit=5&viewbox=${viewbox}&bounded=1`;
 
         const res = await fetch(url, {
           headers: { 'Accept-Language': 'en' },
@@ -141,16 +143,22 @@ export default function MapSearchBar({
         const data = await res.json();
 
         if (Array.isArray(data)) {
-          const results: SearchResult[] = data.map((item: any) => ({
-            id: `geo-${item.place_id}`,
-            type: 'address',
-            title: item.address?.road
-              ? `${item.address.house_number || ''} ${item.address.road}`.trim()
-              : item.display_name.split(',')[0],
-            subtitle: item.display_name.split(',').slice(1, 3).join(',').trim() || 'Bristol, TN',
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lon),
-          }));
+          const results: SearchResult[] = data.map((item: any) => {
+            const state = item.address?.state || '';
+            const stateAbbr = state.includes('Virginia') ? 'VA' : state.includes('Tennessee') ? 'TN' : '';
+            return {
+              id: `geo-${item.place_id}`,
+              type: 'address' as const,
+              title: item.address?.road
+                ? `${item.address.house_number || ''} ${item.address.road}`.trim()
+                : item.display_name.split(',')[0],
+              subtitle: stateAbbr
+                ? `Bristol, ${stateAbbr} · ${item.display_name.split(',').slice(1, 3).join(',').trim()}`
+                : item.display_name.split(',').slice(1, 3).join(',').trim() || 'Bristol Area',
+              lat: parseFloat(item.lat),
+              lng: parseFloat(item.lon),
+            };
+          });
           setGeocodeResults(results);
         }
       } catch (err) {
