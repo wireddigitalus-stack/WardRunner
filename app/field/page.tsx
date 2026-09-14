@@ -66,32 +66,32 @@ const FIELD_TOUR_STEPS: TourStep[] = [
     badge: '3. Mode Switch',
   },
   {
+    targetId: 'tour-field-drop-btn',
+    title: 'Giant 1-Tap Drop Button (Main Action)',
+    description: 'Punch the giant button to lock your GPS coordinates and log the sign drop in 1 second. Pre-set for Melissa K. Brown Yard Sign by default.',
+    accentColor: 'emerald',
+    badge: '4. Main Action',
+  },
+  {
+    targetId: 'tour-field-signtype',
+    title: 'Sign Format Selector',
+    description: 'Quick 1-tap chips to switch format between Yard Sign, Roadside 4x4, Overpass Banner, or Billboard.',
+    accentColor: 'cyan',
+    badge: '5. Sign Format',
+  },
+  {
     targetId: 'tour-field-camera',
-    title: 'AI Photo Sign Scanner',
-    description: 'Point your camera at any sign: AI automatically recognizes candidate, sign dimensions, and whether it belongs to an opponent.',
+    title: 'AI Photo Sign Scanner (Secondary Tool)',
+    description: 'Optional tool: point your camera at any sign for Gemini AI to auto-recognize the candidate, sign size, and competitor status.',
     accentColor: 'purple',
-    badge: '4. AI Camera',
+    badge: '6. AI Camera Tool',
   },
   {
     targetId: 'tour-field-ownership',
     title: 'Whose Sign Is This?',
     description: '1-tap toggle between our campaign (Melissa K. Brown) and competitor intel sightings without typing.',
     accentColor: 'emerald',
-    badge: '5. Ownership',
-  },
-  {
-    targetId: 'tour-field-signtype',
-    title: 'Sign Format Buttons',
-    description: 'McDonald\'s register buttons to pick Yard Sign, Roadside 4x4, Overpass Banner, or High-Impact Billboard.',
-    accentColor: 'cyan',
-    badge: '6. Sign Format',
-  },
-  {
-    targetId: 'tour-field-drop-btn',
-    title: 'Giant 1-Tap Drop Button',
-    description: 'Punch the giant button to lock your GPS coordinates and log the placement to CampaignOS in under 2 seconds.',
-    accentColor: 'emerald',
-    badge: '7. Drop Sign',
+    badge: '7. Ownership',
   },
   {
     targetId: 'tour-field-canvass-link',
@@ -1051,294 +1051,37 @@ export default function FieldPage() {
             </div>
           )}
 
-          {/* Quick-Launch AI Photo Sign Scanner - Giant POS Punch Button */}
-          <div className="relative">
-            <button
-              id="tour-field-camera"
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isAiScanning}
-              className="w-full p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border-2 border-purple-500/60 hover:border-purple-400 text-left flex items-center justify-between shadow-2xl shadow-purple-950/40 active:scale-[0.98] transition-all disabled:opacity-60 group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-indigo-500 to-teal-400 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-purple-500/40 group-hover:scale-105 transition shrink-0">
-                  <Camera className="w-7 h-7 text-slate-950 stroke-[2.5]" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base sm:text-lg font-black text-white uppercase tracking-wide">
-                      📸 AI Photo Sign Scan
-                    </span>
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/50 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 fill-purple-300" />
-                      Auto-Detect
-                    </span>
-                  </div>
-                  <p className="text-xs text-purple-200/90 font-semibold mt-0.5">
-                    Point camera at sign · AI reads candidate, size & drops pin
-                  </p>
-                </div>
+          {/* ================================================================= */}
+          {/* PRIMARY HERO ACTION: 1-TAP DROP SIGN PIN (ZERO TRAINING REQUIRED) */}
+          {/* ================================================================= */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-emerald-500/50 shadow-2xl shadow-emerald-950/40 space-y-3.5">
+            {/* Status Header */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className={`w-2.5 h-2.5 rounded-full ${
+                  justDroppedSuccess
+                    ? 'bg-emerald-400 animate-ping'
+                    : isCompetitor
+                    ? 'bg-rose-500 animate-pulse'
+                    : 'bg-emerald-400 animate-pulse'
+                }`} />
+                <span className="font-extrabold text-white text-xs uppercase tracking-wider">
+                  {isCompetitor ? 'Competitor Spotter Active' : 'Sign Plant Ready'}
+                </span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center shrink-0 ml-2">
-                <ChevronRight className="w-6 h-6 text-purple-300 group-hover:translate-x-0.5 transition" />
-              </div>
-            </button>
-          </div>
-
-          {/* Target Ownership Switch - Giant POS Selector Tiles */}
-          <div id="tour-field-ownership" className="p-4 rounded-3xl bg-slate-900/90 border-2 border-slate-800 shadow-xl">
-            <div className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
-              <span>Step 1: Whose Sign is This?</span>
-              <span className="text-[11px] font-bold text-slate-500">Tap to switch</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {/* BUTTON 1: OUR SIGN */}
-              <button
-                type="button"
-                onClick={() => setIsCompetitor(false)}
-                className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all duration-200 active:scale-[0.98] ${
-                  !isCompetitor
-                    ? 'bg-emerald-500/20 border-emerald-400 ring-4 ring-emerald-500/25 shadow-xl shadow-emerald-500/20 text-white'
-                    : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-2">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                    !isCompetitor ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-slate-800 text-slate-400'
-                  }`}>
-                    <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
-                  </div>
-                  {!isCompetitor && (
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-400 text-slate-950">
-                      SELECTED ✓
-                    </span>
-                  )}
-                </div>
-                <p className="font-black text-base sm:text-lg text-white leading-tight">MELISSA K. BROWN</p>
-                <p className="text-[11px] font-bold text-emerald-400 mt-0.5 uppercase tracking-wider">Our Campaign</p>
-              </button>
-
-              {/* BUTTON 2: COMPETITOR INTEL */}
-              <button
-                type="button"
-                onClick={() => setIsCompetitor(true)}
-                className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all duration-200 active:scale-[0.98] ${
-                  isCompetitor
-                    ? 'bg-rose-500/20 border-rose-400 ring-4 ring-rose-500/25 shadow-xl shadow-rose-500/20 text-white'
-                    : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-2">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                    isCompetitor ? 'bg-rose-500 text-white font-black' : 'bg-slate-800 text-slate-400'
-                  }`}>
-                    <ShieldAlert className="w-5 h-5 stroke-[2.5]" />
-                  </div>
-                  {isCompetitor && (
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-500 text-white">
-                      SELECTED ✓
-                    </span>
-                  )}
-                </div>
-                <p className="font-black text-base sm:text-lg text-white leading-tight">COMPETITOR INTEL</p>
-                <p className="text-[11px] font-bold text-rose-400 mt-0.5 uppercase tracking-wider">Opponent Sign</p>
-              </button>
+              <span className="font-mono text-[11px] text-emerald-300 font-bold bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                {coords ? `GPS ±${coords.accuracy}m locked` : 'Acquiring GPS...'}
+              </span>
             </div>
 
-            {/* Competitor Name Input Drawer */}
-            {isCompetitor && (
-              <div className="mt-4 pt-3.5 border-t border-slate-800 animate-fadeIn">
-                <label className="block text-xs font-black text-rose-400 uppercase tracking-wider mb-1.5">
-                  Competitor Candidate / Slate Name
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="e.g. Bob Reynolds or Common Sense Slate"
-                    value={competitorName}
-                    onChange={(e) => setCompetitorName(e.target.value)}
-                    spellCheck={true}
-                    autoCorrect="on"
-                    autoCapitalize="words"
-                    className="flex-1 h-13 px-4 bg-slate-950 border-2 border-rose-500/50 rounded-2xl text-white text-base font-bold focus:outline-none focus:border-rose-400 transition"
-                    autoFocus
-                  />
-                  <DictateButton
-                    onTranscript={(dictated) => setCompetitorName(dictated)}
-                    size="lg"
-                    title="Push to dictate competitor candidate name"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 4-Way Sign Type Selector - Giant POS Register Tiles */}
-          <div id="tour-field-signtype">
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2.5">
-              Step 2: Sign Format / Size
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {SIGN_TYPES.map((type) => {
-                const isSelected = selectedType === type.id;
-                return (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() => setSelectedType(type.id)}
-                    className={`p-4 sm:p-5 rounded-3xl border-2 text-left flex flex-col justify-between transition-all duration-200 active:scale-[0.97] min-h-[110px] ${
-                      isSelected
-                        ? isCompetitor
-                          ? 'bg-rose-500/20 border-rose-400 ring-4 ring-rose-500/25 shadow-xl text-white'
-                          : 'bg-emerald-500/20 border-emerald-400 ring-4 ring-emerald-500/25 shadow-xl text-white'
-                        : 'bg-slate-900/90 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full mb-2">
-                      <span className="text-3xl sm:text-4xl">{type.icon}</span>
-                      {isSelected ? (
-                        <span
-                          className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                            isCompetitor ? 'bg-rose-500 text-white' : 'bg-emerald-400 text-slate-950'
-                          }`}
-                        >
-                          ACTIVE ✓
-                        </span>
-                      ) : (
-                        <span className="w-3 h-3 rounded-full border border-slate-700 bg-slate-800" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-black text-base sm:text-lg text-white leading-tight uppercase tracking-tight">
-                        {type.label}
-                      </p>
-                      <p className="text-[11px] font-semibold text-slate-400 mt-0.5">{type.size}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Native Camera Quick Capture with Compression */}
-          <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold uppercase text-slate-400 flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5" />
-                Sign Photo Verification (Optional)
-              </label>
-              {photoPreview && (
-                <button
-                  type="button"
-                  onClick={clearPhoto}
-                  className="text-xs text-rose-400 hover:underline"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handlePhotoCapture}
-              className="hidden"
-              id="field-camera-upload"
-            />
-
-            {/* AI Vision Scanning Indicator */}
-            {isAiScanning && (
-              <div className="mt-2.5 p-3.5 rounded-xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-indigo-950/60 border border-indigo-500/40 text-center animate-pulse flex flex-col items-center justify-center gap-1.5">
-                <div className="flex items-center gap-2 text-indigo-300 font-extrabold text-xs">
-                  <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
-                  <span>Gemini Multimodal AI Scanning Sign...</span>
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  Auto-detecting candidate name, sign dimensions & competitor status
-                </p>
-              </div>
-            )}
-
-            {/* AI Scan Result Intelligence Card */}
-            {aiScanResult && !isAiScanning && (
-              <div
-                className={`mt-2.5 p-3 rounded-xl border animate-fade-in ${
-                  aiScanResult.is_competitor
-                    ? 'bg-rose-950/30 border-rose-500/40 text-rose-200'
-                    : 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
-                    AI Auto-Detected ({Math.round(aiScanResult.confidence * 100)}% Match)
-                  </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded font-black bg-white/10 text-white">
-                    {aiScanResult.sign_type.replace('_', ' ').toUpperCase()}
-                  </span>
-                </div>
-                <p className="font-extrabold text-sm text-white flex items-center gap-1.5">
-                  <span>{aiScanResult.is_competitor ? '⚔️ Competitor Spotted:' : '✅ Supporter Sign:'}</span>
-                  <span className="underline decoration-indigo-400 decoration-2 underline-offset-2">
-                    {aiScanResult.candidate_name || (aiScanResult.is_competitor ? 'Opponent' : 'Melissa K. Brown')}
-                  </span>
-                </p>
-                {aiScanResult.summary && (
-                  <p className="text-[11px] text-slate-300/80 mt-1 italic">
-                    "{aiScanResult.summary}"
-                  </p>
-                )}
-                <div className="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">Form auto-configured</span>
-                  <span className="font-black text-emerald-400">Tap Button Below to Drop 📍</span>
-                </div>
-              </div>
-            )}
-
-            {/* AI Scan Fallback / Error Notice */}
-            {aiScanError && !isAiScanning && (
-              <div className="mt-2 p-2 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{aiScanError}</span>
-              </div>
-            )}
-
-            {photoPreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-slate-700 h-36 w-full bg-slate-950 flex items-center justify-center mt-2.5">
-                <img
-                  src={photoPreview}
-                  alt="Captured sign"
-                  className="w-full h-full object-cover"
-                />
-                <label
-                  htmlFor="field-camera-upload"
-                  className="absolute bottom-2 right-2 px-3 py-1 bg-slate-950/85 backdrop-blur rounded-lg text-xs text-white border border-slate-700 cursor-pointer font-medium flex items-center gap-1.5 shadow-lg active:scale-95 transition"
-                >
-                  <Camera className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Retake Photo</span>
-                </label>
-              </div>
-            ) : (
-              <label
-                htmlFor="field-camera-upload"
-                className="w-full py-4 px-4 rounded-xl border border-dashed border-slate-700 hover:border-emerald-500/50 bg-slate-950/50 flex items-center justify-center gap-3 cursor-pointer text-slate-400 hover:text-white transition active:scale-[0.99]"
-              >
-                <Camera className="w-5 h-5 text-emerald-400" />
-                <span className="text-sm font-semibold">Snap Quick Field Photo</span>
-              </label>
-            )}
-          </div>
-
-          {/* Ergonomic Giant McDonald's Cash Register Action Button */}
-          <div className="pt-3">
+            {/* Giant 1-Tap Hero Action Button */}
             <button
               id="tour-field-drop-btn"
               type="button"
               disabled={isSubmitting || gpsStatus === 'locating' || isAiScanning}
               onClick={handleDropSign}
-              className={`w-full py-6 sm:py-7 rounded-3xl font-black text-xl sm:text-2xl tracking-wider shadow-2xl flex items-center justify-center gap-3.5 active:scale-[0.96] transition-all duration-200 relative overflow-hidden border-2 ${
+              className={`w-full py-6 sm:py-7 rounded-2xl font-black text-xl sm:text-2xl tracking-wider shadow-2xl flex flex-col items-center justify-center gap-1.5 active:scale-[0.97] transition-all duration-200 relative overflow-hidden border-2 ${
                 justDroppedSuccess
                   ? 'bg-gradient-to-r from-emerald-400 via-green-400 to-teal-300 border-white text-slate-950 shadow-emerald-400/80 ring-4 ring-emerald-300/80 animate-drop-pop animate-success-glow scale-[1.02]'
                   : isCompetitor
@@ -1351,15 +1094,15 @@ export default function FieldPage() {
               )}
 
               {isSubmitting ? (
-                <>
+                <div className="flex items-center gap-3">
                   <RefreshCw className="w-6 h-6 animate-spin" />
                   <span>UPLOADING SIGN...</span>
-                </>
+                </div>
               ) : isAiScanning ? (
-                <>
+                <div className="flex items-center gap-3">
                   <RefreshCw className="w-6 h-6 animate-spin" />
                   <span>AI SCANNING SIGN...</span>
-                </>
+                </div>
               ) : justDroppedSuccess ? (
                 <div className="flex flex-col items-center justify-center py-0.5 animate-fade-in">
                   <div className="flex items-center gap-2 text-2xl font-black tracking-wider text-slate-950">
@@ -1375,37 +1118,335 @@ export default function FieldPage() {
                 </div>
               ) : (
                 <>
-                  {aiScanResult ? (
-                    <Sparkles className="w-6 h-6 fill-current text-amber-300" />
-                  ) : (
-                    <MapPin className="w-6 h-6" />
-                  )}
-                  <span>
-                    {aiScanResult
-                      ? isCompetitor
-                        ? 'CONFIRM & LOG COMPETITOR'
-                        : 'CONFIRM & DROP SIGN'
-                      : isCompetitor
-                      ? 'LOG COMPETITOR SIGN'
-                      : 'DROP OUR SIGN HERE'}
+                  <div className="flex items-center gap-2.5">
+                    {aiScanResult ? (
+                      <Sparkles className="w-7 h-7 fill-current text-amber-300" />
+                    ) : (
+                      <MapPin className="w-7 h-7 stroke-[2.5]" />
+                    )}
+                    <span>
+                      {aiScanResult
+                        ? isCompetitor
+                          ? 'CONFIRM & LOG COMPETITOR'
+                          : 'CONFIRM & DROP SIGN'
+                        : isCompetitor
+                        ? 'LOG COMPETITOR SIGN'
+                        : 'DROP SIGN PIN HERE'}
+                    </span>
+                  </div>
+                  <span className={`text-xs font-extrabold uppercase tracking-wider ${
+                    isCompetitor ? 'text-rose-100' : 'text-slate-950/80'
+                  }`}>
+                    {isCompetitor
+                      ? competitorName ? `${competitorName} · ${SIGN_TYPES.find(t => t.id === selectedType)?.label}` : 'Opponent Sign · Tap to Log'
+                      : `Melissa K. Brown · ${SIGN_TYPES.find(t => t.id === selectedType)?.label || 'Yard Sign'}`}
                   </span>
                 </>
               )}
             </button>
 
             {/* Sub-label feedback under button */}
-            <div className="flex items-center justify-center gap-1.5 mt-2 text-center min-h-[18px]">
+            <div className="flex items-center justify-center gap-1.5 text-center min-h-[18px]">
               {justDroppedSuccess ? (
                 <span className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1.5 animate-fade-in">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                   Successfully pinned to campaign map! Ready for next stop.
                 </span>
               ) : (
-                <p className="text-[11px] text-slate-500">
-                  Auto-timestamps and logs GPS coordinates in sub-10 seconds.
+                <p className="text-[11px] text-slate-400">
+                  Tap once to drop pin at current GPS coordinates. No typing required.
                 </p>
               )}
             </div>
+
+            {/* Quick 1-Tap Sign Format Selector */}
+            <div id="tour-field-signtype" className="pt-2 border-t border-slate-800/80">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                  Sign Size / Format:
+                </span>
+                <span className="text-[10px] font-bold text-emerald-400">
+                  {SIGN_TYPES.find(t => t.id === selectedType)?.size}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {SIGN_TYPES.map((type) => {
+                  const isSelected = selectedType === type.id;
+                  return (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => setSelectedType(type.id)}
+                      className={`py-2.5 px-1.5 rounded-2xl border-2 text-center flex flex-col items-center justify-center transition-all duration-150 active:scale-95 ${
+                        isSelected
+                          ? isCompetitor
+                            ? 'bg-rose-500/25 border-rose-400 text-white shadow-lg shadow-rose-500/20 ring-2 ring-rose-500/30'
+                            : 'bg-emerald-500/25 border-emerald-400 text-white shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30'
+                          : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="text-2xl sm:text-3xl mb-0.5">{type.icon}</span>
+                      <span className="text-[11px] font-black leading-tight truncate max-w-full">
+                        {type.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* ================================================================= */}
+          {/* SECONDARY TOOLS: AI CAMERA SCANNER & OPPONENT INTEL               */}
+          {/* ================================================================= */}
+          <div className="p-4 rounded-3xl bg-slate-900/70 border border-slate-800/90 shadow-xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-300 block">
+                    Optional Field Tools
+                  </span>
+                  <span className="text-[10px] text-slate-500">
+                    Photo verification, AI sign scan & competitor spotting
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                Secondary
+              </span>
+            </div>
+
+            {/* TOOL 1: AI Photo Sign Scanner (Gemini Multimodal Vision) */}
+            <div>
+              <button
+                id="tour-field-camera"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAiScanning}
+                className="w-full p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 via-slate-900 to-indigo-950/60 border border-purple-500/40 hover:border-purple-400 text-left flex items-center justify-between shadow-lg active:scale-[0.98] transition-all disabled:opacity-60 group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-black shadow-md shadow-purple-500/30 group-hover:scale-105 transition shrink-0">
+                    <Camera className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-sm font-black text-white uppercase tracking-wide">
+                        📸 AI Photo Sign Scanner
+                      </span>
+                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 flex items-center gap-1">
+                        <Sparkles className="w-2.5 h-2.5 fill-purple-300" />
+                        Gemini Vision
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                      Point camera to auto-read candidate & sign dimensions
+                    </p>
+                  </div>
+                </div>
+                <div className="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-400/20 flex items-center justify-center shrink-0 ml-2">
+                  <ChevronRight className="w-4 h-4 text-purple-300 group-hover:translate-x-0.5 transition" />
+                </div>
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handlePhotoCapture}
+                className="hidden"
+                id="field-camera-upload"
+              />
+
+              {/* AI Vision Scanning Indicator */}
+              {isAiScanning && (
+                <div className="mt-2.5 p-3 rounded-xl bg-indigo-950/50 border border-indigo-500/40 text-center animate-pulse flex flex-col items-center justify-center gap-1.5">
+                  <div className="flex items-center gap-2 text-indigo-300 font-extrabold text-xs">
+                    <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
+                    <span>Gemini Multimodal AI Scanning Sign...</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400">
+                    Auto-detecting candidate name, sign dimensions & competitor status
+                  </p>
+                </div>
+              )}
+
+              {/* AI Scan Result Intelligence Card */}
+              {aiScanResult && !isAiScanning && (
+                <div
+                  className={`mt-2.5 p-3 rounded-xl border animate-fade-in ${
+                    aiScanResult.is_competitor
+                      ? 'bg-rose-950/30 border-rose-500/40 text-rose-200'
+                      : 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
+                      AI Auto-Detected ({Math.round(aiScanResult.confidence * 100)}% Match)
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded font-black bg-white/10 text-white">
+                      {aiScanResult.sign_type.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                    <span>{aiScanResult.is_competitor ? '⚔️ Competitor Spotted:' : '✅ Supporter Sign:'}</span>
+                    <span className="underline decoration-indigo-400 decoration-2 underline-offset-2">
+                      {aiScanResult.candidate_name || (aiScanResult.is_competitor ? 'Opponent' : 'Melissa K. Brown')}
+                    </span>
+                  </p>
+                  {aiScanResult.summary && (
+                    <p className="text-[11px] text-slate-300/80 mt-1 italic">
+                      "{aiScanResult.summary}"
+                    </p>
+                  )}
+                  <div className="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400">Form auto-configured</span>
+                    <span className="font-black text-emerald-400">Ready to Drop 📍</span>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Scan Fallback / Error Notice */}
+              {aiScanError && !isAiScanning && (
+                <div className="mt-2 p-2 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{aiScanError}</span>
+                </div>
+              )}
+
+              {/* Photo Preview Container */}
+              {photoPreview && (
+                <div className="relative rounded-xl overflow-hidden border border-slate-700 h-32 w-full bg-slate-950 flex items-center justify-center mt-2.5">
+                  <img
+                    src={photoPreview}
+                    alt="Captured sign"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={clearPhoto}
+                      className="px-2 py-1 bg-slate-950/80 backdrop-blur rounded-lg text-xs text-rose-400 border border-rose-500/30 font-bold hover:bg-rose-950"
+                    >
+                      Remove
+                    </button>
+                    <label
+                      htmlFor="field-camera-upload"
+                      className="px-2.5 py-1 bg-slate-950/80 backdrop-blur rounded-lg text-xs text-white border border-slate-700 cursor-pointer font-bold flex items-center gap-1 shadow-lg"
+                    >
+                      <Camera className="w-3 h-3 text-emerald-400" />
+                      <span>Retake</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* TOOL 2: Target Ownership Switch (Whose Sign Is This?) */}
+            <div id="tour-field-ownership" className="pt-3 border-t border-slate-800/80">
+              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+                <span>Sign Ownership / Territory:</span>
+                <span className="text-[10px] text-slate-500">Tap to report opponent</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* BUTTON 1: OUR SIGN */}
+                <button
+                  type="button"
+                  onClick={() => setIsCompetitor(false)}
+                  className={`p-3 rounded-2xl border-2 text-left flex items-center gap-2.5 transition-all duration-150 active:scale-95 ${
+                    !isCompetitor
+                      ? 'bg-emerald-500/20 border-emerald-400 text-white shadow-md'
+                      : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                    !isCompetitor ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-black text-xs text-white truncate">OUR CAMPAIGN</p>
+                    <p className="text-[10px] font-bold text-emerald-400 truncate">Melissa K. Brown</p>
+                  </div>
+                </button>
+
+                {/* BUTTON 2: COMPETITOR INTEL */}
+                <button
+                  type="button"
+                  onClick={() => setIsCompetitor(true)}
+                  className={`p-3 rounded-2xl border-2 text-left flex items-center gap-2.5 transition-all duration-150 active:scale-95 ${
+                    isCompetitor
+                      ? 'bg-rose-500/20 border-rose-400 text-white shadow-md'
+                      : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                    isCompetitor ? 'bg-rose-500 text-white font-black' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    <ShieldAlert className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-black text-xs text-white truncate">COMPETITOR INTEL</p>
+                    <p className="text-[10px] font-bold text-rose-400 truncate">Opponent Sign</p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Competitor Name Input Drawer */}
+              {isCompetitor && (
+                <div className="mt-3 pt-2.5 border-t border-slate-800 animate-fadeIn">
+                  <label className="block text-[11px] font-black text-rose-400 uppercase tracking-wider mb-1.5">
+                    Competitor Candidate / Slate Name
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g. Bob Reynolds or Common Sense Slate"
+                      value={competitorName}
+                      onChange={(e) => setCompetitorName(e.target.value)}
+                      spellCheck={true}
+                      autoCorrect="on"
+                      autoCapitalize="words"
+                      className="flex-1 h-11 px-3 bg-slate-950 border-2 border-rose-500/50 rounded-xl text-white text-sm font-bold focus:outline-none focus:border-rose-400 transition"
+                      autoFocus
+                    />
+                    <DictateButton
+                      onTranscript={(dictated) => setCompetitorName(dictated)}
+                      size="md"
+                      title="Push to dictate competitor candidate name"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Confirm Button if Secondary Tool was used */}
+            {(photoPreview || aiScanResult || isCompetitor) && (
+              <div className="pt-2 border-t border-slate-800/80">
+                <button
+                  type="button"
+                  disabled={isSubmitting || gpsStatus === 'locating'}
+                  onClick={handleDropSign}
+                  className={`w-full py-4 rounded-2xl font-black text-base tracking-wider shadow-xl flex items-center justify-center gap-2.5 active:scale-[0.98] transition ${
+                    isCompetitor
+                      ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30'
+                      : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/30'
+                  }`}
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>
+                    {isCompetitor
+                      ? `CONFIRM & LOG ${competitorName ? competitorName.toUpperCase() : 'COMPETITOR'}`
+                      : 'CONFIRM & DROP SIGN'}
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
