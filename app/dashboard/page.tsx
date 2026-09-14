@@ -900,14 +900,84 @@ export default function DashboardPage() {
           }
         } catch {}
 
-        /* --- AADT corridor glow lines (Real Road Geometry) --- */
+        /* --- AADT corridor glow lines (Real Road Geometry — Gradient Fade) --- */
+        // Each feature needs its own source for line-gradient to work
+        const corridorFeatures = (realCorridors as any).features || [];
+        corridorFeatures.forEach((feature: any, idx: number) => {
+          const srcId = `corridor-src-${idx}`;
+          const color = feature.properties?.color || '#f59e0b';
+          
+          map.addSource(srcId, {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [feature] },
+            lineMetrics: true,
+          });
+
+          // Outer glow — wide, blurred, fades at both ends
+          map.addLayer({
+            id: `corridor-glow-${idx}`,
+            type: 'line',
+            source: srcId,
+            layout: { 'line-cap': 'butt', 'line-join': 'round' },
+            paint: {
+              'line-width': 14,
+              'line-blur': 8,
+              'line-opacity': isDark ? 0.25 : 0.15,
+              'line-gradient': [
+                'interpolate', ['linear'], ['line-progress'],
+                0, 'transparent',
+                0.08, color,
+                0.92, color,
+                1, 'transparent',
+              ],
+            },
+          });
+
+          // Core line — solid color, fades at ends
+          map.addLayer({
+            id: `corridor-core-${idx}`,
+            type: 'line',
+            source: srcId,
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: {
+              'line-width': 3.5,
+              'line-opacity': 1,
+              'line-gradient': [
+                'interpolate', ['linear'], ['line-progress'],
+                0, 'transparent',
+                0.06, color,
+                0.94, color,
+                1, 'transparent',
+              ],
+            },
+          });
+
+          // Inner highlight — white center glow, fades at ends
+          map.addLayer({
+            id: `corridor-inner-${idx}`,
+            type: 'line',
+            source: srcId,
+            layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: {
+              'line-width': 1.2,
+              'line-opacity': 0.5,
+              'line-gradient': [
+                'interpolate', ['linear'], ['line-progress'],
+                0, 'transparent',
+                0.1, 'rgba(255,255,255,0.6)',
+                0.9, 'rgba(255,255,255,0.6)',
+                1, 'transparent',
+              ],
+            },
+          });
+        });
+
+        // Alias the first corridor-core for hover/visibility (backwards compat)
         map.addSource('corridors', {
           type: 'geojson',
           data: realCorridors as any,
         });
-        map.addLayer({ id: 'corridor-glow', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 12, 'line-opacity': isDark ? 0.22 : 0.14, 'line-blur': 6 } });
-        map.addLayer({ id: 'corridor-core', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 4, 'line-opacity': 0.95 } });
-        map.addLayer({ id: 'corridor-inner', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 1.5, 'line-opacity': 0.55 } });
+        map.addLayer({ id: 'corridor-core', type: 'line', source: 'corridors', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': 'transparent', 'line-width': 12, 'line-opacity': 0 } });
 
         // Hover tooltip on corridor lines
         try {
@@ -1287,7 +1357,11 @@ export default function DashboardPage() {
     if (bristolWatermarkRef.current) {
       bristolWatermarkRef.current.getElement().style.display = showBoundary ? 'block' : 'none';
     }
-    ['corridor-glow', 'corridor-core', 'corridor-inner'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
+    ['corridor-core'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
+    // Toggle per-feature gradient corridor layers
+    for (let i = 0; i < 10; i++) {
+      [`corridor-glow-${i}`, `corridor-core-${i}`, `corridor-inner-${i}`].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', cVis));
+    }
     ['campaign-signs-heatmap'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', hVis));
     ['precincts-fill', 'precincts-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', pVis));
     ['volunteer-trails-glow', 'volunteer-trails-line'].forEach(id => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', vVis));
