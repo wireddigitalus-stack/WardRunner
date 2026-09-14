@@ -98,7 +98,7 @@ export default function PrecinctLeaderboard({
                         {p.name.replace('Precinct ', '')}
                       </span>
                       <span
-                        className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded border ${
+                        className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
                           p.priority === 'Stronghold'
                             ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                             : p.priority === 'High Impact'

@@ -83,11 +83,11 @@ export default function PrecinctDetailCard({
 
             <div className="flex-1 min-w-0 pr-6">
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-slate-300">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-slate-200">
                 Sullivan County VTD
               </span>
               <span
-                className="text-[9px] font-extrabold px-2 py-0.5 rounded-md"
+                className="text-[10px] font-extrabold px-2 py-0.5 rounded-md"
                 style={{
                   backgroundColor: `${precinct.color}20`,
                   color: precinct.color,
@@ -100,7 +100,7 @@ export default function PrecinctDetailCard({
             <h3 className="font-extrabold text-base text-white mt-1 truncate">
               {precinct.name}
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5 truncate">
+            <p className="text-xs text-slate-300 mt-0.5 truncate">
               {precinct.corridorFocus}
             </p>
           </div>
@@ -110,35 +110,35 @@ export default function PrecinctDetailCard({
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/10">
           <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
               Voter Roll
             </span>
             <span className="text-sm font-black text-white block mt-0.5">
               {precinct.registeredVoters.toLocaleString()}
             </span>
-            <span className="text-[9px] text-slate-500 block">Registered</span>
+            <span className="text-[10px] text-slate-400 block">Registered</span>
           </div>
 
           <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
               Muni Turnout
             </span>
             <span className="text-sm font-black text-emerald-400 block mt-0.5">
               {precinct.historicTurnoutPct}%
             </span>
-            <span className="text-[9px] text-slate-500 block">
+            <span className="text-[10px] text-slate-400 block">
               ~{precinct.historicalVotesCast.toLocaleString()} votes
             </span>
           </div>
 
           <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
               Early Vote
             </span>
             <span className="text-sm font-black text-sky-400 block mt-0.5">
               {precinct.earlyVotingRatio}%
             </span>
-            <span className="text-[9px] text-slate-500 block">Absentee/Early</span>
+            <span className="text-[10px] text-slate-400 block">Absentee/Early</span>
           </div>
         </div>
 
@@ -149,9 +149,9 @@ export default function PrecinctDetailCard({
               <Vote className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <span className="text-[9px] uppercase font-bold text-emerald-400 block">Official Polling Location</span>
+              <span className="text-[10px] uppercase font-bold text-emerald-400 block">Official Polling Location</span>
               <p className="text-xs font-bold text-white truncate">{precinct.pollingPlace}</p>
-              <p className="text-[10px] text-slate-400 truncate">{precinct.pollingAddress}</p>
+              <p className="text-[11px] text-slate-300 truncate">{precinct.pollingAddress}</p>
             </div>
           </div>
           <a

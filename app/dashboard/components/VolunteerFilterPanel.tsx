@@ -437,7 +437,7 @@ export default function VolunteerFilterPanel({
                                 {v.volunteer_name}
                               </h4>
                               {isSelected && (
-                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 shrink-0">
+                                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 shrink-0">
                                   ISOLATED
                                 </span>
                               )}

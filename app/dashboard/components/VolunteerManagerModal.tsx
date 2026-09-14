@@ -600,7 +600,7 @@ export default function VolunteerManagerModal({
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-sm text-white">{vol.name}</span>
-                              <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
+                              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
                                 {vol.role}
                               </span>
                             </div>
@@ -831,7 +831,7 @@ export default function VolunteerManagerModal({
                             }`}
                           >
                             <span className="text-sm block">{t.emoji}</span>
-                            <span className="text-[9px] block mt-0.5 leading-none">{t.label}</span>
+                            <span className="text-[10px] font-bold block mt-0.5 leading-none">{t.label}</span>
                           </button>
                         ))}
                       </div>

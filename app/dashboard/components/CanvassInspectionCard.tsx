@@ -72,7 +72,7 @@ export default function CanvassInspectionCard({
 
           <div className="mt-3.5 space-y-2 text-xs">
             <div className="p-2.5 rounded-2xl bg-white/[0.04] border border-white/10">
-              <span className="text-[9px] uppercase font-bold text-teal-400 tracking-wider block">📍 Address</span>
+              <span className="text-[10px] uppercase font-bold text-teal-400 tracking-wider block">📍 Address</span>
               <p className="font-extrabold text-sm text-white mt-0.5 truncate">{record.street_address || 'Bristol, TN'}</p>
               <p className="text-[10px] text-slate-400 font-mono mt-0.5">
                 {Number(record.latitude).toFixed(4)}, {Number(record.longitude).toFixed(4)}
@@ -101,7 +101,7 @@ export default function CanvassInspectionCard({
 
             {record.notes && (
               <div className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10">
-                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Field Notes</span>
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Field Notes</span>
                 <p className="text-xs text-slate-200 mt-1 italic">&ldquo;{record.notes}&rdquo;</p>
               </div>
             )}

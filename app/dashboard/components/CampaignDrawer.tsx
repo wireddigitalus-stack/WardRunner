@@ -140,7 +140,7 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
             <Target className="w-3.5 h-3.5 text-purple-400" />
             <span>Missions</span>
             {activeMissionsCount > 0 && (
-              <span className="text-[9px] px-1 py-0.5 rounded-full bg-purple-500/40 text-purple-100 font-mono font-bold">{activeMissionsCount}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/40 text-purple-100 font-mono font-bold">{activeMissionsCount}</span>
             )}
           </button>
           <button onClick={() => onSetTab('inventory')}
@@ -230,7 +230,7 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
                           ) : (
                             <div className="text-right">
                               <span className="text-xs font-extrabold font-mono" style={{ color: item.color }}>{placed} / {total}</span>
-                              <span className="text-[9px] opacity-40 ml-1.5">({reserve} left)</span>
+                              <span className="text-[11px] opacity-60 ml-1.5 font-semibold">({reserve} left)</span>
                             </div>
                           )}
                         </div>
@@ -246,8 +246,8 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
               {/* AADT Corridors */}
               <div>
                 <div className="flex items-center justify-between mb-2.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-amber-400">AADT Corridors</label>
-                  <span className="text-[9px] opacity-30 font-mono">vehicles/day</span>
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-amber-400">AADT Corridors</label>
+                  <span className="text-[10px] opacity-50 font-mono font-bold">vehicles/day</span>
                 </div>
                 <div className="space-y-2 stagger-children">
                   {aadtCorridors.map(c => (
@@ -285,9 +285,9 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
 
               {/* Marker Mode */}
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-2 flex items-center justify-between">
+                <label className="text-[11px] font-bold uppercase tracking-widest opacity-60 mb-2 flex items-center justify-between">
                   <span>Map Marker Mode</span>
-                  <span className="text-[9px] font-medium text-cyan-400/90">{useDotMode ? '● Street Dots Active' : '📍 Pins Active'}</span>
+                  <span className="text-[11px] font-bold text-cyan-400/90">{useDotMode ? '● Street Dots Active' : '📍 Pins Active'}</span>
                 </label>
                 <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl ${isDark ? 'bg-white/5' : 'bg-black/[0.03]'}`}>
                   <button onClick={() => onSetUseDotMode(false)} className={`py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${!useDotMode ? isDark ? 'bg-zinc-800 text-white shadow' : 'bg-white text-slate-900 shadow' : 'opacity-50 hover:opacity-80'}`}>
@@ -365,7 +365,7 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
                               <p className="text-[10px] opacity-40 truncate">{sign.street_address ? `${sign.street_address} · ` : ''}{sign.is_competitor ? 'Reported' : 'Placed'} {relativeTime(sign.created_at)}</p>
                             </div>
                           </div>
-                          <span className={`shrink-0 text-[9px] font-extrabold px-2 py-0.5 rounded-md ${sign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+                          <span className={`shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-md ${sign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
                             {meta.label}
                           </span>
                         </div>

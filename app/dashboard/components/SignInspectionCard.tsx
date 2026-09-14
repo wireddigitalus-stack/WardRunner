@@ -55,7 +55,7 @@ export default function SignInspectionCard({
                 {SIGN_TYPE_META[sign.sign_type]?.emoji || '📍'}
               </div>
               <div className="flex-1 min-w-0">
-                <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${sign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+                <span className={`inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${sign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
                   {sign.is_competitor ? 'Opponent Sighting' : 'Official Campaign'}
                 </span>
                 <h3 className="font-extrabold text-base mt-1 truncate">
@@ -70,7 +70,7 @@ export default function SignInspectionCard({
 
           <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
             <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10">
-              <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider block">📍 Street Address</span>
+              <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">📍 Street Address</span>
               {loadingAddress ? (
                 <span className={`inline-block h-4 w-44 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
               ) : (
@@ -80,11 +80,11 @@ export default function SignInspectionCard({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <span className="text-[9px] uppercase font-bold opacity-30 block">{sign.is_competitor ? 'Reported By' : 'Placed By'}</span>
+                <span className="text-[10px] uppercase font-bold opacity-40 block">{sign.is_competitor ? 'Reported By' : 'Placed By'}</span>
                 <span className="font-semibold mt-0.5 block">{sign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'}</span>
               </div>
               <div>
-                <span className="text-[9px] uppercase font-bold opacity-30 block">GPS</span>
+                <span className="text-[10px] uppercase font-bold opacity-40 block">GPS</span>
                 <span className="font-mono opacity-60 mt-0.5 block">{Number(sign.latitude).toFixed(4)}, {Number(sign.longitude).toFixed(4)}</span>
               </div>
             </div>

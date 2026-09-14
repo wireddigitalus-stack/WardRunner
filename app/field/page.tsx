@@ -982,7 +982,7 @@ export default function FieldPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
                               m.priority === 'critical'
                                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                                 : m.priority === 'high'
@@ -1237,7 +1237,7 @@ export default function FieldPage() {
                       <span className="text-sm font-black text-white uppercase tracking-wide">
                         📸 AI Photo Sign Scanner
                       </span>
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 flex items-center gap-1">
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 flex items-center gap-1">
                         <Sparkles className="w-2.5 h-2.5 fill-purple-300" />
                         Gemini Vision
                       </span>

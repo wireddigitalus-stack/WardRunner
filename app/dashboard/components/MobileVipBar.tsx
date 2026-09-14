@@ -200,15 +200,15 @@ export default function MobileVipBar({
           <div id="tour-mobile-stats-hud" className="pointer-events-auto flex items-center gap-1 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-2 py-1 shadow-xl overflow-x-auto max-w-[210px] no-scrollbar">
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/20 text-[10px] font-bold text-emerald-300 shrink-0">
               <span>🟢 {stats.ours}</span>
-              <span className="text-[9px] font-medium text-emerald-400/70">Ours</span>
+              <span className="text-[10px] font-semibold text-emerald-400/80">Ours</span>
             </div>
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-rose-500/15 border border-rose-500/20 text-[10px] font-bold text-rose-300 shrink-0">
               <span>🔴 {stats.theirs}</span>
-              <span className="text-[9px] font-medium text-rose-400/70">Opp</span>
+              <span className="text-[10px] font-semibold text-rose-400/80">Opp</span>
             </div>
             <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-teal-500/15 border border-teal-500/20 text-[10px] font-bold text-teal-300 shrink-0">
               <span>🚪 {canvassRecords.length}</span>
-              <span className="text-[9px] font-medium text-teal-400/70">Doors</span>
+              <span className="text-[10px] font-semibold text-teal-400/80">Doors</span>
             </div>
           </div>
 
@@ -291,7 +291,7 @@ export default function MobileVipBar({
             )}
             {/* Active Layers Indicator Badge when closed */}
             {!isPaletteOpen && activeLayersCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-md">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 text-slate-950 font-black text-[10px] flex items-center justify-center shadow-md">
                 {activeLayersCount}
               </span>
             )}
@@ -604,7 +604,7 @@ export default function MobileVipBar({
 
                         <div className="text-right">
                           <span className="text-xs font-black text-emerald-400">{p.historicTurnoutPct}%</span>
-                          <p className="text-[9px] text-slate-400">Turnout</p>
+                          <p className="text-[10px] text-slate-400 font-medium">Turnout</p>
                         </div>
                       </div>
                     );

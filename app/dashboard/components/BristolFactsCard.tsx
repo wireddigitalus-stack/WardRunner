@@ -82,10 +82,10 @@ export default function BristolFactsCard({
 
           <div className="flex-1 min-w-0 pr-6">
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30">
                 Sullivan County, TN
               </span>
-              <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300">
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300">
                 Municipal Ward
               </span>
             </div>
@@ -99,106 +99,88 @@ export default function BristolFactsCard({
           </div>
         </div>
 
-        {/* Tabs Bar */}
-        <div className="flex rounded-xl bg-slate-900/80 p-1 mt-4 border border-white/10">
-          <button
-            onClick={() => setActiveTab('civic')}
-            className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition ${
-              activeTab === 'civic'
-                ? 'bg-sky-500 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            🏛️ Civic
-          </button>
-          <button
-            onClick={() => setActiveTab('elections')}
-            className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition ${
-              activeTab === 'elections'
-                ? 'bg-sky-500 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            🗳️ Elections
-          </button>
-          <button
-            onClick={() => setActiveTab('field')}
-            className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition ${
-              activeTab === 'field'
-                ? 'bg-sky-500 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            📊 Field
-          </button>
-          <button
-            onClick={() => setActiveTab('ordinances')}
-            className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition ${
-              activeTab === 'ordinances'
-                ? 'bg-sky-500 text-slate-950 shadow-md'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            📜 Rules
-          </button>
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-1 mt-4 p-1 rounded-2xl bg-white/[0.03] border border-white/10">
+          {(['civic', 'elections', 'field', 'ordinances'] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            const labels = {
+              civic: 'Overview',
+              elections: 'Elections',
+              field: 'Ground Ops',
+              ordinances: 'Sign Laws',
+            };
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-black transition-all ${
+                  isActive
+                    ? 'bg-sky-500/25 text-white shadow-md border border-sky-500/40'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {labels[tab]}
+              </button>
+            );
+          })}
         </div>
 
         {/* ============================================================
-            TAB 1: CIVIC & MUNICIPAL OVERVIEW
+            TAB 1: CITY OVERVIEW & STRUCTURE
             ============================================================ */}
         {activeTab === 'civic' && (
           <div className="mt-3.5 space-y-3 animate-fade-in">
             {/* 4-Stat Metric Tiles */}
             <div className="grid grid-cols-4 gap-1.5">
               <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Population
                 </span>
                 <span className="text-xs font-black text-white block mt-0.5">
                   {BRISTOL_CITY_FACTS.population.toLocaleString()}
                 </span>
-                <span className="text-[8px] text-slate-500 block">Census</span>
+                <span className="text-[10px] text-slate-400 block">Census</span>
               </div>
 
               <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Voters
                 </span>
                 <span className="text-xs font-black text-sky-400 block mt-0.5">
                   {BRISTOL_CITY_FACTS.registeredVoters.toLocaleString()}
                 </span>
-                <span className="text-[8px] text-slate-500 block">Roll</span>
+                <span className="text-[10px] text-slate-400 block">Roll</span>
               </div>
 
               <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Land Area
                 </span>
                 <span className="text-xs font-black text-emerald-400 block mt-0.5">
                   {BRISTOL_CITY_FACTS.landAreaSqMi}
                 </span>
-                <span className="text-[8px] text-slate-500 block">sq mi</span>
+                <span className="text-[10px] text-slate-400 block">sq mi</span>
               </div>
 
               <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Elevation
                 </span>
                 <span className="text-xs font-black text-amber-400 block mt-0.5">
                   {BRISTOL_CITY_FACTS.elevationFt}′
                 </span>
-                <span className="text-[8px] text-slate-500 block">AMSL</span>
+                <span className="text-[10px] text-slate-400 block">AMSL</span>
               </div>
             </div>
 
             {/* Form of Government */}
             <div className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <span className="text-[9px] uppercase font-bold text-sky-400 block">Municipal Government</span>
+                <span className="text-[10px] uppercase font-bold text-sky-400 block">Municipal Government</span>
                 <p className="text-xs font-bold text-white truncate">{BRISTOL_CITY_FACTS.governmentType}</p>
-                <p className="text-[10px] text-slate-400 truncate">{BRISTOL_CITY_FACTS.councilStructure}</p>
+                <p className="text-[11px] text-slate-300 truncate">{BRISTOL_CITY_FACTS.councilStructure}</p>
               </div>
-              <span className="px-2 py-1 rounded-lg bg-sky-500/15 border border-sky-500/30 text-[10px] font-bold text-sky-300 shrink-0">
+              <span className="px-2 py-1 rounded-lg bg-sky-500/15 border border-sky-500/30 text-[11px] font-bold text-sky-300 shrink-0">
                 5 Seats
               </span>
             </div>
@@ -210,9 +192,9 @@ export default function BristolFactsCard({
                   <Building2 className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[9px] uppercase font-bold text-sky-400 block">Bristol City Hall</span>
+                  <span className="text-[10px] uppercase font-bold text-sky-400 block">Bristol City Hall</span>
                   <p className="text-xs font-bold text-white truncate">{BRISTOL_CITY_FACTS.cityHall.address}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{BRISTOL_CITY_FACTS.cityHall.phone} • {BRISTOL_CITY_FACTS.cityHall.hours}</p>
+                  <p className="text-[11px] text-slate-300 truncate">{BRISTOL_CITY_FACTS.cityHall.phone} • {BRISTOL_CITY_FACTS.cityHall.hours}</p>
                 </div>
               </div>
               <a
@@ -242,23 +224,23 @@ export default function BristolFactsCard({
             {/* Turnout Comparison */}
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Muni Election Turnout
                 </span>
                 <span className="text-base font-black text-emerald-400 block mt-0.5">
                   {BRISTOL_CITY_FACTS.historicTurnoutPct}%
                 </span>
-                <span className="text-[9px] text-slate-500 block">~6,300 votes in off-year cycles</span>
+                <span className="text-[10px] text-slate-400 block">~6,300 votes in off-year cycles</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Presidential Cycle
                 </span>
                 <span className="text-base font-black text-sky-400 block mt-0.5">
                   {BRISTOL_CITY_FACTS.presidentialTurnoutPct}%
                 </span>
-                <span className="text-[9px] text-slate-500 block">Peak general participation</span>
+                <span className="text-[10px] text-slate-400 block">Peak general participation</span>
               </div>
             </div>
 
@@ -269,9 +251,9 @@ export default function BristolFactsCard({
                   <Vote className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[9px] uppercase font-bold text-emerald-400 block">Election Authority</span>
+                  <span className="text-[10px] uppercase font-bold text-emerald-400 block">Election Authority</span>
                   <p className="text-xs font-bold text-white truncate">{BRISTOL_CITY_FACTS.electionCommission.name}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{BRISTOL_CITY_FACTS.electionCommission.address}</p>
+                  <p className="text-[11px] text-slate-300 truncate">{BRISTOL_CITY_FACTS.electionCommission.address}</p>
                 </div>
               </div>
               <a
@@ -284,8 +266,8 @@ export default function BristolFactsCard({
             </div>
 
             {/* Early Voting Locations Pill */}
-            <div className="p-2.5 rounded-2xl bg-slate-900/60 border border-white/5 text-[11px]">
-              <span className="text-[9px] font-bold uppercase text-slate-400 block mb-1">
+            <div className="p-2.5 rounded-2xl bg-slate-900/60 border border-white/5 text-xs">
+              <span className="text-[10px] font-bold uppercase text-slate-300 block mb-1">
                 Early Voting Sites
               </span>
               <div className="space-y-1 text-slate-300">
@@ -308,7 +290,7 @@ export default function BristolFactsCard({
             {/* Citywide Lawn Signs */}
             <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/10">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                   Citywide Sign Footprint
                 </span>
@@ -331,44 +313,44 @@ export default function BristolFactsCard({
             {/* Field Operations Grid */}
             <div className="grid grid-cols-3 gap-2">
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Doors Knocked
                 </span>
                 <span className="text-sm font-black text-teal-300 block mt-0.5">
                   {canvassRecords.length}
                 </span>
-                <span className="text-[9px] text-slate-500 block">Total visits</span>
+                <span className="text-[10px] text-slate-400 block">Total visits</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Contact Rate
                 </span>
                 <span className="text-sm font-black text-emerald-400 block mt-0.5">
                   {contactRate}%
                 </span>
-                <span className="text-[9px] text-slate-500 block">Spoke with voter</span>
+                <span className="text-[10px] text-slate-400 block">Spoke with voter</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
                   Field Volunteers
                 </span>
                 <span className="text-sm font-black text-purple-400 block mt-0.5">
                   {activeVolunteers}
                 </span>
-                <span className="text-[9px] text-slate-500 block">On turf</span>
+                <span className="text-[10px] text-slate-400 block">On turf</span>
               </div>
             </div>
 
             {/* Traffic Arterial Exposure */}
             <div className="p-2.5 rounded-2xl bg-slate-900/70 border border-white/5">
-              <span className="text-[9px] uppercase font-bold text-amber-400 block mb-1">
+              <span className="text-[10px] uppercase font-bold text-amber-400 block mb-1">
                 Highest Visibility Traffic Corridors
               </span>
               <div className="space-y-1.5">
                 {BRISTOL_CITY_FACTS.keyCorridors.slice(0, 3).map((c, i) => (
-                  <div key={i} className="flex items-center justify-between text-[10px]">
+                  <div key={i} className="flex items-center justify-between text-[11px]">
                     <span className="font-bold text-white truncate">{c.name}</span>
                     <span className="font-mono text-amber-300 font-bold shrink-0 ml-2">{c.aadt}</span>
                   </div>
@@ -390,7 +372,7 @@ export default function BristolFactsCard({
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                     {ord.title}
                   </span>
-                  <span className="text-[9px] font-mono text-slate-500">{ord.citation}</span>
+                  <span className="text-[10px] font-mono text-slate-400">{ord.citation}</span>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-relaxed">
                   {ord.rule}

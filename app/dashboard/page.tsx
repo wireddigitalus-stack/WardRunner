@@ -56,7 +56,7 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
   {
     targetId: 'tour-roster-btn',
     title: 'Volunteer Roster & PINs',
-    description: 'Manage campaign volunteers, assign sign runner or canvasser roles, and generate secure 6-digit access PINs for the field apps.',
+    description: 'Manage campaign volunteers, assign sign runner or canvasser roles, and generate secure 4-digit access PINs for the field apps.',
     accentColor: 'purple',
     badge: '4. Team Roster',
   },
@@ -98,7 +98,7 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
   {
     targetId: 'tour-signs-toggle, tour-mobile-signs, tour-mobile-palette-toggle',
     title: 'Yard Signs Radar',
-    description: '3-state cycle: tap for full Sign Icons, tap again for Micro-Dots (high density radar), or tap to clear sign clutter.',
+    description: 'Toggle sign markers on the map: switch between compact smart pill badges and full pin markers.',
     accentColor: 'emerald',
     badge: '10. Sign Radar',
   },
@@ -1233,7 +1233,7 @@ export default function DashboardPage() {
           ">
             <span>🏛️</span>
             <span>Bristol, TN</span>
-            <span style="font-size: 9px; opacity: 0.8; font-weight: 700; text-transform: uppercase;">Facts</span>
+            <span style="font-size: 11px; opacity: 0.85; font-weight: 800; text-transform: uppercase;">Facts</span>
           </div>
         `;
         bristolBadgeEl.addEventListener('click', (e) => {
@@ -1580,9 +1580,9 @@ export default function DashboardPage() {
 
         if (useDotMode) {
           // Smart Pill Badge — compact but type-identifiable
-          const pillW = isSel ? 36 : 30;
-          const pillH = isSel ? 18 : 15;
-          const fontSize = isSel ? 9 : 7.5;
+          const pillW = isSel ? 40 : 34;
+          const pillH = isSel ? 22 : 18;
+          const fontSize = isSel ? 11 : 9.5;
           el.innerHTML = `
             <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
               ${isSel ? `
@@ -1597,7 +1597,7 @@ export default function DashboardPage() {
               <div class="street-dot" style="
                 width: ${pillW}px;
                 height: ${pillH}px;
-                border-radius: 9px;
+                border-radius: 10px;
                 background: linear-gradient(135deg, ${bgColor}, ${bgColorDark});
                 border: 1.5px solid rgba(255,255,255,0.9);
                 box-shadow: 0 0 8px ${glowColor}, 0 1px 4px rgba(0,0,0,0.5);
@@ -1879,9 +1879,9 @@ export default function DashboardPage() {
                 background: rgba(15, 23, 42, 0.95);
                 color: white;
                 border: 1.5px solid ${isSel ? '#ffffff' : 'rgba(255, 255, 255, 0.4)'};
-                padding: 2px 7.5px;
+                padding: 2.5px 8px;
                 border-radius: 9999px;
-                font-size: 9.5px;
+                font-size: 11px;
                 font-weight: 900;
                 letter-spacing: 0.5px;
                 white-space: nowrap;
@@ -1891,7 +1891,7 @@ export default function DashboardPage() {
                 align-items: center;
                 gap: 4px;
               ">
-                <span style="color: ${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'}; font-size: 9px;">🎯</span>
+                <span style="color: ${isCritical ? '#fda4af' : isHigh ? '#fde68a' : '#c084fc'}; font-size: 11px;">🎯</span>
                 <span style="color: white; font-weight: 900;">${shortLabel}</span>
                 <span style="color: rgba(255,255,255,0.4);">·</span>
                 <span style="color: #38bdf8; font-family: monospace; font-weight: 900;">${mission.quantity}×</span>
@@ -2090,9 +2090,9 @@ export default function DashboardPage() {
                 <span style="
                   background: ${bg};
                   color: white;
-                  font-size: 9px;
+                  font-size: 11px;
                   font-weight: 900;
-                  padding: 1px 5px;
+                  padding: 1.5px 6px;
                   border-radius: 6px;
                   text-transform: uppercase;
                 ">${label}</span>
@@ -2550,7 +2550,7 @@ export default function DashboardPage() {
             <div className="hidden sm:block">
               <div className="flex items-center gap-2">
                 <h1 className="font-extrabold text-sm tracking-tight">Field Command</h1>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">LIVE</span>
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">LIVE</span>
               </div>
               <p className="text-[11px] opacity-50 leading-none mt-0.5">CampaignOS • Melissa K. Brown • Bristol TN City Council</p>
             </div>

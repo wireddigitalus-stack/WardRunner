@@ -46,7 +46,7 @@ export default function ScoutRecommendationCard({
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl text-white font-black shadow-lg shadow-amber-500/30 shrink-0">★</div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                  <span className={`inline-block text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${
                     rec.priority === 'critical' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
                     rec.priority === 'high' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
                     'bg-sky-500/20 text-sky-400 border border-sky-500/30'
@@ -63,7 +63,7 @@ export default function ScoutRecommendationCard({
 
           <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
             <div className="p-3 rounded-2xl bg-white/[0.04] border border-amber-500/20">
-              <span className="text-[9px] uppercase font-bold text-amber-400 tracking-wider block">📍 Street Address / Intersection</span>
+              <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider block">📍 Street Address / Intersection</span>
               {loadingRecAddress ? (
                 <span className={`inline-block h-4 w-44 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
               ) : (
@@ -73,12 +73,12 @@ export default function ScoutRecommendationCard({
             </div>
 
             <div>
-              <span className="text-[9px] uppercase font-bold opacity-30 block">🎯 Strategic Rationale</span>
+              <span className="text-[10px] uppercase font-bold opacity-40 block">🎯 Strategic Rationale</span>
               <p className="text-xs opacity-75 leading-relaxed mt-0.5">{rec.reason}</p>
             </div>
 
             <div>
-              <span className="text-[9px] uppercase font-bold opacity-30 block mb-1.5">Deploy As Sign Type</span>
+              <span className="text-[10px] uppercase font-bold opacity-40 block mb-1.5">Deploy As Sign Type</span>
               <div className="grid grid-cols-3 gap-1.5">
                 {[
                   { id: 'yard_sign' as SignType, emoji: '🏡', label: 'Yard Sign' },

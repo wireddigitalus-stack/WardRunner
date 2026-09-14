@@ -93,7 +93,7 @@ export default function HomePage() {
                 <div className="w-11 h-11 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
                   <BarChart3 className="w-5 h-5" />
                 </div>
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-blue-500/15 text-blue-300 border border-blue-500/30">
                   <ShieldCheck className="w-3 h-3 text-blue-400" />
                   PIN PROTECTED
                 </span>

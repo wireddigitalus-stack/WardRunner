@@ -56,7 +56,7 @@ export default function MissionDetailCard({
 
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+              <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${
                 isCompleted
                   ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                   : mission.priority === 'critical'
@@ -86,7 +86,7 @@ export default function MissionDetailCard({
         {/* Details Grid */}
         <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/10">
           <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
               Assigned Volunteer
             </span>
             <span className="text-xs font-bold text-purple-300 flex items-center gap-1.5 mt-0.5 truncate">
@@ -96,7 +96,7 @@ export default function MissionDetailCard({
           </div>
 
           <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">
               Quota Requested
             </span>
             <span className="text-xs font-black text-emerald-400 mt-0.5 block">

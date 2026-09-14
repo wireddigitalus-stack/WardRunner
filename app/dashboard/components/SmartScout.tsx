@@ -171,7 +171,7 @@ export default function SmartScout({
 
         {/* --- Map Legend (Desktop Left Rail) --- */}
         <div className="hidden sm:block pointer-events-auto">
-          <div className="glass rounded-2xl px-3 py-2 text-[10px] space-y-1.5 overflow-hidden">
+          <div className="glass rounded-2xl px-3 py-2 text-[11px] space-y-1.5 overflow-hidden">
             {/* Row 1: Signs */}
             <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1">
               {[
@@ -180,15 +180,15 @@ export default function SmartScout({
                 { bg: '#e11d48', label: 'VS',   title: 'Opp' },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-1">
-                  <div style={{ background: item.bg, width: 16, height: 16, borderRadius: 4, border: '1.5px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 1px 4px ${item.bg}44`, flexShrink: 0 }}>
-                    <span style={{ color: 'white', fontSize: 6.5, fontWeight: 900 }}>{item.label}</span>
+                  <div style={{ background: item.bg, width: 18, height: 18, borderRadius: 4, border: '1.5px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 1px 4px ${item.bg}44`, flexShrink: 0 }}>
+                    <span style={{ color: 'white', fontSize: 7.5, fontWeight: 900 }}>{item.label}</span>
                   </div>
-                  <span className="font-semibold opacity-70">{item.title}</span>
+                  <span className="font-semibold opacity-80">{item.title}</span>
                 </div>
               ))}
               <div className="flex items-center gap-1 border-l border-white/10 pl-2">
                 <span className="w-3.5 h-[2px] rounded-full bg-amber-400 shrink-0" />
-                <span className="font-semibold opacity-70">AADT</span>
+                <span className="font-semibold opacity-80">AADT</span>
               </div>
             </div>
             {/* Row 2: Canvassing */}
@@ -199,15 +199,15 @@ export default function SmartScout({
                 { bg: '#475569', label: '—', title: 'None' },
               ].map(item => (
                 <div key={item.title} className="flex items-center gap-1">
-                  <div style={{ background: item.bg, width: 16, height: 16, borderRadius: 4, border: '1.5px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 1px 4px ${item.bg}44`, flexShrink: 0 }}>
-                    <span style={{ color: 'white', fontSize: 7, fontWeight: 900 }}>{item.label}</span>
+                  <div style={{ background: item.bg, width: 18, height: 18, borderRadius: 4, border: '1.5px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 1px 4px ${item.bg}44`, flexShrink: 0 }}>
+                    <span style={{ color: 'white', fontSize: 8, fontWeight: 900 }}>{item.label}</span>
                   </div>
-                  <span className="font-semibold opacity-70">{item.title}</span>
+                  <span className="font-semibold opacity-80">{item.title}</span>
                 </div>
               ))}
               <div className="flex items-center gap-1 border-l border-white/10 pl-2">
                 <span className="w-4 h-[2px] rounded-full shrink-0" style={{ background: 'linear-gradient(90deg, #a855f7, #c084fc)' }} />
-                <span className="font-semibold opacity-70">Trail</span>
+                <span className="font-semibold opacity-80">Trail</span>
               </div>
             </div>
             {/* Row 3: Heatmap (only when active) */}
@@ -216,9 +216,9 @@ export default function SmartScout({
                 <span className="text-xs">🔥</span>
                 <span className="font-extrabold opacity-80">Heat</span>
                 <div className="flex items-center gap-1.5 pl-1">
-                  <span className="text-[9px] text-slate-400 font-bold uppercase">Cool</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase">Cool</span>
                   <div className="w-14 h-2 rounded-full shadow-sm ring-1 ring-white/10" style={{ background: 'linear-gradient(90deg, rgba(6,182,212,0.9) 0%, rgba(16,185,129,0.9) 25%, rgba(245,158,11,0.95) 48%, rgba(249,115,22,0.95) 68%, rgba(239,68,68,0.97) 85%, rgba(255,255,255,0.98) 100%)' }} />
-                  <span className="text-[9px] text-rose-400 font-bold uppercase">Hot</span>
+                  <span className="text-[10px] text-rose-400 font-bold uppercase">Hot</span>
                 </div>
               </div>
             )}
@@ -243,11 +243,11 @@ export default function SmartScout({
               <Sparkles className="w-3.5 h-3.5 text-white" />
             </div>
             <div>
-              <div className="text-[11px] font-bold flex items-center gap-1.5">
+              <div className="text-xs font-bold flex items-center gap-1.5">
                 Scout
-                <span className="text-[8px] font-extrabold px-1 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20 leading-none">AI</span>
+                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20 leading-none">AI</span>
               </div>
-              <p className="text-[9px] opacity-35 leading-none mt-0.5">
+              <p className="text-[11px] opacity-60 leading-none mt-0.5">
                 {recs.length > 0 ? `${recs.length} recommendations` : 'Tap to analyze'}
               </p>
             </div>
@@ -320,9 +320,9 @@ export default function SmartScout({
                   {!loading && !error && recs.length > 0 && (
                     <>
                       <div className="flex items-center justify-between">
-                        <p className="text-[9px] font-bold uppercase tracking-widest opacity-30">Top Spots</p>
+                        <p className="text-[11px] font-bold uppercase tracking-widest opacity-40">Top Spots</p>
                         <button onClick={fetchRecommendations} className="p-1 rounded-lg hover:bg-white/10 transition">
-                          <RefreshCw className="w-3 h-3 opacity-30" />
+                          <RefreshCw className="w-3.5 h-3.5 opacity-40" />
                         </button>
                       </div>
 
@@ -340,19 +340,19 @@ export default function SmartScout({
                           >
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-[10px] font-black shrink-0 shadow shadow-amber-500/30">
+                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-[11px] font-black shrink-0 shadow shadow-amber-500/30">
                                   {rec.rank}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-[11px] font-bold truncate">{rec.street}</p>
+                                  <p className="text-xs font-bold truncate">{rec.street}</p>
                                   <div className="flex items-center gap-1.5 mt-0.5">
-                                    <span className={`text-[8px] font-extrabold uppercase px-1 py-0.5 rounded border leading-none ${pc.badge}`}>{rec.priority}</span>
-                                    <span className="text-[9px] opacity-30 font-mono">{rec.aadt?.toLocaleString()}</span>
+                                    <span className={`text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded border leading-none ${pc.badge}`}>{rec.priority}</span>
+                                    <span className="text-[11px] opacity-40 font-mono">{rec.aadt?.toLocaleString()} AADT</span>
                                   </div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-0.5 shrink-0">
-                                <Zap className="w-2.5 h-2.5 text-amber-400" />
+                                <Zap className="w-3 h-3 text-amber-400" />
                                 <span className="text-xs font-black text-amber-400">{rec.score}</span>
                               </div>
                             </div>
@@ -363,17 +363,17 @@ export default function SmartScout({
                       {/* Show All on Map */}
                       <button
                         onClick={() => onShowOnMap(recs)}
-                        className="w-full py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 active:scale-[0.97] transition-all"
+                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 active:scale-[0.97] transition-all"
                       >
-                        <Target className="w-3 h-3" /> Show All on Map
+                        <Target className="w-3.5 h-3.5" /> Show All on Map
                       </button>
                     </>
                   )}
 
                   {!loading && !error && recs.length === 0 && (
                     <div className="text-center py-6">
-                      <p className="text-[10px] opacity-30">No recommendations yet</p>
-                      <button onClick={fetchRecommendations} className="mt-2 text-[10px] font-bold text-amber-400">Generate Now</button>
+                      <p className="text-xs opacity-40">No recommendations yet</p>
+                      <button onClick={fetchRecommendations} className="mt-2 text-xs font-bold text-amber-400">Generate Now</button>
                     </div>
                   )}
                 </div>
@@ -385,19 +385,19 @@ export default function SmartScout({
                   {/* Generation Controls */}
                   <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-300 flex items-center gap-1">
-                        <Footprints className="w-3 h-3" /> Scout Canvass Turfs
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-purple-300 flex items-center gap-1">
+                        <Footprints className="w-3.5 h-3.5" /> Scout Canvass Turfs
                       </span>
-                      <span className="text-[9px] text-zinc-400 font-medium">Bristol, TN</span>
+                      <span className="text-[11px] text-zinc-400 font-semibold">Bristol, TN</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-1.5 text-xs">
                       <div>
-                        <label className="text-[9px] text-zinc-400 block mb-0.5 font-semibold">Target Precinct</label>
+                        <label className="text-[11px] text-zinc-300 block mb-0.5 font-semibold">Target Precinct</label>
                         <select
                           value={selectedPrecinctCode}
                           onChange={e => setSelectedPrecinctCode(e.target.value)}
-                          className="w-full h-7 px-2 rounded-lg bg-black/40 border border-white/10 text-[10px] font-bold text-white focus:outline-none"
+                          className="w-full h-8 px-2 rounded-lg bg-black/40 border border-white/10 text-xs font-bold text-white focus:outline-none"
                         >
                           <option value="3A">Precinct 3A (Anderson)</option>
                           <option value="2A">Precinct 2A (Virginia Ave)</option>
@@ -408,7 +408,7 @@ export default function SmartScout({
                       </div>
 
                       <div>
-                        <label className="text-[9px] text-zinc-400 block mb-0.5 font-semibold">Doors / Duration</label>
+                        <label className="text-[11px] text-zinc-300 block mb-0.5 font-semibold">Doors / Duration</label>
                         <select
                           value={doorTarget}
                           onChange={e => {
@@ -416,7 +416,7 @@ export default function SmartScout({
                             setDoorTarget(d);
                             setDurationMinutes(d === 25 ? 30 : d === 40 ? 45 : d === 50 ? 60 : 75);
                           }}
-                          className="w-full h-7 px-2 rounded-lg bg-black/40 border border-white/10 text-[10px] font-bold text-white focus:outline-none"
+                          className="w-full h-8 px-2 rounded-lg bg-black/40 border border-white/10 text-xs font-bold text-white focus:outline-none"
                         >
                           <option value="25">25 doors (~30m)</option>
                           <option value="40">40 doors (~45m)</option>
@@ -454,10 +454,10 @@ export default function SmartScout({
 
                   {/* Route List */}
                   {routes.length > 0 ? (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-zinc-400 px-0.5">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-zinc-300 px-0.5">
                         <span>Active & Available Turfs</span>
-                        <span className="font-mono text-purple-300">{routes.length} Total</span>
+                        <span className="font-mono text-purple-300 font-bold">{routes.length} Total</span>
                       </div>
 
                       {routes.map((route) => {
@@ -472,43 +472,43 @@ export default function SmartScout({
                             <div className="flex items-start justify-between gap-1.5">
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[8px] font-extrabold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
                                     {route.precinct_code}
                                   </span>
-                                  <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded ${isCompleted ? 'bg-emerald-500/20 text-emerald-300' : isAssigned ? 'bg-sky-500/20 text-sky-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${isCompleted ? 'bg-emerald-500/20 text-emerald-300' : isAssigned ? 'bg-sky-500/20 text-sky-300' : 'bg-amber-500/20 text-amber-300'}`}>
                                     {isCompleted ? 'DONE' : isAssigned ? 'ASSIGNED' : 'OPEN'}
                                   </span>
                                 </div>
-                                <h4 className="text-[11px] font-bold text-white mt-1 truncate">
+                                <h4 className="text-xs font-bold text-white mt-1 truncate">
                                   {route.name}
                                 </h4>
-                                <p className="text-[9px] text-zinc-400 mt-0.5 flex items-center gap-1.5">
-                                  <Clock className="w-2.5 h-2.5" />
+                                <p className="text-[11px] text-zinc-300 mt-0.5 flex items-center gap-1.5">
+                                  <Clock className="w-3 h-3 text-purple-400" />
                                   ~{route.estimated_walk_minutes}m • {route.target_doors} doors • {route.distance_miles}mi
                                 </p>
                               </div>
                             </div>
 
-                            <p className="text-[9px] text-zinc-400 line-clamp-2 italic leading-relaxed">
+                            <p className="text-[11px] text-zinc-300 line-clamp-2 italic leading-relaxed">
                               "{route.strategic_reasoning}"
                             </p>
 
                             {/* Assigned Volunteer Pill or Quick Assign */}
-                            <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[10px]">
-                              <div className="flex items-center gap-1 text-zinc-300">
-                                <Users className="w-3 h-3 text-purple-400" />
-                                <span className="font-semibold truncate max-w-[110px]">
+                            <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-1.5 text-zinc-200">
+                                <Users className="w-3.5 h-3.5 text-purple-400" />
+                                <span className="font-semibold truncate max-w-[120px]">
                                   {route.assigned_volunteer_name || 'No volunteer'}
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1.5">
                                 <button
                                   onClick={() => {
                                     if (onSelectRoute) onSelectRoute(route);
                                     if (onFlyTo) onFlyTo(route.start_point.lat, route.start_point.lng);
                                   }}
-                                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white font-bold text-[9px] transition active:scale-95"
+                                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white font-bold text-[11px] transition active:scale-95"
                                 >
                                   Preview
                                 </button>
@@ -516,15 +516,15 @@ export default function SmartScout({
                                 <div className="relative">
                                   <button
                                     onClick={() => setAssigningRouteId(assigningRouteId === route.id ? null : route.id)}
-                                    className="px-2 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 font-bold text-[9px] transition flex items-center gap-0.5 active:scale-95"
+                                    className="px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 font-bold text-[11px] transition flex items-center gap-1 active:scale-95"
                                   >
-                                    <UserPlus className="w-2.5 h-2.5" />
+                                    <UserPlus className="w-3 h-3" />
                                     <span>{isAssigned ? 'Reassign' : 'Assign'}</span>
                                   </button>
 
                                   {assigningRouteId === route.id && (
-                                    <div className="absolute right-0 bottom-full mb-1 w-44 rounded-xl bg-slate-900 border border-white/15 p-1 shadow-2xl z-50 animate-slide-up text-[10px]">
-                                      <div className="text-[8px] font-bold text-zinc-400 px-2 py-1 uppercase">
+                                    <div className="absolute right-0 bottom-full mb-1 w-48 rounded-xl bg-slate-900 border border-white/15 p-1.5 shadow-2xl z-50 animate-slide-up text-xs">
+                                      <div className="text-[10px] font-bold text-zinc-400 px-2 py-1 uppercase tracking-wider">
                                         Assign Volunteer
                                       </div>
                                       {availableVolunteers.map(vol => (
@@ -534,14 +534,14 @@ export default function SmartScout({
                                             if (onAssignRoute) onAssignRoute(route.id, vol.name);
                                             setAssigningRouteId(null);
                                           }}
-                                          className={`w-full text-left px-2 py-1 rounded-lg transition flex items-center justify-between ${
+                                          className={`w-full text-left px-2.5 py-1.5 rounded-lg transition flex items-center justify-between ${
                                             route.assigned_volunteer_name === vol.name
                                               ? 'bg-purple-500/30 text-purple-200 font-bold'
                                               : 'hover:bg-white/10 text-white'
                                           }`}
                                         >
                                           <span>{vol.name}</span>
-                                          <span className="text-[8px] text-zinc-400">{vol.role.split(' ')[0]}</span>
+                                          <span className="text-[10px] text-zinc-400">{vol.role.split(' ')[0]}</span>
                                         </button>
                                       ))}
                                     </div>
@@ -555,8 +555,8 @@ export default function SmartScout({
                     </div>
                   ) : (
                     <div className="text-center py-6">
-                      <p className="text-[10px] opacity-30">No turf routes generated yet</p>
-                      <button onClick={fetchTurfRoutes} className="mt-2 text-[10px] font-bold text-purple-300 underline">
+                      <p className="text-xs opacity-40">No turf routes generated yet</p>
+                      <button onClick={fetchTurfRoutes} className="mt-2 text-xs font-bold text-purple-300 underline">
                         Generate Turf Loops for {selectedPrecinctCode}
                       </button>
                     </div>
@@ -568,11 +568,11 @@ export default function SmartScout({
               {tab === 'chat' && (
                 <div className="space-y-2">
                   {chatMessages.length === 0 && (
-                    <div className="text-center py-4 space-y-2">
-                      <p className="text-[10px] opacity-30">Ask about sign placement</p>
-                      <div className="flex flex-wrap gap-1 justify-center">
+                    <div className="text-center py-4 space-y-2.5">
+                      <p className="text-xs opacity-40">Ask about sign placement</p>
+                      <div className="flex flex-wrap gap-1.5 justify-center">
                         {['Best spots near downtown?', 'Counter opponents on State St?', 'High traffic, no signs?'].map(q => (
-                          <button key={q} onClick={() => setChatInput(q)} className="text-[9px] px-2 py-1 rounded-lg border border-white/10 hover:bg-white/5 transition">{q}</button>
+                          <button key={q} onClick={() => setChatInput(q)} className="text-[11px] px-2.5 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition text-slate-200">{q}</button>
                         ))}
                       </div>
                     </div>

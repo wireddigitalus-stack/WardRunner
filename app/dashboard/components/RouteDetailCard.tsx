@@ -198,7 +198,7 @@ export default function RouteDetailCard({
                     }`}
                   >
                     <span>{vol.name}</span>
-                    <span className="text-[9px] text-zinc-400">{vol.role.split(' ')[0]}</span>
+                    <span className="text-[10px] text-zinc-300 font-semibold">{vol.role.split(' ')[0]}</span>
                   </button>
                 ))}
               </div>

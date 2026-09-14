@@ -238,41 +238,41 @@ export default function TacticalOnboardingTour({
       )}
 
       {/* 3. Floating Briefing Tooltip Card - Always dead center for rock-solid stability */}
-      <div className="fixed inset-0 pointer-events-none flex items-center justify-center p-4 z-50">
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center p-4 sm:p-6 z-50">
         <div
-          className={`w-full max-w-[420px] bg-slate-950/95 backdrop-blur-md border-2 ${activeColor.border} rounded-3xl p-5 sm:p-6 shadow-2xl pointer-events-auto animate-scale-in flex flex-col justify-between`}
+          className={`w-full max-w-[540px] bg-slate-950/95 backdrop-blur-md border-2 ${activeColor.border} rounded-3xl p-6 sm:p-8 shadow-2xl pointer-events-auto animate-scale-in flex flex-col justify-between`}
         >
           {/* Header & Step Counter */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${activeColor.badge}`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className={`text-xs sm:text-sm font-black uppercase px-3 py-1 rounded-full border tracking-wide ${activeColor.badge}`}>
                   {step.badge || `STEP ${currentStepIndex + 1} OF ${steps.length}`}
                 </span>
-                <span className="text-xs text-slate-400 font-bold">Mission Briefing</span>
+                <span className="text-sm text-slate-300 font-bold">Mission Briefing</span>
               </div>
               <button
                 type="button"
                 onClick={handleFinish}
-                className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition"
+                className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition"
                 title="Skip tour"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
             {/* Title & Icon */}
-            <div className="flex items-start gap-3 mt-1">
+            <div className="flex items-start gap-4 mt-2">
               {step.icon && (
-                <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-3xl shrink-0 shadow-inner">
                   {step.icon}
                 </div>
               )}
-              <div>
-                <h3 className="text-lg sm:text-xl font-black text-white leading-tight uppercase tracking-tight">
+              <div className="flex-1">
+                <h3 className="text-xl sm:text-2xl font-black text-white leading-tight uppercase tracking-tight">
                   {step.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1.5 leading-relaxed">
+                <p className="text-sm sm:text-base text-slate-200 font-medium mt-2.5 leading-relaxed">
                   {step.description}
                 </p>
               </div>
@@ -280,10 +280,10 @@ export default function TacticalOnboardingTour({
           </div>
 
           {/* Progress Indicators & Navigation Controls */}
-          <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
+          <div className="mt-8 pt-5 border-t border-slate-800/80 flex items-center justify-between gap-4">
             {/* Step Indicators: Compact Dots if <= 6, sleek progress bar if > 6 to prevent wrapping */}
             {steps.length <= 6 ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 {steps.map((_, idx) => (
                   <button
                     key={idx}
@@ -292,22 +292,22 @@ export default function TacticalOnboardingTour({
                       setCurrentStepIndex(idx);
                       playStepTone('step');
                     }}
-                    className={`h-2 rounded-full transition-all duration-300 ${
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
                       idx === currentStepIndex
-                        ? 'w-6 bg-emerald-400'
-                        : 'w-2 bg-slate-700 hover:bg-slate-600'
+                        ? 'w-8 bg-emerald-400'
+                        : 'w-2.5 bg-slate-700 hover:bg-slate-600'
                     }`}
                     title={`Go to step ${idx + 1}`}
                   />
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col gap-1 min-w-[90px]">
-                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 font-mono">
-                  <span>Step {currentStepIndex + 1}/{steps.length}</span>
+              <div className="flex flex-col gap-1.5 min-w-[110px]">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300 font-mono">
+                  <span>Step {currentStepIndex + 1} of {steps.length}</span>
                   <span>{Math.round(((currentStepIndex + 1) / steps.length) * 100)}%</span>
                 </div>
-                <div className="w-24 sm:w-28 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-32 sm:w-40 h-2 bg-slate-800 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-emerald-400 rounded-full transition-all duration-300"
                     style={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }}
@@ -317,31 +317,31 @@ export default function TacticalOnboardingTour({
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {!isFirst && (
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider transition"
+                  className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm uppercase tracking-wider transition"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
               )}
 
               <button
                 type="button"
                 onClick={isLast ? handleFinish : handleNext}
-                className={`px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5 shadow-lg active:scale-95 transition ${activeColor.btn}`}
+                className={`px-5 sm:px-6 py-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2 shadow-lg active:scale-95 transition ${activeColor.btn}`}
               >
                 {isLast ? (
                   <>
                     <span>GOT IT ✓</span>
-                    <Check className="w-4 h-4 stroke-[3]" />
+                    <Check className="w-5 h-5 stroke-[3]" />
                   </>
                 ) : (
                   <>
                     <span>NEXT</span>
-                    <ChevronRight className="w-4 h-4 stroke-[3]" />
+                    <ChevronRight className="w-5 h-5 stroke-[3]" />
                   </>
                 )}
               </button>
