@@ -876,6 +876,19 @@ export default function DashboardPage() {
           } catch {}
         }
 
+        /* --- Brighten Street Name Labels on Dark Basemap --- */
+        try {
+          const layers = map.getStyle().layers || [];
+          for (const layer of layers) {
+            if ((layer as any).type === 'symbol' && (layer as any).layout?.['text-field']) {
+              const id = (layer as any).id as string;
+              try { map.setPaintProperty(id, 'text-color', '#d1d5db'); } catch {}
+              try { map.setPaintProperty(id, 'text-halo-color', 'rgba(0,0,0,0.9)'); } catch {}
+              try { map.setPaintProperty(id, 'text-halo-width', 1.8); } catch {}
+            }
+          }
+        } catch {}
+
         /* --- AADT corridor glow lines (Real Road Geometry) --- */
         map.addSource('corridors', {
           type: 'geojson',
@@ -951,7 +964,7 @@ export default function DashboardPage() {
           source: 'volunteer-trails',
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: {
-            'line-color': '#10b981',
+            'line-color': '#a855f7',
             'line-width': 8,
             'line-opacity': isDark ? 0.35 : 0.22,
             'line-blur': 4,
@@ -964,7 +977,7 @@ export default function DashboardPage() {
           source: 'volunteer-trails',
           layout: { 'line-cap': 'round', 'line-join': 'round' },
           paint: {
-            'line-color': '#10b981',
+            'line-color': '#c084fc',
             'line-width': 3,
             'line-opacity': 0.85,
             'line-dasharray': [3, 2],
@@ -1943,9 +1956,9 @@ export default function DashboardPage() {
         const isContact = rec.result === 'contact';
         const isFlyer = rec.result === 'left_flyer';
 
-        const bg = isContact ? '#059669' : isFlyer ? '#d97706' : '#475569';
-        const bgDark = isContact ? '#047857' : isFlyer ? '#b45309' : '#334155';
-        const glowColor = isContact ? 'rgba(16, 185, 129, 0.45)' : isFlyer ? 'rgba(245, 158, 11, 0.45)' : 'rgba(100, 116, 139, 0.4)';
+        const bg = isContact ? '#9333ea' : isFlyer ? '#d97706' : '#475569';
+        const bgDark = isContact ? '#7e22ce' : isFlyer ? '#b45309' : '#334155';
+        const glowColor = isContact ? 'rgba(147, 51, 234, 0.45)' : isFlyer ? 'rgba(245, 158, 11, 0.45)' : 'rgba(100, 116, 139, 0.4)';
         const label = isContact ? (rec.sentiment ? rec.sentiment.replace('_', ' ').toUpperCase() : 'CONTACT') : isFlyer ? 'FLYER' : 'NO CONTACT';
         const houseLabel = rec.street_address ? rec.street_address.split(',')[0] : 'House';
 

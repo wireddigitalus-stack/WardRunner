@@ -31,7 +31,7 @@ export default function CanvassInspectionCard({
       <div style={dragStyle} className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up">
         <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
           <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${
-            record.result === 'contact' ? 'from-emerald-400 to-teal-400'
+            record.result === 'contact' ? 'from-purple-400 to-violet-400'
             : record.result === 'left_flyer' ? 'from-amber-400 to-orange-400'
             : 'from-slate-400 to-slate-600'
           }`} />
@@ -46,7 +46,7 @@ export default function CanvassInspectionCard({
             </div>
             <div className="flex items-start gap-3.5">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg ${
-                record.result === 'contact' ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                record.result === 'contact' ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
                 : record.result === 'left_flyer' ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
                 : 'bg-slate-800 border border-slate-700 text-slate-300'
               }`}>
@@ -55,7 +55,7 @@ export default function CanvassInspectionCard({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-                    record.result === 'contact' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    record.result === 'contact' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                     : record.result === 'left_flyer' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                     : 'bg-slate-700/50 text-slate-300 border border-slate-600'
                   }`}>
@@ -83,7 +83,7 @@ export default function CanvassInspectionCard({
               <div className="p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between">
                 <span className="text-[10px] uppercase font-bold text-slate-400">Voter Sentiment</span>
                 <span className={`text-xs font-black uppercase px-2.5 py-0.5 rounded-lg ${
-                  record.sentiment === 'strong_support' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                  record.sentiment === 'strong_support' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
                   record.sentiment === 'lean_support' ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' :
                   record.sentiment === 'undecided' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
                   'bg-rose-500/20 text-rose-300 border border-rose-500/30'
@@ -111,7 +111,7 @@ export default function CanvassInspectionCard({
             <a
               href={getAppleMapsUrl({ address: record.street_address, lat: Number(record.latitude), lng: Number(record.longitude), title: `Door: ${record.street_address || 'Voter'}`, mode: 'directions' })}
               target="_blank" rel="noopener noreferrer"
-              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.98] transition"
+              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-purple-500/20 hover:scale-[1.01] active:scale-[0.98] transition"
             >
               <Navigation className="w-3.5 h-3.5" /> Navigate
             </a>

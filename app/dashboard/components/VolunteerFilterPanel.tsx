@@ -206,16 +206,26 @@ export default function VolunteerFilterPanel({
               const isSel = selectedGroup === g.id;
               const count = groupCounts[g.id] ?? 0;
               const isFirst = idx === 0;
+              // Color-code chips to match map icon colors
+              const chipColors: Record<string, { sel: string; badge: string }> = {
+                all:       { sel: 'bg-teal-500/20 text-teal-300 border-teal-500/40 ring-1 ring-teal-400/30', badge: 'bg-teal-500/30 text-teal-100 border border-teal-500/40' },
+                canvasser: { sel: 'bg-purple-500/20 text-purple-300 border-purple-500/40 ring-1 ring-purple-400/30', badge: 'bg-purple-500/30 text-purple-100 border border-purple-500/40' },
+                flyer:     { sel: 'bg-amber-500/20 text-amber-300 border-amber-500/40 ring-1 ring-amber-400/30', badge: 'bg-amber-500/30 text-amber-100 border border-amber-500/40' },
+                sign:      { sel: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 ring-1 ring-emerald-400/30', badge: 'bg-emerald-500/30 text-emerald-100 border border-emerald-500/40' },
+                town_hall: { sel: 'bg-blue-500/20 text-blue-300 border-blue-500/40 ring-1 ring-blue-400/30', badge: 'bg-blue-500/30 text-blue-100 border border-blue-500/40' },
+              };
+              const cc = chipColors[g.id] || chipColors.all;
               return (
                 <button
                   key={g.id}
                   type="button"
                   onClick={() => onSelectGroup(g.id)}
-                  className={`py-2 px-2.5 sm:px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-between gap-1.5 border ${
+                  title={g.label}
+                  className={`py-2 px-2.5 sm:px-3 text-xs font-bold rounded-xl transition-all duration-100 flex items-center justify-between gap-1.5 border ${
                     isFirst ? 'col-span-2 sm:col-span-1' : ''
                   } ${
                     isSel
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm font-black ring-1 ring-emerald-400/30'
+                      ? `${cc.sel} shadow-sm font-black`
                       : 'bg-white/[0.03] hover:bg-white/[0.08] text-slate-400 hover:text-white border-white/5'
                   }`}
                 >
@@ -225,7 +235,7 @@ export default function VolunteerFilterPanel({
                     <span className="truncate sm:hidden">{g.short}</span>
                   </span>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-extrabold shrink-0 ${
-                    isSel ? 'bg-emerald-500/30 text-emerald-100 border border-emerald-500/40' : 'bg-white/10 text-slate-300'
+                    isSel ? cc.badge : 'bg-white/10 text-slate-300'
                   }`}>
                     {count}
                   </span>
@@ -397,9 +407,15 @@ export default function VolunteerFilterPanel({
                           onSelectVolunteer(v.volunteer_name);
                         }
                       }}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.99] ${
+                      className={`p-3.5 rounded-2xl border transition-all duration-100 cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.99] ${
                         isSelected
-                          ? 'bg-emerald-500/15 border-emerald-400/50 shadow-xl shadow-emerald-500/10'
+                          ? ((v.role || '').toLowerCase().includes('canvass') || (v.role || '').toLowerCase().includes('door'))
+                            ? 'bg-purple-500/15 border-purple-400/50 shadow-xl shadow-purple-500/10'
+                            : (v.role || '').toLowerCase().includes('sign') || (v.role || '').toLowerCase().includes('field')
+                            ? 'bg-emerald-500/15 border-emerald-400/50 shadow-xl shadow-emerald-500/10'
+                            : (v.role || '').toLowerCase().includes('flyer')
+                            ? 'bg-amber-500/15 border-amber-400/50 shadow-xl shadow-amber-500/10'
+                            : 'bg-teal-500/15 border-teal-400/50 shadow-xl shadow-teal-500/10'
                           : 'bg-slate-900/70 hover:bg-slate-800/80 border-white/5 hover:border-white/15'
                       }`}
                     >

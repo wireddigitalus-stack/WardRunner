@@ -169,10 +169,11 @@ export default function SmartScout({
 
         {/* --- Map Legend (Desktop Left Rail) --- */}
         <div className="hidden sm:block pointer-events-auto">
-          <div className="glass rounded-2xl px-3.5 py-2 flex items-center justify-between text-[10px]">
+          <div className="glass rounded-2xl px-3.5 py-2 text-[10px] space-y-1.5">
+            {/* Row 1: Signs */}
             <div className="flex items-center gap-3">
               {[
-                { bg: '#059669', label: 'YARD', title: 'Yard' },
+                { bg: '#059669', label: 'YARD', title: 'Yard Sign' },
                 { bg: '#2563eb', label: '4×4',  title: 'Large' },
                 { bg: '#e11d48', label: 'VS',   title: 'Opponent' },
               ].map(item => (
@@ -183,10 +184,29 @@ export default function SmartScout({
                   <span className="font-semibold opacity-70">{item.title}</span>
                 </div>
               ))}
+              <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+                <span className="w-4 h-[2px] rounded-full bg-amber-400 shrink-0" />
+                <span className="font-semibold opacity-70">AADT</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
-              <span className="w-4 h-[2px] rounded-full bg-amber-400 shrink-0" />
-              <span className="font-semibold opacity-70">AADT</span>
+            {/* Row 2: Canvassing */}
+            <div className="flex items-center gap-3 border-t border-white/10 pt-1.5">
+              {[
+                { bg: '#9333ea', label: '🚪', title: 'Contact' },
+                { bg: '#d97706', label: '📰', title: 'Flyer' },
+                { bg: '#475569', label: '—', title: 'No Contact' },
+              ].map(item => (
+                <div key={item.title} className="flex items-center gap-1.5">
+                  <div style={{ background: item.bg, width: 18, height: 18, borderRadius: 5, border: '1.5px solid rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 1px 4px ${item.bg}44`, flexShrink: 0 }}>
+                    <span style={{ color: 'white', fontSize: 8, fontWeight: 900 }}>{item.label}</span>
+                  </div>
+                  <span className="font-semibold opacity-70">{item.title}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+                <span className="w-5 h-[2.5px] rounded-full shrink-0" style={{ background: 'linear-gradient(90deg, #a855f7, #c084fc)', borderTop: '1px dashed rgba(192,132,252,0.6)' }} />
+                <span className="font-semibold opacity-70">Trail</span>
+              </div>
             </div>
           </div>
         </div>

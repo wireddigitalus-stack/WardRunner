@@ -13,7 +13,6 @@ import {
   Save,
   Target,
   MapPin,
-  Navigation,
   Send,
   PlusCircle,
   CheckCircle2,
@@ -23,12 +22,10 @@ import {
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 import type { SignType, VolunteerAssignment } from '@/lib/types';
-import { getAppleMapsUrl } from '@/lib/mapUrls';
 import {
   TARGET_PRESETS,
   TargetPreset,
   getStoredAssignments,
-  saveStoredAssignments,
   addAssignment,
 } from '@/lib/assignmentData';
 
@@ -145,7 +142,6 @@ export default function VolunteerManagerModal({
   const [assignPriority, setAssignPriority] = useState<'critical' | 'high' | 'medium'>('high');
   const [assignNotes, setAssignNotes] = useState('');
   const [dispatchSuccess, setDispatchSuccess] = useState(false);
-  const [missionFilter, setMissionFilter] = useState<'all' | 'active' | 'completed'>('all');
 
   // Load Volunteers & Assignments
   useEffect(() => {
@@ -324,34 +320,7 @@ export default function VolunteerManagerModal({
     setTimeout(() => setDispatchSuccess(false), 2500);
   };
 
-  const handleToggleComplete = (id: string) => {
-    const updated = assignments.map(a => {
-      if (a.id === id) {
-        const isCompleted = a.status === 'completed';
-        return {
-          ...a,
-          status: (isCompleted ? 'assigned' : 'completed') as any,
-          completed_at: isCompleted ? undefined : new Date().toISOString(),
-        };
-      }
-      return a;
-    });
-    setAssignments(updated);
-    saveStoredAssignments(updated);
-  };
-
-  const handleDeleteAssignment = (id: string) => {
-    const updated = assignments.filter(a => a.id !== id);
-    setAssignments(updated);
-    saveStoredAssignments(updated);
-  };
-
   const activeAssignmentsCount = assignments.filter(a => a.status !== 'completed').length;
-  const filteredAssignments = assignments.filter(a => {
-    if (missionFilter === 'active') return a.status !== 'completed';
-    if (missionFilter === 'completed') return a.status === 'completed';
-    return true;
-  });
 
   if (!isOpen) return null;
 
@@ -920,147 +889,11 @@ export default function VolunteerManagerModal({
                 </form>
               </div>
 
-              {/* Active & Completed Missions List */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-300">
-                    Dispatched Sign Missions ({assignments.length})
-                  </span>
-
-                  {/* Filter Pills */}
-                  <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 text-[10px]">
-                    <button
-                      onClick={() => setMissionFilter('all')}
-                      className={`px-2.5 py-1 rounded-lg font-bold transition ${missionFilter === 'all' ? 'bg-white/15 text-white' : 'text-slate-400'}`}
-                    >
-                      All ({assignments.length})
-                    </button>
-                    <button
-                      onClick={() => setMissionFilter('active')}
-                      className={`px-2.5 py-1 rounded-lg font-bold transition ${missionFilter === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'text-slate-400'}`}
-                    >
-                      Active ({activeAssignmentsCount})
-                    </button>
-                    <button
-                      onClick={() => setMissionFilter('completed')}
-                      className={`px-2.5 py-1 rounded-lg font-bold transition ${missionFilter === 'completed' ? 'bg-purple-500/20 text-purple-300' : 'text-slate-400'}`}
-                    >
-                      Completed ({assignments.length - activeAssignmentsCount})
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2.5">
-                  {filteredAssignments.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-slate-500 rounded-2xl bg-white/[0.02] border border-white/5">
-                      No missions matching this filter. Dispatch a mission above to give your field crew targeted drop zones.
-                    </div>
-                  ) : (
-                    filteredAssignments.map((a) => {
-                      const isDone = a.status === 'completed';
-                      return (
-                        <div
-                          key={a.id}
-                          className={`p-3.5 rounded-2xl border transition-all ${
-                            isDone
-                              ? 'bg-white/[0.01] border-white/5 opacity-60'
-                              : 'bg-white/[0.03] border-white/10 hover:border-white/20'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                                  a.priority === 'critical'
-                                    ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
-                                    : a.priority === 'high'
-                                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                                    : 'bg-sky-500/15 text-sky-400 border-sky-500/30'
-                                }`}>
-                                  {a.priority}
-                                </span>
-
-                                <span className="text-xs font-bold text-white truncate">
-                                  {a.title}
-                                </span>
-
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-emerald-400 border border-white/10">
-                                  {a.quantity}× {a.sign_type.replace('_', ' ')}
-                                </span>
-
-                                {isDone && (
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                                    <Check className="w-3 h-3" /> Completed
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 flex-wrap">
-                                <span className="text-purple-300 font-semibold flex items-center gap-1">
-                                  <Users className="w-3 h-3" /> {a.volunteer_name}
-                                </span>
-                                <span>•</span>
-                                <span className="text-slate-500">
-                                  {a.target_type === 'precinct' ? '🗳️ Precinct Area' : '🚦 Intersection'}
-                                </span>
-                                <span>•</span>
-                                <span className="font-mono text-[10px]">
-                                  {Number(a.lat).toFixed(4)}, {Number(a.lng).toFixed(4)}
-                                </span>
-                              </div>
-
-                              {a.notes && (
-                                <p className="text-xs text-slate-300 mt-1.5 pl-2.5 border-l-2 border-emerald-500/40 italic">
-                                  "{a.notes}"
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <a
-                                href={getAppleMapsUrl({
-                                  address: a.street_address,
-                                  lat: a.lat,
-                                  lng: a.lng,
-                                  title: a.title,
-                                  mode: 'view',
-                                })}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition"
-                                title="Open Address in Apple Maps"
-                              >
-                                <Navigation className="w-3.5 h-3.5" />
-                              </a>
-
-                              <button
-                                onClick={() => handleToggleComplete(a.id)}
-                                className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1 transition active:scale-95 ${
-                                  isDone
-                                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-400'
-                                    : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300'
-                                }`}
-                                title={isDone ? 'Mark as Active' : 'Mark as Completed'}
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">{isDone ? 'Done' : 'Complete'}</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleDeleteAssignment(a.id)}
-                                className="p-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition"
-                                title="Delete mission"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
+              {/* Tip Note */}
+              <div className="mt-6 p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
+                <p className="text-xs text-slate-400">
+                  <span className="text-purple-400 font-bold">💡 Tip:</span> View and manage all dispatched missions in the <span className="text-white font-semibold">Campaign Drawer → Missions</span> tab.
+                </p>
               </div>
             </div>
           )}
