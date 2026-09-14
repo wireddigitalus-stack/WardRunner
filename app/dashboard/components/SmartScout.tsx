@@ -41,6 +41,7 @@ interface SmartScoutProps {
   onAssignRoute?: (routeId: string, volunteerName: string) => void;
   onAddRoute?: (route: CanvassRoute) => void;
   availableVolunteers?: { id: string; name: string; role: string }[];
+  showHeatmap?: boolean;
 }
 
 export default function SmartScout({
@@ -59,6 +60,7 @@ export default function SmartScout({
   onAssignRoute,
   onAddRoute,
   availableVolunteers = [],
+  showHeatmap = false,
 }: SmartScoutProps) {
   const [expanded, setExpanded] = useState(false);
   const [tab, setTab] = useState<'recs' | 'turf' | 'chat'>('recs');
@@ -208,6 +210,18 @@ export default function SmartScout({
                 <span className="font-semibold opacity-70">Trail</span>
               </div>
             </div>
+            {/* Row 3: Heatmap (only when active) */}
+            {showHeatmap && (
+              <div className="flex items-center gap-2 border-t border-white/10 pt-1.5 animate-fadeIn">
+                <span className="text-xs">🔥</span>
+                <span className="font-extrabold opacity-80">Heat</span>
+                <div className="flex items-center gap-1.5 pl-1">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase">Cool</span>
+                  <div className="w-16 h-2 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 via-amber-400 via-orange-500 via-rose-600 to-white shadow-sm ring-1 ring-white/10" />
+                  <span className="text-[9px] text-rose-400 font-bold uppercase">Hot</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

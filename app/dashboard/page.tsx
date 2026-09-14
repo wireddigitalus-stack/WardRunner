@@ -2654,30 +2654,6 @@ export default function DashboardPage() {
         isDark={isDark}
       />
 
-      {/* Campaign Heatmap Active Floating Legend Pill */}
-      {showHeatmap && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-auto animate-slide-up">
-          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-950/90 backdrop-blur-md border border-rose-500/40 text-white text-xs font-semibold shadow-xl">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs">🔥</span>
-              <span className="font-extrabold text-[11px] tracking-tight">Campaign Heat</span>
-            </div>
-            <div className="flex items-center gap-1.5 pl-2 border-l border-white/15">
-              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Cool</span>
-              <div className="w-16 h-2 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 via-amber-400 via-orange-500 via-rose-600 to-white shadow-sm ring-1 ring-white/10" />
-              <span className="text-[9px] text-rose-400 font-bold uppercase tracking-wider">Hot</span>
-            </div>
-            <button
-              onClick={() => setShowHeatmap(false)}
-              className="ml-1 w-4 h-4 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-[10px] text-slate-300 hover:text-white transition"
-              title="Close Heatmap"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ============================================================
           RIGHT-RAIL MAP CONTROLS (Desktop md: screens — 100% Unchanged)
           ============================================================ */}
@@ -2963,6 +2939,7 @@ export default function DashboardPage() {
         trafficStations={trafficStations}
         intersections={trafficIntersections}
         isDark={isDark}
+        showHeatmap={showHeatmap}
         recs={scoutRecs}
         setRecs={setScoutRecs}
         searchBar={
