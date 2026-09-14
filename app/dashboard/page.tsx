@@ -16,6 +16,9 @@ import CommandPinGate from './components/CommandPinGate';
 import RouteDetailCard from './components/RouteDetailCard';
 import MobileVipBar from './components/MobileVipBar';
 import BristolFactsCard from './components/BristolFactsCard';
+import SignInspectionCard from './components/SignInspectionCard';
+import CanvassInspectionCard from './components/CanvassInspectionCard';
+import ScoutRecommendationCard from './components/ScoutRecommendationCard';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON, BRISTOL_ALL_PRECINCTS_BOUNDS, BRISTOL_ALL_PRECINCTS_CENTER } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
@@ -2513,7 +2516,7 @@ export default function DashboardPage() {
               id="tour-lock-btn"
               onClick={handleLockCommand}
               className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 active:scale-95 group"
-              title="Lock Field Command Gate (Master PIN: 620620)"
+              title="Lock Field Command Gate"
             >
               <Lock className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-400 transition-colors" />
               <span className="hidden md:inline">Lock</span>
@@ -2771,390 +2774,58 @@ export default function DashboardPage() {
 
 
 
-      {/* ============================================================
-          SELECTED SIGN — INSPECTION CARD (Centered on Desktop and Mobile)
-          ============================================================ */}
+      {/* SELECTED SIGN — INSPECTION CARD */}
       {selectedSign && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-          <div 
-            style={signDrag.style} 
-            className="w-full max-w-[380px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up"
-          >
-            <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
-              {/* Accent edge */}
-              <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${selectedSign.is_competitor ? 'from-rose-500 to-pink-500' : 'from-emerald-400 to-teal-400'}`} />
-
-              <button onClick={() => setSelectedSign(null)} className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
-                <X className="w-3.5 h-3.5 opacity-50" />
-              </button>
-
-              {/* Desktop Drag Handle & Header */}
-              <div
-                {...signDrag.dragProps}
-                onDoubleClick={signDrag.resetPosition}
-                className="select-none md:cursor-grab md:active:cursor-grabbing pb-1"
-                title="Drag to move card • Double click to center"
-              >
-                {/* Subtle Drag Handle Pill */}
-                <div className="hidden md:flex items-center justify-center -mt-2 mb-2.5">
-                  <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${selectedSign.is_competitor ? 'from-rose-500 to-pink-600' : 'from-emerald-400 to-teal-500'} flex items-center justify-center text-2xl shadow-lg ${selectedSign.is_competitor ? 'shadow-rose-500/30' : 'shadow-emerald-500/30'}`}>
-                    {SIGN_TYPE_META[selectedSign.sign_type]?.emoji || '📍'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${selectedSign.is_competitor ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
-                      {selectedSign.is_competitor ? 'Opponent Sighting' : 'Official Campaign'}
-                    </span>
-                    <h3 className="font-extrabold text-base mt-1 truncate">
-                      {selectedSign.is_competitor ? selectedSign.competitor_name : 'Melissa K. Brown'}
-                    </h3>
-                    <p className="text-xs opacity-50 capitalize mt-0.5">
-                      {selectedSign.sign_type.replace('_', ' ')} · <span className={selectedSign.is_competitor ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{selectedSign.is_competitor ? 'Reported' : (selectedSign.status === 'placed' ? 'Placed' : selectedSign.status.replace('_', ' '))}</span> {relativeTime(selectedSign.created_at)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
-                <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10">
-                  <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider block">📍 Street Address</span>
-                  {loadingAddress ? (
-                    <span className={`inline-block h-4 w-44 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-                  ) : (
-                    <span className="font-extrabold mt-1 block text-sm text-white">{streetAddress || selectedSign.street_address || 'Bristol, TN'}</span>
-                  )}
-                  <span className="text-[10px] opacity-40 block mt-0.5 font-mono">Bristol, TN • {Number(selectedSign.latitude).toFixed(4)}, {Number(selectedSign.longitude).toFixed(4)}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-[9px] uppercase font-bold opacity-30 block">
-                      {selectedSign.is_competitor ? 'Reported By' : 'Placed By'}
-                    </span>
-                    <span className="font-semibold mt-0.5 block">
-                      {selectedSign.is_competitor ? 'Opponent Volunteer' : 'Campaign Volunteer'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] uppercase font-bold opacity-30 block">GPS</span>
-                    <span className="font-mono opacity-60 mt-0.5 block">{Number(selectedSign.latitude).toFixed(4)}, {Number(selectedSign.longitude).toFixed(4)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <a
-                  href={getAppleMapsUrl({
-                    address: streetAddress || selectedSign.street_address,
-                    lat: Number(selectedSign.latitude),
-                    lng: Number(selectedSign.longitude),
-                    title: `Sign: ${streetAddress || selectedSign.street_address || 'Bristol TN'}`,
-                    mode: 'directions',
-                  })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-[0.97] transition-all"
-                >
-                  <Navigation className="w-3.5 h-3.5" /> View in Apple Maps
-                </a>
-                <button onClick={() => setSelectedSign(null)} className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}>
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SignInspectionCard
+          sign={selectedSign} isDark={isDark}
+          streetAddress={streetAddress} loadingAddress={loadingAddress}
+          dragStyle={signDrag.style} dragProps={signDrag.dragProps}
+          resetPosition={signDrag.resetPosition}
+          onDismiss={() => setSelectedSign(null)}
+        />
       )}
 
-      {/* ============================================================
-          SELECTED GROUND CANVASS RECORD — INSPECTION CARD (Centered on Desktop & Mobile)
-          ============================================================ */}
+
+
+
+      {/* SELECTED CANVASS RECORD — INSPECTION CARD */}
       {selectedCanvassRecord && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-          <div 
-            style={canvassDrag.style} 
-            className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up"
-          >
-            <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl">
-              {/* Accent top edge */}
-              <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${
-                selectedCanvassRecord.result === 'contact'
-                  ? 'from-emerald-400 to-teal-400'
-                  : selectedCanvassRecord.result === 'left_flyer'
-                  ? 'from-amber-400 to-orange-400'
-                  : 'from-slate-400 to-slate-600'
-              }`} />
-
-              <button
-                onClick={() => setSelectedCanvassRecord(null)}
-                className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
-              >
-                <X className="w-3.5 h-3.5 opacity-50" />
-              </button>
-
-              {/* Desktop Drag Handle & Header */}
-              <div
-                {...canvassDrag.dragProps}
-                onDoubleClick={canvassDrag.resetPosition}
-                className="select-none md:cursor-grab md:active:cursor-grabbing pb-1"
-                title="Drag to move card • Double click to center"
-              >
-                {/* Subtle Drag Handle Pill */}
-                <div className="hidden md:flex items-center justify-center -mt-2 mb-2.5">
-                  <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
-                </div>
-
-                <div className="flex items-start gap-3.5">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg ${
-                    selectedCanvassRecord.result === 'contact'
-                      ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
-                      : selectedCanvassRecord.result === 'left_flyer'
-                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
-                      : 'bg-slate-800 border border-slate-700 text-slate-300'
-                  }`}>
-                    {selectedCanvassRecord.result === 'contact' ? '🤝' : selectedCanvassRecord.result === 'left_flyer' ? '📰' : '🚪'}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
-                        selectedCanvassRecord.result === 'contact'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : selectedCanvassRecord.result === 'left_flyer'
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          : 'bg-slate-700/50 text-slate-300 border border-slate-600'
-                      }`}>
-                        {selectedCanvassRecord.result === 'contact' ? 'Spoke With Voter' : selectedCanvassRecord.result === 'left_flyer' ? 'Left Campaign Flyer' : 'No Contact / Not Home'}
-                      </span>
-                    </div>
-
-                    <h3 className="font-extrabold text-base mt-1 truncate">
-                      {selectedCanvassRecord.voter_name || 'Voter Contact'}
-                    </h3>
-                    <p className="text-xs text-slate-400 truncate mt-0.5 font-medium">
-                      Canvasser: <span className="text-white font-semibold">{selectedCanvassRecord.volunteer_name || 'Field Team'}</span> · {relativeTime(selectedCanvassRecord.created_at)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3.5 space-y-2 text-xs">
-                <div className="p-2.5 rounded-2xl bg-white/[0.04] border border-white/10">
-                  <span className="text-[9px] uppercase font-bold text-teal-400 tracking-wider block">📍 Address</span>
-                  <p className="font-extrabold text-sm text-white mt-0.5 truncate">{selectedCanvassRecord.street_address || 'Bristol, TN'}</p>
-                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    {Number(selectedCanvassRecord.latitude).toFixed(4)}, {Number(selectedCanvassRecord.longitude).toFixed(4)}
-                  </p>
-                </div>
-
-                {selectedCanvassRecord.sentiment && (
-                  <div className="p-2.5 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Voter Sentiment</span>
-                    <span className={`text-xs font-black uppercase px-2.5 py-0.5 rounded-lg ${
-                      selectedCanvassRecord.sentiment === 'strong_support' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
-                      selectedCanvassRecord.sentiment === 'lean_support' ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' :
-                      selectedCanvassRecord.sentiment === 'undecided' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                      'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                    }`}>
-                      {selectedCanvassRecord.sentiment.replace('_', ' ')}
-                    </span>
-                  </div>
-                )}
-
-                {selectedCanvassRecord.wants_yard_sign && (
-                  <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
-                    <span>🏡</span>
-                    <span>Voter Requested Yard Sign for Front Lawn!</span>
-                  </div>
-                )}
-
-                {selectedCanvassRecord.notes && (
-                  <div className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/10">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Field Notes</span>
-                    <p className="text-xs text-slate-200 mt-1 italic">&ldquo;{selectedCanvassRecord.notes}&rdquo;</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <a
-                  href={getAppleMapsUrl({
-                    address: selectedCanvassRecord.street_address,
-                    lat: Number(selectedCanvassRecord.latitude),
-                    lng: Number(selectedCanvassRecord.longitude),
-                    title: `Door: ${selectedCanvassRecord.street_address || 'Voter'}`,
-                    mode: 'directions',
-                  })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 hover:scale-[1.01] active:scale-[0.98] transition"
-                >
-                  <Navigation className="w-3.5 h-3.5" /> Navigate
-                </a>
-                <button
-                  onClick={() => setSelectedCanvassRecord(null)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CanvassInspectionCard
+          record={selectedCanvassRecord} isDark={isDark}
+          dragStyle={canvassDrag.style} dragProps={canvassDrag.dragProps}
+          resetPosition={canvassDrag.resetPosition}
+          onDismiss={() => setSelectedCanvassRecord(null)}
+        />
       )}
 
-      {/* ============================================================
-          SCOUT RECOMMENDATION — APPROVAL CARD (Bottom Center slide-up)
-          ============================================================ */}
+      {/* SCOUT RECOMMENDATION — APPROVAL CARD */}
       {selectedRec && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-          <div 
-            style={recDrag.style} 
-            className="w-full max-w-[420px] max-h-[88vh] overflow-y-auto no-scrollbar pointer-events-auto animate-slide-up"
-          >
-            <div className="glass-heavy rounded-3xl p-5 relative overflow-hidden shadow-2xl shadow-amber-500/10">
-            {/* Amber glowing top edge */}
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300" />
-
-            <button onClick={() => setSelectedRec(null)} className={`absolute top-3 right-3 p-1.5 rounded-full transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
-              <X className="w-3.5 h-3.5 opacity-50" />
-            </button>
-
-            {/* Desktop Drag Handle & Header */}
-            <div
-              {...recDrag.dragProps}
-              onDoubleClick={recDrag.resetPosition}
-              className="select-none md:cursor-grab md:active:cursor-grabbing pb-1"
-              title="Drag to move card • Double click to center"
-            >
-              {/* Subtle Drag Handle Pill */}
-              <div className="hidden md:flex items-center justify-center -mt-2 mb-2.5">
-                <div className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/50 transition-colors" />
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl text-white font-black shadow-lg shadow-amber-500/30 shrink-0">
-                  ★
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                      selectedRec.priority === 'critical' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-                      selectedRec.priority === 'high' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                      'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                    }`}>
-                      {selectedRec.priority} Priority
-                    </span>
-                    <span className="text-[10px] font-black text-amber-400">★ {selectedRec.score}/10 Score</span>
-                  </div>
-                  <h3 className="font-extrabold text-base mt-1 truncate">{selectedRec.street}</h3>
-                  <p className="text-xs opacity-60 mt-0.5 font-medium">
-                    {selectedRec.aadt ? `${selectedRec.aadt.toLocaleString()} vehicles/day` : 'High-impact corridor'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Details Section */}
-            <div className={`mt-4 pt-3 border-t ${isDark ? 'border-white/10' : 'border-black/8'} space-y-3 text-xs`}>
-              <div className="p-3 rounded-2xl bg-white/[0.04] border border-amber-500/20">
-                <span className="text-[9px] uppercase font-bold text-amber-400 tracking-wider block">📍 Street Address / Intersection</span>
-                {loadingRecAddress ? (
-                  <span className={`inline-block h-4 w-44 rounded mt-1 animate-pulse ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-                ) : (
-                  <span className="font-extrabold mt-1 block text-sm text-white">{recAddress || selectedRec.street}</span>
-                )}
-                <span className="text-[10px] opacity-40 block mt-0.5 font-mono">Bristol, TN • {selectedRec.lat.toFixed(4)}, {selectedRec.lng.toFixed(4)}</span>
-              </div>
-
-              <div>
-                <span className="text-[9px] uppercase font-bold opacity-30 block">🎯 Strategic Rationale</span>
-                <p className="text-xs opacity-75 leading-relaxed mt-0.5">{selectedRec.reason}</p>
-              </div>
-
-              {/* Sign Type Selector */}
-              <div>
-                <span className="text-[9px] uppercase font-bold opacity-30 block mb-1.5">Deploy As Sign Type</span>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[
-                    { id: 'yard_sign', emoji: '🏡', label: 'Yard Sign' },
-                    { id: 'large_sign', emoji: '🪧', label: 'Large 4×4' },
-                    { id: 'banner', emoji: '🚩', label: 'Banner' },
-                  ].map(t => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setSelectedRecSignType(t.id as SignType)}
-                      className={`p-2 rounded-xl text-center border transition-all ${
-                        selectedRecSignType === t.id
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm'
-                          : 'bg-white/5 border-white/10 opacity-60 hover:opacity-100'
-                      }`}
-                    >
-                      <span className="text-base block">{t.emoji}</span>
-                      <span className="text-[10px] font-bold block mt-0.5 leading-none">{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => handleApproveRec(selectedRec, selectedRecSignType)}
-                disabled={approvingRec}
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 active:scale-[0.97] transition-all disabled:opacity-50"
-              >
-                <Check className="w-4 h-4" /> {approvingRec ? 'Deploying…' : 'Approve & Deploy'}
-              </button>
-              <button
-                onClick={() => {
-                  setModalInitialTarget({
-                    title: selectedRec.street,
-                    street_address: recAddress || selectedRec.street,
-                    lat: selectedRec.lat,
-                    lng: selectedRec.lng,
-                    signType: selectedRecSignType,
-                    quantity: 1,
-                    targetType: 'scout_rec',
-                  });
-                  setModalInitialTab('dispatch');
-                  setShowVolunteerModal(true);
-                }}
-                className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-purple-300 border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 flex items-center gap-1.5 transition active:scale-95 shadow-sm"
-                title="Assign this Scout recommendation to a field volunteer"
-              >
-                <Users className="w-3.5 h-3.5 text-purple-400" /> Assign
-              </button>
-              <button
-                onClick={() => handleDeclineRec(selectedRec)}
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold transition text-rose-400 border border-rose-500/20 hover:bg-rose-500/10 active:scale-95`}
-              >
-                Decline
-              </button>
-              <a
-                href={getAppleMapsUrl({
-                  address: recAddress || selectedRec.street,
-                  lat: selectedRec.lat,
-                  lng: selectedRec.lng,
-                  title: selectedRec.street,
-                  mode: 'view',
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}
-                title="Open Address in Apple Maps"
-              >
-                <Navigation className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
+        <ScoutRecommendationCard
+          rec={selectedRec} isDark={isDark}
+          recAddress={recAddress} loadingRecAddress={loadingRecAddress}
+          selectedRecSignType={selectedRecSignType}
+          approvingRec={approvingRec}
+          dragStyle={recDrag.style} dragProps={recDrag.dragProps}
+          resetPosition={recDrag.resetPosition}
+          onDismiss={() => setSelectedRec(null)}
+          onSetSignType={setSelectedRecSignType}
+          onApprove={handleApproveRec}
+          onDecline={handleDeclineRec}
+          onAssign={(rec) => {
+            setModalInitialTarget({
+              title: rec.street,
+              street_address: recAddress || rec.street,
+              lat: rec.lat,
+              lng: rec.lng,
+              signType: selectedRecSignType,
+              quantity: 1,
+              targetType: 'scout_rec',
+            });
+            setModalInitialTab('dispatch');
+            setShowVolunteerModal(true);
+          }}
+        />
+      )}
 
       {/* ============================================================
           iOS-STYLE SLIDE-OVER DRAWER
