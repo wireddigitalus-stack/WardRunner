@@ -28,7 +28,7 @@ export interface TrafficData {
   fetchedAt: string;
 }
 
-const CACHE_KEY = 'wardrunner_traffic_data';
+const CACHE_KEY = 'campaignos_traffic_data';
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // Bristol TN bounding box
@@ -109,7 +109,7 @@ export async function getTrafficData(): Promise<TrafficData> {
   // Check cache
   if (typeof window !== 'undefined') {
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
+      const cached = localStorage.getItem(CACHE_KEY) || localStorage.getItem('wardrunner_traffic_data');
       if (cached) {
         const parsed: TrafficData = JSON.parse(cached);
         if (Date.now() - new Date(parsed.fetchedAt).getTime() < CACHE_TTL_MS) {

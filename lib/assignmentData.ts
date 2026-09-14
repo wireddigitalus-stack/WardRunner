@@ -2,7 +2,7 @@ import { VolunteerAssignment, SignType } from './types';
 import { fetchFromSupabase, upsertToSupabase, deleteFromSupabase, subscribeToTable } from '@/lib/syncEngine';
 import { getCampaignId } from '@/lib/auth';
 
-export const ASSIGNMENTS_STORAGE_KEY = 'wardrunner_assignments';
+export const ASSIGNMENTS_STORAGE_KEY = 'campaignos_assignments';
 const TABLE_NAME = 'volunteer_assignments';
 
 export interface TargetPreset {
@@ -163,7 +163,7 @@ export const SEED_ASSIGNMENTS: VolunteerAssignment[] = [
 export function getStoredAssignments(): VolunteerAssignment[] {
   if (typeof window === 'undefined') return SEED_ASSIGNMENTS;
   try {
-    const raw = localStorage.getItem(ASSIGNMENTS_STORAGE_KEY);
+    const raw = localStorage.getItem(ASSIGNMENTS_STORAGE_KEY) || localStorage.getItem('wardrunner_assignments');
     if (!raw) {
       localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(SEED_ASSIGNMENTS));
       return SEED_ASSIGNMENTS;
@@ -179,6 +179,7 @@ export function saveStoredAssignments(assignments: VolunteerAssignment[]) {
   try {
     localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(assignments));
     // Dispatch storage event so other components and tabs react
+    window.dispatchEvent(new CustomEvent('campaignos_assignments_updated', { detail: assignments }));
     window.dispatchEvent(new CustomEvent('wardrunner_assignments_updated', { detail: assignments }));
   } catch (e) {
     console.error('Failed to save assignments:', e);

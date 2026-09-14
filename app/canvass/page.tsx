@@ -133,7 +133,7 @@ export default function CanvassPage() {
     if (!session) return;
     if (typeof window !== 'undefined' && window.innerWidth < 768) return;
     try {
-      const seen = localStorage.getItem('wardrunner_tour_completed_wardrunner_canvass_tour_v1');
+      const seen = localStorage.getItem('campaignos_tour_completed_canvass_v1') || localStorage.getItem('wardrunner_tour_completed_wardrunner_canvass_tour_v1');
       if (!seen) {
         const timer = setTimeout(() => {
           setIsTourOpen(true);
@@ -220,12 +220,13 @@ export default function CanvassPage() {
 
   // 1. Initial Session Load
   useEffect(() => {
-    const saved = localStorage.getItem('wardrunner_session');
+    const saved = localStorage.getItem('campaignos_session') || localStorage.getItem('wardrunner_session');
     if (saved) {
       try {
         const parsed: VolunteerSession = JSON.parse(saved);
         setSession(parsed);
       } catch {
+        localStorage.removeItem('campaignos_session');
         localStorage.removeItem('wardrunner_session');
       }
     }
@@ -270,9 +271,11 @@ export default function CanvassPage() {
     loadRoute();
 
     const handleUpdate = () => loadRoute();
+    window.addEventListener('campaignos_routes_updated', handleUpdate);
     window.addEventListener('wardrunner_routes_updated', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
+      window.removeEventListener('campaignos_routes_updated', handleUpdate);
       window.removeEventListener('wardrunner_routes_updated', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
@@ -374,7 +377,7 @@ export default function CanvassPage() {
         volunteerName: result.session?.volunteerName || nameInput.trim(),
       };
 
-      localStorage.setItem('wardrunner_session', JSON.stringify(newSession));
+      localStorage.setItem('campaignos_session', JSON.stringify(newSession));
       setSession(newSession);
       requestWakeLock();
     } catch (err: any) {
@@ -396,6 +399,7 @@ export default function CanvassPage() {
         current_action: 'Logged off',
       });
     }
+    localStorage.removeItem('campaignos_session');
     localStorage.removeItem('wardrunner_session');
     setSession(null);
     setIsTourOpen(false);
@@ -1276,7 +1280,7 @@ export default function CanvassPage() {
 
       {/* 60-Second Canvass Briefing Onboarding Tour (Desktop Only for now) */}
       <TacticalOnboardingTour
-        tourKey="wardrunner_canvass_tour_v1"
+        tourKey="campaignos_canvass_tour_v1"
         steps={CANVASS_TOUR_STEPS}
         isOpen={isTourOpen && !!session && (typeof window !== 'undefined' ? window.innerWidth >= 768 : false)}
         onClose={() => setIsTourOpen(false)}

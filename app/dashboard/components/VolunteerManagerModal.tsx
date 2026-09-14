@@ -151,18 +151,18 @@ export default function VolunteerManagerModal({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const savedPin = localStorage.getItem('wardrunner_campaign_pin');
+      const savedPin = localStorage.getItem('campaignos_campaign_pin') || localStorage.getItem('wardrunner_campaign_pin');
       if (savedPin) {
         setMasterPin(savedPin);
         setTempMasterPin(savedPin);
       }
 
-      const savedVols = localStorage.getItem('wardrunner_volunteers');
+      const savedVols = localStorage.getItem('campaignos_volunteers') || localStorage.getItem('wardrunner_volunteers');
       if (savedVols) {
         setVolunteers(JSON.parse(savedVols));
       } else {
         setVolunteers(DEFAULT_VOLUNTEERS);
-        localStorage.setItem('wardrunner_volunteers', JSON.stringify(DEFAULT_VOLUNTEERS));
+        localStorage.setItem('campaignos_volunteers', JSON.stringify(DEFAULT_VOLUNTEERS));
       }
 
       setAssignments(getStoredAssignments());
@@ -174,8 +174,12 @@ export default function VolunteerManagerModal({
       if (e.detail) setAssignments(e.detail);
       else setAssignments(getStoredAssignments());
     };
+    window.addEventListener('campaignos_assignments_updated', handleAssignmentsUpdated);
     window.addEventListener('wardrunner_assignments_updated', handleAssignmentsUpdated);
-    return () => window.removeEventListener('wardrunner_assignments_updated', handleAssignmentsUpdated);
+    return () => {
+      window.removeEventListener('campaignos_assignments_updated', handleAssignmentsUpdated);
+      window.removeEventListener('wardrunner_assignments_updated', handleAssignmentsUpdated);
+    };
   }, []);
 
   // Handle external tab & target triggers (e.g. from Scout or Precinct cards)
@@ -200,7 +204,7 @@ export default function VolunteerManagerModal({
   const saveVolunteers = (newVols: Volunteer[]) => {
     setVolunteers(newVols);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('wardrunner_volunteers', JSON.stringify(newVols));
+      localStorage.setItem('campaignos_volunteers', JSON.stringify(newVols));
     }
   };
 
@@ -213,7 +217,7 @@ export default function VolunteerManagerModal({
     setMasterPin(cleaned);
     setIsEditingMasterPin(false);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('wardrunner_campaign_pin', cleaned);
+      localStorage.setItem('campaignos_campaign_pin', cleaned);
     }
   };
 

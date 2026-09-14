@@ -13,8 +13,8 @@ export const SEED_SIGNS: Sign[] = [
   { id: '8', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5860, longitude: -82.1750, placed_by_name: 'Opponent Volunteer', street_address: '1820 Bluff City Highway', sign_type: 'large_sign', is_competitor: true, competitor_name: 'Common Sense Slate', status: 'placed', created_at: new Date(Date.now() - 3600000 * 6).toISOString() },
 ];
 
-export const SIGNS_STORAGE_KEY = 'wardrunner_signs_data';
-export const SIGNS_PING_KEY = 'wardrunner_signs_ping';
+export const SIGNS_STORAGE_KEY = 'campaignos_signs_data';
+export const SIGNS_PING_KEY = 'campaignos_signs_ping';
 
 export function getStoredSigns(): Sign[] {
   if (typeof window === 'undefined') return SEED_SIGNS;
@@ -25,7 +25,7 @@ export function getStoredSigns(): Sign[] {
   }, 0);
 
   try {
-    const raw = localStorage.getItem(SIGNS_STORAGE_KEY);
+    const raw = localStorage.getItem(SIGNS_STORAGE_KEY) || localStorage.getItem('wardrunner_signs_data');
     if (!raw) {
       localStorage.setItem(SIGNS_STORAGE_KEY, JSON.stringify(SEED_SIGNS));
       return SEED_SIGNS;
@@ -45,6 +45,7 @@ export function saveStoredSigns(signs: Sign[]): void {
   try {
     localStorage.setItem(SIGNS_STORAGE_KEY, JSON.stringify(signs));
     localStorage.setItem(SIGNS_PING_KEY, String(Date.now()));
+    window.dispatchEvent(new CustomEvent('campaignos_signs_updated', { detail: signs }));
     window.dispatchEvent(new CustomEvent('wardrunner_signs_updated', { detail: signs }));
   } catch (e) {
     console.warn('Failed to save signs to localStorage:', e);

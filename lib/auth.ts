@@ -14,8 +14,8 @@ export interface AuthSession {
   authenticatedAt: string;
 }
 
-const SESSION_KEY = 'wardrunner_session';
-const AUTH_KEY = 'wardrunner_field_command_auth';
+const SESSION_KEY = 'campaignos_session';
+const AUTH_KEY = 'campaignos_field_command_auth';
 
 // ─── Server-Side PIN Validation ──────────────────────────────────────────────
 
@@ -163,7 +163,7 @@ function validatePinOffline(pin: string): { valid: boolean; session?: AuthSessio
 
   // Check local volunteer roster
   try {
-    const rawVols = localStorage.getItem('wardrunner_volunteers');
+    const rawVols = localStorage.getItem('campaignos_volunteers') || localStorage.getItem('wardrunner_volunteers');
     if (rawVols) {
       const vols = JSON.parse(rawVols);
       const match = vols.find((v: any) => v.active && v.pin === pin);
@@ -208,7 +208,7 @@ function persistSession(session: AuthSession): void {
 export function getCurrentSession(): AuthSession | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+    const raw = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || sessionStorage.getItem('wardrunner_session') || localStorage.getItem('wardrunner_session');
     if (!raw) return null;
     const session: AuthSession = JSON.parse(raw);
     // Validate shape
@@ -224,7 +224,9 @@ export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') return false;
   return (
     sessionStorage.getItem(AUTH_KEY) === 'true' ||
-    localStorage.getItem(AUTH_KEY) === 'true'
+    localStorage.getItem(AUTH_KEY) === 'true' ||
+    sessionStorage.getItem('wardrunner_field_command_auth') === 'true' ||
+    localStorage.getItem('wardrunner_field_command_auth') === 'true'
   );
 }
 
@@ -246,8 +248,12 @@ export function logout(): void {
   try {
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem('wardrunner_session');
+    sessionStorage.removeItem('wardrunner_field_command_auth');
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem('wardrunner_session');
+    localStorage.removeItem('wardrunner_field_command_auth');
   } catch {
     // ignore
   }

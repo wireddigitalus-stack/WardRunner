@@ -3,8 +3,8 @@ import { snapWalkingPathToStreets } from './canvassData';
 import { fetchFromSupabase, upsertToSupabase, deleteFromSupabase, subscribeToTable } from '@/lib/syncEngine';
 import { getCampaignId } from '@/lib/auth';
 
-export const CANVASS_ROUTES_STORAGE_KEY = 'wardrunner_canvass_routes';
-export const CANVASS_ROUTES_PING_KEY = 'wardrunner_canvass_routes_ping';
+export const CANVASS_ROUTES_STORAGE_KEY = 'campaignos_canvass_routes';
+export const CANVASS_ROUTES_PING_KEY = 'campaignos_canvass_routes_ping';
 
 const TABLE_NAME = 'canvass_routes';
 
@@ -136,27 +136,13 @@ export const SEED_CANVASS_ROUTES: CanvassRoute[] = [
 export function getStoredCanvassRoutes(): CanvassRoute[] {
   if (typeof window === 'undefined') return SEED_CANVASS_ROUTES;
   try {
-    const raw = localStorage.getItem(CANVASS_ROUTES_STORAGE_KEY);
+    const raw = localStorage.getItem(CANVASS_ROUTES_STORAGE_KEY) || localStorage.getItem('wardrunner_canvass_routes');
     if (!raw) {
       localStorage.setItem(CANVASS_ROUTES_STORAGE_KEY, JSON.stringify(SEED_CANVASS_ROUTES));
       return SEED_CANVASS_ROUTES;
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      // Auto-migrate route-2a-1 start point if still at legacy 36.6025 to avoid overlapping Marcus's stop
-      const r2a = parsed.find((r: any) => r.id === 'route-2a-1');
-      if (r2a && Math.abs(r2a.start_point?.lat - 36.6025) < 0.0005) {
-        r2a.start_point = {
-          lat: 36.6016,
-          lng: -82.1775,
-          address: 'Virginia Ave & E Cedar St',
-        };
-        const seed2a = SEED_CANVASS_ROUTES.find(s => s.id === 'route-2a-1');
-        if (seed2a) {
-          r2a.path_coordinates = seed2a.path_coordinates;
-        }
-        localStorage.setItem(CANVASS_ROUTES_STORAGE_KEY, JSON.stringify(parsed));
-      }
       return parsed;
     }
     return SEED_CANVASS_ROUTES;
@@ -170,6 +156,7 @@ export function saveStoredCanvassRoutes(routes: CanvassRoute[]): void {
   try {
     localStorage.setItem(CANVASS_ROUTES_STORAGE_KEY, JSON.stringify(routes));
     localStorage.setItem(CANVASS_ROUTES_PING_KEY, String(Date.now()));
+    window.dispatchEvent(new CustomEvent('campaignos_routes_updated', { detail: routes }));
     window.dispatchEvent(new CustomEvent('wardrunner_routes_updated', { detail: routes }));
   } catch (e) {
     console.warn('Failed to save canvass routes to localStorage:', e);

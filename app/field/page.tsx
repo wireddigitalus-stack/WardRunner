@@ -116,7 +116,7 @@ export default function FieldPage() {
     if (!session) return;
     if (typeof window !== 'undefined' && window.innerWidth < 768) return;
     try {
-      const seen = localStorage.getItem('wardrunner_tour_completed_wardrunner_field_tour_v1');
+      const seen = localStorage.getItem('campaignos_tour_completed_field_v1') || localStorage.getItem('wardrunner_tour_completed_wardrunner_field_tour_v1');
       if (!seen) {
         const timer = setTimeout(() => {
           setIsTourOpen(true);
@@ -215,12 +215,13 @@ export default function FieldPage() {
 
   // Load session from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('wardrunner_session');
+    const saved = localStorage.getItem('campaignos_session') || localStorage.getItem('wardrunner_session');
     if (saved) {
       try {
         const parsed: VolunteerSession = JSON.parse(saved);
         setSession(parsed);
       } catch (e) {
+        localStorage.removeItem('campaignos_session');
         localStorage.removeItem('wardrunner_session');
       }
     }
@@ -241,8 +242,12 @@ export default function FieldPage() {
       setMissions(getStoredAssignments());
     };
     loadMissions();
+    window.addEventListener('campaignos_assignments_updated', loadMissions);
     window.addEventListener('wardrunner_assignments_updated', loadMissions);
-    return () => window.removeEventListener('wardrunner_assignments_updated', loadMissions);
+    return () => {
+      window.removeEventListener('campaignos_assignments_updated', loadMissions);
+      window.removeEventListener('wardrunner_assignments_updated', loadMissions);
+    };
   }, []);
 
   const handleAcceptMission = (m: VolunteerAssignment) => {
@@ -391,7 +396,7 @@ export default function FieldPage() {
         volunteerName: result.session?.volunteerName || nameInput.trim(),
       };
 
-      localStorage.setItem('wardrunner_session', JSON.stringify(newSession));
+      localStorage.setItem('campaignos_session', JSON.stringify(newSession));
       setSession(newSession);
     } catch (err: any) {
       setAuthError(err?.message || 'Authentication failed. Check your connection.');
@@ -411,6 +416,7 @@ export default function FieldPage() {
         current_action: 'Logged off',
       });
     }
+    localStorage.removeItem('campaignos_session');
     localStorage.removeItem('wardrunner_session');
     setSession(null);
     setIsTourOpen(false);
@@ -1498,7 +1504,7 @@ export default function FieldPage() {
 
       {/* 60-Second Field Sign Runner Briefing Tour (Desktop Only for now) */}
       <TacticalOnboardingTour
-        tourKey="wardrunner_field_tour_v1"
+        tourKey="campaignos_field_tour_v1"
         steps={FIELD_TOUR_STEPS}
         isOpen={isTourOpen && !!session && (typeof window !== 'undefined' ? window.innerWidth >= 768 : false)}
         onClose={() => setIsTourOpen(false)}

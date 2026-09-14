@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-const SYNC_QUEUE_KEY = 'wardrunner_sync_queue';
+const SYNC_QUEUE_KEY = 'campaignos_sync_queue';
 const DEFAULT_CAMPAIGN_ID = process.env.NEXT_PUBLIC_DEFAULT_CAMPAIGN_ID || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
 export type SyncState = 'synced' | 'syncing' | 'offline' | 'error';
@@ -48,7 +48,7 @@ function safeSetItem(key: string, value: string): void {
  * Get the current offline write queue.
  */
 function getQueue(): QueuedItem[] {
-  const data = safeGetItem(SYNC_QUEUE_KEY);
+  const data = safeGetItem(SYNC_QUEUE_KEY) || safeGetItem('wardrunner_sync_queue');
   if (!data) return [];
   try {
     return JSON.parse(data);
@@ -64,6 +64,7 @@ function getQueue(): QueuedItem[] {
 function saveQueue(queue: QueuedItem[]): void {
   safeSetItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
   if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('campaignos_queue_updated'));
     window.dispatchEvent(new Event('wardrunner_queue_updated'));
   }
 }
@@ -123,6 +124,7 @@ export async function flushQueue(): Promise<void> {
 
   saveQueue(remainingQueue);
   if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('campaignos_sync_complete'));
     window.dispatchEvent(new Event('wardrunner_sync_complete'));
   }
 }
@@ -168,8 +170,12 @@ export function useSyncStatus(): SyncStatus {
   useEffect(() => {
     updateStatus();
     const handler = () => updateStatus();
+    window.addEventListener('campaignos_queue_updated', handler);
     window.addEventListener('wardrunner_queue_updated', handler);
-    return () => window.removeEventListener('wardrunner_queue_updated', handler);
+    return () => {
+      window.removeEventListener('campaignos_queue_updated', handler);
+      window.removeEventListener('wardrunner_queue_updated', handler);
+    };
   }, [updateStatus]);
 
   useEffect(() => {
@@ -177,8 +183,12 @@ export function useSyncStatus(): SyncStatus {
       setLastSyncAt(new Date().toISOString());
       updateStatus();
     };
+    window.addEventListener('campaignos_sync_complete', handleSyncComplete);
     window.addEventListener('wardrunner_sync_complete', handleSyncComplete);
-    return () => window.removeEventListener('wardrunner_sync_complete', handleSyncComplete);
+    return () => {
+      window.removeEventListener('campaignos_sync_complete', handleSyncComplete);
+      window.removeEventListener('wardrunner_sync_complete', handleSyncComplete);
+    };
   }, [updateStatus]);
 
   useEffect(() => {

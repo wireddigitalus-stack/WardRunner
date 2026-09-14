@@ -2,10 +2,10 @@ import { CanvassRecord, VolunteerLocationPing, GroundVolunteerRole } from './typ
 import { getCampaignId } from '@/lib/auth';
 import { fetchFromSupabase, upsertToSupabase, deleteFromSupabase, subscribeToTable } from '@/lib/syncEngine';
 
-export const CANVASS_STORAGE_KEY = 'wardrunner_canvass_records';
-export const CANVASS_PING_KEY = 'wardrunner_canvass_ping';
-export const VOLUNTEER_PINGS_STORAGE_KEY = 'wardrunner_volunteer_pings';
-export const VOLUNTEER_PINGS_PING_KEY = 'wardrunner_volunteer_pings_tick';
+export const CANVASS_STORAGE_KEY = 'campaignos_canvass_records';
+export const CANVASS_PING_KEY = 'campaignos_canvass_ping';
+export const VOLUNTEER_PINGS_STORAGE_KEY = 'campaignos_volunteer_pings';
+export const VOLUNTEER_PINGS_PING_KEY = 'campaignos_volunteer_pings_tick';
 
 export const SEED_CANVASS_RECORDS: CanvassRecord[] = [
   // Sarah Jenkins - Precinct 3A (Anderson / 9th St)
@@ -226,7 +226,7 @@ export const SEED_VOLUNTEER_PINGS: VolunteerLocationPing[] = [
 export function getStoredCanvassRecords(): CanvassRecord[] {
   if (typeof window === 'undefined') return SEED_CANVASS_RECORDS;
   try {
-    const raw = localStorage.getItem(CANVASS_STORAGE_KEY);
+    const raw = localStorage.getItem(CANVASS_STORAGE_KEY) || localStorage.getItem('wardrunner_canvass_records');
     if (!raw) {
       localStorage.setItem(CANVASS_STORAGE_KEY, JSON.stringify(SEED_CANVASS_RECORDS));
       return SEED_CANVASS_RECORDS;
@@ -246,6 +246,7 @@ export function saveStoredCanvassRecords(records: CanvassRecord[]): void {
   try {
     localStorage.setItem(CANVASS_STORAGE_KEY, JSON.stringify(records));
     localStorage.setItem(CANVASS_PING_KEY, String(Date.now()));
+    window.dispatchEvent(new CustomEvent('campaignos_canvass_updated', { detail: records }));
     window.dispatchEvent(new CustomEvent('wardrunner_canvass_updated', { detail: records }));
   } catch (e) {
     console.warn('Failed to save canvass records to localStorage:', e);
@@ -308,7 +309,7 @@ export async function deleteCanvassRecord(id: string): Promise<void> {
 export function getStoredVolunteerPings(): VolunteerLocationPing[] {
   if (typeof window === 'undefined') return SEED_VOLUNTEER_PINGS;
   try {
-    const raw = localStorage.getItem(VOLUNTEER_PINGS_STORAGE_KEY);
+    const raw = localStorage.getItem(VOLUNTEER_PINGS_STORAGE_KEY) || localStorage.getItem('wardrunner_volunteer_pings');
     if (!raw) {
       localStorage.setItem(VOLUNTEER_PINGS_STORAGE_KEY, JSON.stringify(SEED_VOLUNTEER_PINGS));
       return SEED_VOLUNTEER_PINGS;
@@ -339,6 +340,7 @@ export function saveStoredVolunteerPings(pings: VolunteerLocationPing[]): void {
   try {
     localStorage.setItem(VOLUNTEER_PINGS_STORAGE_KEY, JSON.stringify(pings));
     localStorage.setItem(VOLUNTEER_PINGS_PING_KEY, String(Date.now()));
+    window.dispatchEvent(new CustomEvent('campaignos_pings_updated', { detail: pings }));
     window.dispatchEvent(new CustomEvent('wardrunner_pings_updated', { detail: pings }));
   } catch (e) {
     console.warn('Failed to save volunteer pings to localStorage:', e);

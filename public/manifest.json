@@ -1,8 +1,8 @@
 {
-  "name": "CampaignOS Field Ops",
+  "name": "CampaignOS",
   "short_name": "CampaignOS",
   "description": "Rapid campaign field sign logistics and intelligence",
-  "start_url": "/field",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#020617",

@@ -280,6 +280,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isAuth =
+        sessionStorage.getItem('campaignos_field_command_auth') === 'true' ||
+        localStorage.getItem('campaignos_field_command_auth') === 'true' ||
         sessionStorage.getItem('wardrunner_field_command_auth') === 'true' ||
         localStorage.getItem('wardrunner_field_command_auth') === 'true';
       setIsCommandAuthorized(isAuth);
@@ -289,7 +291,9 @@ export default function DashboardPage() {
 
   const handleLockCommand = useCallback(() => {
     if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('campaignos_field_command_auth');
       sessionStorage.removeItem('wardrunner_field_command_auth');
+      localStorage.removeItem('campaignos_field_command_auth');
       localStorage.removeItem('wardrunner_field_command_auth');
     }
     setIsCommandAuthorized(false);
@@ -419,7 +423,7 @@ export default function DashboardPage() {
   // Load saved inventory stock and dispatched assignments from localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('wardrunner_inventory_stock');
+      const saved = localStorage.getItem('campaignos_inventory_stock') || localStorage.getItem('wardrunner_inventory_stock');
       if (saved) setInventoryStock(JSON.parse(saved));
     } catch {}
 
@@ -427,6 +431,7 @@ export default function DashboardPage() {
       setAssignments(getStoredAssignments());
     };
     loadAssigns();
+    window.addEventListener('campaignos_assignments_updated', loadAssigns);
     window.addEventListener('wardrunner_assignments_updated', loadAssigns);
 
     // Ground Campaign Data Loaders
@@ -451,6 +456,8 @@ export default function DashboardPage() {
       }
     };
     loadGroundData();
+    window.addEventListener('campaignos_canvass_updated', loadGroundData);
+    window.addEventListener('campaignos_pings_updated', loadGroundData);
     window.addEventListener('wardrunner_canvass_updated', loadGroundData);
     window.addEventListener('wardrunner_pings_updated', loadGroundData);
 
@@ -459,15 +466,20 @@ export default function DashboardPage() {
       setRoutes(getStoredCanvassRoutes());
     };
     loadRoutes();
+    window.addEventListener('campaignos_routes_updated', loadRoutes);
     window.addEventListener('wardrunner_routes_updated', loadRoutes);
 
     // Poll ground data every 8s for live field updates
     const groundInterval = setInterval(loadGroundData, 8000);
 
     return () => {
+      window.removeEventListener('campaignos_assignments_updated', loadAssigns);
       window.removeEventListener('wardrunner_assignments_updated', loadAssigns);
+      window.removeEventListener('campaignos_canvass_updated', loadGroundData);
+      window.removeEventListener('campaignos_pings_updated', loadGroundData);
       window.removeEventListener('wardrunner_canvass_updated', loadGroundData);
       window.removeEventListener('wardrunner_pings_updated', loadGroundData);
+      window.removeEventListener('campaignos_routes_updated', loadRoutes);
       window.removeEventListener('wardrunner_routes_updated', loadRoutes);
       clearInterval(groundInterval);
     };
@@ -476,7 +488,7 @@ export default function DashboardPage() {
   const updateStockQuantity = (type: keyof InventoryStock, delta: number) => {
     setInventoryStock(prev => {
       const next = { ...prev, [type]: Math.max(0, prev[type] + delta) };
-      try { localStorage.setItem('wardrunner_inventory_stock', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem('campaignos_inventory_stock', JSON.stringify(next)); } catch {}
       return next;
     });
   };
@@ -504,8 +516,8 @@ export default function DashboardPage() {
     if (!checkedAuth || !isCommandAuthorized) return;
     if (isMobileScreen || (typeof window !== 'undefined' && window.innerWidth < 768)) return;
     try {
-      const key = 'wardrunner_tour_completed_wardrunner_dashboard_tour_v1';
-      const seen = localStorage.getItem(key);
+      const key = 'campaignos_tour_completed_dashboard_v1';
+      const seen = localStorage.getItem(key) || localStorage.getItem('wardrunner_tour_completed_wardrunner_dashboard_tour_v1');
       if (!seen) {
         const timer = setTimeout(() => {
           setIsTourOpen(true);
@@ -555,9 +567,15 @@ export default function DashboardPage() {
     const handleSignsSync = () => {
       setSigns(getStoredSigns());
     };
+    window.addEventListener('campaignos_signs_updated', handleSignsSync);
     window.addEventListener('wardrunner_signs_updated', handleSignsSync);
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'wardrunner_signs_data' || e.key === 'wardrunner_signs_ping') {
+      if (
+        e.key === 'campaignos_signs_data' ||
+        e.key === 'campaignos_signs_ping' ||
+        e.key === 'wardrunner_signs_data' ||
+        e.key === 'wardrunner_signs_ping'
+      ) {
         handleSignsSync();
       }
     };
@@ -572,6 +590,7 @@ export default function DashboardPage() {
     const signInterval = setInterval(fetchSigns, 10000);
 
     return () => {
+      window.removeEventListener('campaignos_signs_updated', handleSignsSync);
       window.removeEventListener('wardrunner_signs_updated', handleSignsSync);
       window.removeEventListener('storage', handleStorage);
       unsubscribeRemote();
@@ -3214,7 +3233,7 @@ export default function DashboardPage() {
       {/* Tactical Mission Briefing Onboarding Tour (Desktop Only) */}
       {!isMobileScreen && (
         <TacticalOnboardingTour
-          tourKey="wardrunner_dashboard_tour_v1"
+          tourKey="campaignos_dashboard_tour_v1"
           steps={DASHBOARD_TOUR_STEPS}
           isOpen={isTourOpen && isCommandAuthorized && checkedAuth}
           onClose={() => setIsTourOpen(false)}

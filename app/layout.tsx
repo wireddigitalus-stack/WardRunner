@@ -13,7 +13,7 @@ const getBaseUrl = () => {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return 'https://wardrunner.app';
+  return 'https://campaignos.app';
 };
 
 const baseUrl = getBaseUrl();
@@ -22,6 +22,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
   description: 'Fast, mobile-first field logistics, yard sign intelligence, and campaign operations for political campaigns.',
+  applicationName: 'CampaignOS',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'CampaignOS',
+  },
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
