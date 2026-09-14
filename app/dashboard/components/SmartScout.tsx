@@ -217,7 +217,7 @@ export default function SmartScout({
                 <span className="font-extrabold opacity-80">Heat</span>
                 <div className="flex items-center gap-1.5 pl-1">
                   <span className="text-[9px] text-slate-400 font-bold uppercase">Cool</span>
-                  <div className="w-14 h-2 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 via-amber-400 via-orange-500 via-rose-600 to-white shadow-sm ring-1 ring-white/10" />
+                  <div className="w-14 h-2 rounded-full shadow-sm ring-1 ring-white/10" style={{ background: 'linear-gradient(90deg, rgba(6,182,212,0.9) 0%, rgba(16,185,129,0.9) 25%, rgba(245,158,11,0.95) 48%, rgba(249,115,22,0.95) 68%, rgba(239,68,68,0.97) 85%, rgba(255,255,255,0.98) 100%)' }} />
                   <span className="text-[9px] text-rose-400 font-bold uppercase">Hot</span>
                 </div>
               </div>
