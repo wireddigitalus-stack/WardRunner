@@ -99,26 +99,28 @@ export default function ScoutRecommendationCard({
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-col sm:flex-row gap-2">
             <button onClick={() => onApprove(rec, selectedRecSignType)} disabled={approvingRec}
-              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 active:scale-[0.97] transition-all disabled:opacity-50">
-              <Check className="w-4 h-4" /> {approvingRec ? 'Deploying…' : 'Approve & Deploy'}
+              className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 active:scale-[0.97] transition-all disabled:opacity-50 truncate">
+              <Check className="w-4 h-4 shrink-0" /> <span>{approvingRec ? 'Deploying…' : 'Approve & Deploy'}</span>
             </button>
-            <button onClick={() => onAssign(rec)}
-              className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-purple-300 border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 flex items-center gap-1.5 transition active:scale-95 shadow-sm"
-              title="Assign this Scout recommendation to a field volunteer">
-              <Users className="w-3.5 h-3.5 text-purple-400" /> Assign
-            </button>
-            <button onClick={() => onDecline(rec)}
-              className="px-3.5 py-2.5 rounded-xl text-xs font-semibold transition text-rose-400 border border-rose-500/20 hover:bg-rose-500/10 active:scale-95">
-              Decline
-            </button>
-            <a href={getAppleMapsUrl({ address: recAddress || rec.street, lat: rec.lat, lng: rec.lng, title: rec.street, mode: 'view' })}
-              target="_blank" rel="noopener noreferrer"
-              className={`px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}
-              title="Open Address in Apple Maps">
-              <Navigation className="w-3.5 h-3.5" />
-            </a>
+            <div className="flex items-center gap-2">
+              <button onClick={() => onAssign(rec)}
+                className="flex-1 sm:flex-initial px-3.5 py-2.5 rounded-xl text-xs font-bold text-purple-300 border border-purple-500/30 bg-purple-500/20 hover:bg-purple-500/30 flex items-center justify-center gap-1.5 transition active:scale-95 shadow-sm"
+                title="Assign this Scout recommendation to a field volunteer">
+                <Users className="w-3.5 h-3.5 text-purple-400 shrink-0" /> <span>Assign</span>
+              </button>
+              <button onClick={() => onDecline(rec)}
+                className="px-3.5 py-2.5 rounded-xl text-xs font-semibold transition text-rose-400 border border-rose-500/20 hover:bg-rose-500/10 active:scale-95 shrink-0">
+                Decline
+              </button>
+              <a href={getAppleMapsUrl({ address: recAddress || rec.street, lat: rec.lat, lng: rec.lng, title: rec.street, mode: 'view' })}
+                target="_blank" rel="noopener noreferrer"
+                className={`p-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition shrink-0 ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'}`}
+                title="Open Address in Apple Maps">
+                <Navigation className="w-3.5 h-3.5" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
