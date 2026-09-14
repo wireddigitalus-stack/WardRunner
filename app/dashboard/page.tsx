@@ -2875,14 +2875,14 @@ export default function DashboardPage() {
                 key={item.id}
                 id={item.id}
                 onClick={item.onClick}
-                className={`group flex items-center gap-1.5 rounded-xl transition-all duration-200 active:scale-95 ${
+                className={`group flex items-center gap-1.5 rounded-xl transition-all duration-200 active:scale-95 pl-2.5 pr-2 py-1.5 ${
                   item.active
-                    ? `${c.bg} ${c.text} border ${c.border} shadow-md ${c.shadow} ring-1 ${c.glow} pl-2.5 pr-2 py-1.5`
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 px-2 py-1.5'
+                    ? `${c.bg} ${c.text} border ${c.border} shadow-md ${c.shadow} ring-1 ${c.glow}`
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5 border border-transparent'
                 }`}
                 title={item.label}
               >
-                <span className={`transition-all duration-200 ${item.active ? 'text-[10px] font-black uppercase tracking-wider opacity-100 max-w-[60px]' : 'text-[0px] max-w-0 opacity-0 overflow-hidden'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider transition-colors duration-200 ${item.active ? c.text : 'text-zinc-500'}`}>
                   {item.label}
                 </span>
                 {item.icon}
