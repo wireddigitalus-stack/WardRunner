@@ -19,6 +19,9 @@ import {
   Clock,
   AlertCircle,
   Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Plus,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 import type { SignType, VolunteerAssignment } from '@/lib/types';
@@ -27,7 +30,10 @@ import {
   TargetPreset,
   getStoredAssignments,
   addAssignment,
+  markAssignmentComplete,
 } from '@/lib/assignmentData';
+import { upsertToSupabase, deleteFromSupabase } from '@/lib/syncEngine';
+import { getCampaignId } from '@/lib/auth';
 
 export interface Volunteer {
   id: string;
@@ -112,26 +118,32 @@ export default function VolunteerManagerModal({
   initialTab = 'roster',
   initialTarget = null,
 }: VolunteerManagerModalProps) {
-  const [activeTab, setActiveTab] = useState<'roster' | 'dispatch'>(initialTab);
+  // Main view mode: 'crew' (volunteer-centric with live missions) or 'all_missions' (city-wide list)
+  const [viewMode, setViewMode] = useState<'crew' | 'all_missions'>('crew');
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [masterPin, setMasterPin] = useState(DEFAULT_MASTER_PIN);
   const [isEditingMasterPin, setIsEditingMasterPin] = useState(false);
   const [tempMasterPin, setTempMasterPin] = useState(DEFAULT_MASTER_PIN);
 
-  // Volunteer Roster Form State
+  // Volunteer creation state
+  const [showAddVolunteer, setShowAddVolunteer] = useState(false);
   const [name, setName] = useState('');
   const [role, setRole] = useState<Volunteer['role']>('Field Volunteer');
   const [customPin, setCustomPin] = useState('');
   const [phone, setPhone] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Copy Feedback
+  // Copy feedback
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedMaster, setCopiedMaster] = useState(false);
 
-  // Assignments / Dispatch State
+  // Assignments / Dispatch state
   const [assignments, setAssignments] = useState<VolunteerAssignment[]>([]);
-  const [assignedVolunteer, setAssignedVolunteer] = useState('');
+  const [dispatchingForVolunteer, setDispatchingForVolunteer] = useState<string | null>(null);
+  const [expandedMissionsForVol, setExpandedMissionsForVol] = useState<Record<string, boolean>>({});
+  const [missionFilter, setMissionFilter] = useState<'all' | 'active' | 'completed'>('active');
+
+  // Dispatch Form fields
   const [selectedTargetId, setSelectedTargetId] = useState<string>(TARGET_PRESETS[0].id);
   const [customTitle, setCustomTitle] = useState('');
   const [customAddress, setCustomAddress] = useState('');
@@ -201,12 +213,16 @@ export default function VolunteerManagerModal({
 
   // Handle external tab & target triggers (e.g. from Scout or Precinct cards)
   useEffect(() => {
-    if (initialTab) setActiveTab(initialTab);
-  }, [initialTab]);
+    if (initialTab === 'dispatch') {
+      setViewMode('crew');
+      setDispatchingForVolunteer(volunteers[0]?.name || 'Campaign Volunteer');
+    }
+  }, [initialTab, volunteers]);
 
   useEffect(() => {
     if (initialTarget) {
-      setActiveTab('dispatch');
+      setViewMode('crew');
+      setDispatchingForVolunteer(volunteers[0]?.name || 'Campaign Volunteer');
       setSelectedTargetId('custom');
       setCustomTitle(initialTarget.title);
       setCustomAddress(initialTarget.street_address || initialTarget.title);
@@ -215,13 +231,31 @@ export default function VolunteerManagerModal({
       if (initialTarget.signType) setAssignSignType(initialTarget.signType);
       if (initialTarget.quantity) setAssignQty(initialTarget.quantity);
     }
-  }, [initialTarget]);
+  }, [initialTarget, volunteers]);
 
-  // Save volunteers to localStorage
+  // Save volunteers to localStorage AND sync to Supabase database
   const saveVolunteers = (newVols: Volunteer[]) => {
     setVolunteers(newVols);
     if (typeof window !== 'undefined') {
       localStorage.setItem('campaignos_volunteers', JSON.stringify(newVols));
+    }
+    // Dual-write persistence to Supabase volunteers table
+    try {
+      const campaignId = getCampaignId();
+      newVols.forEach((v) => {
+        upsertToSupabase('volunteers', 'campaignos_volunteers', {
+          id: v.id,
+          campaign_id: campaignId,
+          name: v.name,
+          pin_hash: v.pin || masterPin,
+          role: v.role,
+          phone: v.phone || null,
+          active: v.active !== false,
+          created_at: v.created_at,
+        }).catch((err) => console.error('Failed to sync volunteer to database:', err));
+      });
+    } catch (e) {
+      console.warn('Supabase volunteer sync skipped:', e);
     }
   };
 
@@ -268,10 +302,16 @@ export default function VolunteerManagerModal({
     setCustomPin('');
     setPhone('');
     setRole('Field Volunteer');
+    setShowAddVolunteer(false);
   };
 
   const handleDeleteVolunteer = (id: string) => {
-    saveVolunteers(volunteers.filter((v) => v.id !== id));
+    const vol = volunteers.find((v) => v.id === id);
+    if (confirm(`Remove ${vol?.name || 'volunteer'} from the active crew roster?`)) {
+      const remaining = volunteers.filter((v) => v.id !== id);
+      saveVolunteers(remaining);
+      deleteFromSupabase('volunteers', 'campaignos_volunteers', id).catch(() => {});
+    }
   };
 
   const getLoginLink = (vol?: Volunteer) => {
@@ -295,10 +335,17 @@ export default function VolunteerManagerModal({
     }
   };
 
-  // Dispatch Mission Handler
+  // Toggle mission completed status in real-time
+  const handleToggleMissionComplete = (missionId: string) => {
+    const updated = markAssignmentComplete(missionId);
+    setAssignments(updated);
+  };
+
+  // Dispatch Mission Handler (Dual-writes to storage, window event, and Supabase)
   const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
-    const volName = assignedVolunteer || (volunteers[0]?.name || 'Campaign Volunteer');
+    const targetVolunteer = dispatchingForVolunteer || volunteers[0]?.name || 'Campaign Volunteer';
+
     let title = '';
     let lat = 36.5951;
     let lng = -82.1887;
@@ -312,7 +359,7 @@ export default function VolunteerManagerModal({
       lng = customLng;
       target_type = initialTarget?.targetType || 'custom';
     } else {
-      const preset = TARGET_PRESETS.find(p => p.id === selectedTargetId);
+      const preset = TARGET_PRESETS.find((p) => p.id === selectedTargetId);
       if (preset) {
         title = preset.title;
         street_address = preset.title;
@@ -324,8 +371,9 @@ export default function VolunteerManagerModal({
 
     const trimmedNotes = assignNotes.trim();
 
+    // addAssignment automatically saves to localStorage, emits window event, and upserts to Supabase
     const newAssign = addAssignment({
-      volunteer_name: volName,
+      volunteer_name: targetVolunteer,
       target_type,
       title,
       street_address,
@@ -337,14 +385,24 @@ export default function VolunteerManagerModal({
       notes: trimmedNotes || undefined,
     });
 
-    setAssignments(prev => [newAssign, ...prev]);
+    // Instant real-time UI update: increment counter & expand missions for this volunteer
+    setAssignments((prev) => [newAssign, ...prev]);
     setLastDispatchedMission(newAssign);
     setDispatchSuccess(true);
     setAssignNotes('');
+    setDispatchingForVolunteer(null); // Close the inline dispatch drawer
+    setExpandedMissionsForVol((prev) => ({ ...prev, [targetVolunteer]: true }));
     playDispatchChime();
   };
 
-  const activeAssignmentsCount = assignments.filter(a => a.status !== 'completed').length;
+  const toggleVolMissionsExpanded = (volName: string) => {
+    setExpandedMissionsForVol((prev) => ({
+      ...prev,
+      [volName]: !prev[volName],
+    }));
+  };
+
+  const activeAssignmentsCount = assignments.filter((a) => a.status !== 'completed').length;
 
   if (!isOpen) return null;
 
@@ -352,284 +410,401 @@ export default function VolunteerManagerModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animate-fade-in pointer-events-auto">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity"
+        className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
       {/* Center Pop Card */}
-      <div className="relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col glass-heavy rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-slide-up">
+      <div className="relative z-10 w-full max-w-3xl max-h-[92vh] flex flex-col glass-heavy rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-slide-up">
         {/* Top Accent Gradient Edge */}
         <div className="h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 shrink-0" />
 
         {/* Modal Header */}
         <div className="p-5 sm:p-6 border-b border-white/10 flex items-start justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/25 shrink-0">
-              <Users className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-emerald-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/25 shrink-0 border border-white/20">
+              <div className="flex items-center">
+                <Users className="w-5 h-5 -mr-1" />
+                <Target className="w-4 h-4 text-emerald-300" />
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black tracking-tight text-white">Campaign Field Hub</h2>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  {volunteers.length} Crew • {activeAssignmentsCount} Active Missions
+                <h3 className="text-lg font-black text-white tracking-tight">
+                  Crew & Missions Command
+                </h3>
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Live Sync
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Manage volunteer PIN access and dispatch sign placement missions to specific intersections & precincts.
+                Manage volunteer access PINs, real-time workload, and dispatch sign missions across Bristol.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition active:scale-95"
+            title="Close command hub"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex border-b border-white/10 px-5 sm:px-6 bg-white/[0.02] shrink-0">
-          <button
-            onClick={() => setActiveTab('roster')}
-            className={`py-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
-              activeTab === 'roster'
-                ? 'border-purple-400 text-purple-300'
-                : 'border-transparent text-slate-400 hover:text-white'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>Crew Roster & PINs</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-slate-300 font-mono">
-              {volunteers.length}
-            </span>
-          </button>
+        {/* Navigation Tabs & Action Bar */}
+        <div className="flex items-center justify-between border-b border-white/10 px-5 sm:px-6 bg-white/[0.02] shrink-0">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('crew')}
+              className={`py-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
+                viewMode === 'crew'
+                  ? 'border-purple-400 text-purple-300'
+                  : 'border-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Crew & Tasks</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-slate-300 font-mono">
+                {volunteers.length}
+              </span>
+              {activeAssignmentsCount > 0 && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-bold animate-pulse">
+                  {activeAssignmentsCount} Active
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setViewMode('all_missions')}
+              className={`py-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
+                viewMode === 'all_missions'
+                  ? 'border-emerald-400 text-emerald-300'
+                  : 'border-transparent text-slate-400 hover:text-white'
+              }`}
+            >
+              <Target className="w-4 h-4" />
+              <span>All City Missions</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-slate-300 font-mono">
+                {assignments.length}
+              </span>
+            </button>
+          </div>
 
           <button
-            onClick={() => setActiveTab('dispatch')}
-            className={`py-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
-              activeTab === 'dispatch'
-                ? 'border-emerald-400 text-emerald-300'
-                : 'border-transparent text-slate-400 hover:text-white'
-            }`}
+            onClick={() => setShowAddVolunteer((prev) => !prev)}
+            className="px-3 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 text-xs font-bold flex items-center gap-1.5 transition active:scale-95"
           >
-            <Target className="w-4 h-4" />
-            <span>Sign Missions & Dispatch</span>
-            {activeAssignmentsCount > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-bold animate-pulse">
-                {activeAssignmentsCount} Active
-              </span>
-            )}
+            <UserPlus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Add Crew Member</span>
           </button>
         </div>
 
         {/* Modal Body (Scrollable) */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
-
-          {/* ========================================================
-              TAB 1: CREW ROSTER & PINS
-              ======================================================== */}
-          {activeTab === 'roster' && (
-            <>
-              {/* Master Campaign PIN Card */}
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Key className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                      Campaign Master Access PIN
-                    </span>
-                    {isEditingMasterPin ? (
-                      <div className="flex items-center gap-2 mt-1">
-                        <input
-                          type="text"
-                          value={tempMasterPin}
-                          onChange={(e) => setTempMasterPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                          className="w-28 px-2.5 py-1 text-sm font-mono font-bold bg-white/10 rounded-lg border border-emerald-500 text-white focus:outline-none"
-                          autoFocus
-                          maxLength={4}
-                        />
-                        <button
-                          onClick={handleSaveMasterPin}
-                          className="p-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition"
-                          title="Save PIN"
-                        >
-                          <Save className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setTempMasterPin(masterPin);
-                            setIsEditingMasterPin(false);
-                          }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-white transition"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xl font-black font-mono tracking-widest text-emerald-400">
-                          {masterPin}
-                        </span>
-                        <button
-                          onClick={() => setIsEditingMasterPin(true)}
-                          className="p-1 text-slate-400 hover:text-white transition"
-                          title="Edit Master PIN"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 self-end sm:self-center">
-                  <button
-                    onClick={() => handleCopyLink()}
-                    className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-2 transition active:scale-95 ${
-                      copiedMaster
-                        ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                        : 'bg-white/5 hover:bg-white/10 border-white/10 text-white'
-                    }`}
-                  >
-                    {copiedMaster ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Master Link Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 opacity-60" />
-                        <span>Copy Field App Link</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
+          {/* Master Campaign PIN Bar (Visible in all tabs) */}
+          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
+                <Key className="w-4 h-4" />
               </div>
-
-              {/* Add New Volunteer Card */}
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                    <UserPlus className="w-4 h-4 text-purple-400" />
-                    Add Field Volunteer or Captain
-                  </span>
-                  <span className="text-[10px] text-slate-400">Custom PIN is optional</span>
-                </div>
-
-                {formError && (
-                  <div className="mb-3 p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/25 text-rose-300 text-xs font-semibold">
-                    {formError}
-                  </div>
-                )}
-
-                <form onSubmit={handleAddVolunteer} className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g. Rachel Adams"
-                        spellCheck={true}
-                        className="w-full px-3 py-2 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Campaign Role
-                      </label>
-                      <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value as any)}
-                        className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-purple-500"
-                      >
-                        <option value="Field Volunteer">Field Volunteer (Standard)</option>
-                        <option value="Field Scout">Field Scout (Intelligence & Competitors)</option>
-                        <option value="Precinct Captain">Precinct Captain (Neighborhood Lead)</option>
-                        <option value="Field Director">Field Director (Admin Access)</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Dedicated PIN (4 digits)
-                      </label>
-                      <input
-                        type="text"
-                        value={customPin}
-                        onChange={(e) => setCustomPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        placeholder={`Leave blank to use ${masterPin}`}
-                        maxLength={4}
-                        className="w-full px-3 py-2 text-xs font-mono rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Phone Number (Optional)
-                      </label>
-                      <input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="(423) 555-0100"
-                        className="w-full px-3 py-2 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end pt-1">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Campaign Master Access PIN
+                </span>
+                {isEditingMasterPin ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={tempMasterPin}
+                      onChange={(e) => setTempMasterPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      className="w-24 px-2 py-1 text-sm font-mono font-bold bg-white/10 rounded-lg border border-emerald-500 text-white focus:outline-none"
+                      autoFocus
+                    />
                     <button
-                      type="submit"
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-95 transition"
+                      onClick={handleSaveMasterPin}
+                      className="p-1 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
+                      title="Save PIN"
                     >
-                      Add to Roster
+                      <Save className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setTempMasterPin(masterPin);
+                        setIsEditingMasterPin(false);
+                      }}
+                      className="p-1 rounded-lg text-slate-400 hover:text-white"
+                      title="Cancel"
+                    >
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
-                </form>
+                ) : (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-base font-mono font-black text-emerald-400 tracking-wider">
+                      {masterPin}
+                    </span>
+                    <button
+                      onClick={() => setIsEditingMasterPin(true)}
+                      className="p-1 rounded text-slate-400 hover:text-white transition"
+                      title="Edit Master PIN"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleCopyLink()}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition active:scale-95 ${
+                  copiedMaster
+                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-300'
+                }`}
+                title="Copy Master Field App invite link"
+              >
+                {copiedMaster ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Link Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Copy Master Link</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* New Volunteer Registration Card (Expandable) */}
+          {showAddVolunteer && (
+            <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 animate-slide-up space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-purple-300 flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" /> Register New Field Volunteer
+                </span>
+                <button
+                  onClick={() => setShowAddVolunteer(false)}
+                  className="text-slate-400 hover:text-white text-xs px-1"
+                >
+                  ✕
+                </button>
               </div>
 
-              {/* Volunteers Roster List */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-300">
-                    Active Volunteer Crew ({volunteers.length})
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    Direct links pre-authenticate volunteers into <code>/field</code>
-                  </span>
+              {formError && (
+                <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/25 text-rose-300 text-xs font-semibold">
+                  {formError}
+                </div>
+              )}
+
+              <form onSubmit={handleAddVolunteer} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Rachel Adams"
+                      spellCheck={true}
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Campaign Role
+                    </label>
+                    <select
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as any)}
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="Field Volunteer">Field Volunteer (Standard)</option>
+                      <option value="Field Scout">Field Scout (Intelligence & Competitors)</option>
+                      <option value="Precinct Captain">Precinct Captain (Neighborhood Lead)</option>
+                      <option value="Field Director">Field Director (Admin Access)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Dedicated PIN (4 digits)
+                    </label>
+                    <input
+                      type="text"
+                      value={customPin}
+                      onChange={(e) => setCustomPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      placeholder={`Leave blank to use ${masterPin}`}
+                      maxLength={4}
+                      className="w-full px-3 py-2 text-xs font-mono rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Phone Number (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="(423) 555-0100"
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  {volunteers.map((vol) => {
-                    const badge = ROLE_BADGES[vol.role] || ROLE_BADGES['Field Volunteer'];
-                    const placedCount = signsCountByVolunteer[vol.name] || 0;
-                    const isCopied = copiedId === vol.id;
+                <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddVolunteer(false)}
+                    className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 hover:text-white text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 active:scale-95 transition"
+                  >
+                    Save Volunteer to Roster & DB
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
-                    return (
-                      <div
-                        key={vol.id}
-                        className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-white/20 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center font-black text-sm text-white shrink-0 border border-white/10">
+          {/* Immediate Dispatch Confirmation Alert */}
+          {dispatchSuccess && lastDispatchedMission && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-emerald-500/20 border-2 border-emerald-400/50 shadow-xl shadow-emerald-950/40 text-white animate-slide-up space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/30 border border-emerald-400/60 flex items-center justify-center text-emerald-300 shrink-0">
+                    <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black uppercase text-emerald-300 tracking-wider block">
+                      ✓ Mission Dispatched & Database Synced!
+                    </span>
+                    <p className="text-[11px] text-slate-300">
+                      Assigned to <span className="font-bold text-white">{lastDispatchedMission.volunteer_name}</span> · {lastDispatchedMission.quantity}× {lastDispatchedMission.sign_type.replace('_', ' ')}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDispatchSuccess(false)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 text-xs"
+                  title="Dismiss notification"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/10 space-y-1.5 text-xs">
+                <p className="font-bold text-white flex items-center gap-1.5">
+                  <span>📍 Target:</span>
+                  <span className="text-slate-200">{lastDispatchedMission.title}</span>
+                </p>
+                {lastDispatchedMission.notes ? (
+                  <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-1.5 font-medium">
+                    <span className="shrink-0 text-sm">📝</span>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">Special Instructions Logged:</span>
+                      <span className="italic">&ldquo;{lastDispatchedMission.notes}&rdquo;</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic">No special placement notes attached.</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] pt-0.5">
+                <span className="text-emerald-300 font-semibold flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Live in volunteer&apos;s mobile app & cloud database
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDispatchSuccess(false);
+                    setLastDispatchedMission(null);
+                  }}
+                  className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 font-bold transition active:scale-95"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================
+              VIEW MODE 1: CREW & TASKS (People-First Master View)
+              ======================================================== */}
+          {viewMode === 'crew' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-300">
+                  Active Volunteer Ground Force ({volunteers.length})
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  Click <span className="text-emerald-400 font-bold">+ Dispatch</span> on any card to assign tasks
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {volunteers.map((vol) => {
+                  const badge = ROLE_BADGES[vol.role] || ROLE_BADGES['Field Volunteer'];
+                  const placedCount = signsCountByVolunteer[vol.name] || 0;
+                  const isCopied = copiedId === vol.id;
+                  const isDispatchingThis = dispatchingForVolunteer === vol.name;
+                  
+                  // Missions for this specific volunteer
+                  const volMissions = assignments.filter((a) => a.volunteer_name === vol.name);
+                  const activeVolMissions = volMissions.filter((a) => a.status !== 'completed');
+                  const completedVolMissions = volMissions.filter((a) => a.status === 'completed');
+                  const isMissionsExpanded = !!expandedMissionsForVol[vol.name];
+
+                  return (
+                    <div
+                      key={vol.id}
+                      className={`rounded-2xl border transition-all overflow-hidden ${
+                        isDispatchingThis
+                          ? 'bg-purple-950/20 border-purple-500/50 shadow-lg ring-1 ring-purple-500/30'
+                          : 'bg-white/[0.02] border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      {/* Volunteer Main Card Header */}
+                      <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center font-black text-sm text-white shrink-0 border border-white/10 shadow-md">
                             {vol.name.charAt(0)}
                           </div>
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-sm text-white">{vol.name}</span>
                               <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
                                 {vol.role}
                               </span>
+                              {activeVolMissions.length > 0 ? (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                                  {activeVolMissions.length} active mission{activeVolMissions.length === 1 ? '' : 's'}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                  No active missions
+                                </span>
+                              )}
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-medium">
-                              <span className="font-mono text-emerald-400 font-semibold">
+
+                            <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 font-medium flex-wrap">
+                              <span className="font-mono text-emerald-400 font-bold">
                                 PIN: {vol.pin || masterPin}
                               </span>
                               {vol.phone && (
@@ -641,49 +816,70 @@ export default function VolunteerManagerModal({
                               {placedCount > 0 && (
                                 <>
                                   <span>•</span>
-                                  <span className="text-amber-400 font-semibold">{placedCount} signs dropped</span>
+                                  <span className="text-amber-400 font-semibold">{placedCount} signs placed</span>
+                                </>
+                              )}
+                              {completedVolMissions.length > 0 && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-slate-400">{completedVolMissions.length} completed</span>
                                 </>
                               )}
                             </div>
                           </div>
                         </div>
 
-                        {/* Actions */}
+                        {/* Action Buttons */}
                         <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                          {/* 1-Click Dispatch Button */}
                           <button
                             onClick={() => {
-                              setAssignedVolunteer(vol.name);
-                              setActiveTab('dispatch');
+                              if (isDispatchingThis) {
+                                setDispatchingForVolunteer(null);
+                              } else {
+                                setDispatchingForVolunteer(vol.name);
+                              }
                             }}
-                            className="px-2.5 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold flex items-center gap-1 transition active:scale-95"
-                            title="Assign a sign placement mission"
+                            className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition active:scale-95 ${
+                              isDispatchingThis
+                                ? 'bg-emerald-500 text-black border-emerald-400 shadow-md shadow-emerald-500/30'
+                                : 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/30 text-emerald-300'
+                            }`}
+                            title={`Dispatch mission to ${vol.name}`}
                           >
-                            <Target className="w-3.5 h-3.5" />
-                            <span>Assign Mission</span>
+                            <Send className="w-3.5 h-3.5" />
+                            <span>{isDispatchingThis ? 'Close Form' : '+ Dispatch'}</span>
                           </button>
 
+                          {/* Toggle Assigned Missions Dropdown */}
                           <button
-                            onClick={() => handleCopyLink(vol)}
-                            className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition active:scale-95 ${
-                              isCopied
-                                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                            onClick={() => toggleVolMissionsExpanded(vol.name)}
+                            className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 transition active:scale-95 ${
+                              isMissionsExpanded
+                                ? 'bg-purple-500/20 border-purple-500/40 text-purple-200'
                                 : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-300'
                             }`}
-                            title="Copy direct volunteer sign-in link"
+                            title="View active missions assigned to this volunteer"
                           >
-                            {isCopied ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>Link Copied</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5 text-slate-400" />
-                                <span>Copy Link</span>
-                              </>
-                            )}
+                            <Target className="w-3.5 h-3.5 text-purple-400" />
+                            <span>Missions ({volMissions.length})</span>
+                            {isMissionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                           </button>
 
+                          {/* Copy Link */}
+                          <button
+                            onClick={() => handleCopyLink(vol)}
+                            className={`p-2 rounded-xl border text-xs font-bold flex items-center transition active:scale-95 ${
+                              isCopied
+                                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                                : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-400 hover:text-white'
+                            }`}
+                            title="Copy volunteer direct sign-in link"
+                          >
+                            {isCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          </button>
+
+                          {/* Delete Volunteer */}
                           <button
                             onClick={() => handleDeleteVolunteer(vol.id)}
                             className="p-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition active:scale-95"
@@ -693,368 +889,438 @@ export default function VolunteerManagerModal({
                           </button>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
-          )}
 
-          {/* ========================================================
-              TAB 2: SIGN MISSIONS & DISPATCH (Assign Areas & Intersections)
-              ======================================================== */}
-          {activeTab === 'dispatch' && (
-            <div className="space-y-6">
-              {/* Dispatch Form Card */}
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
-                    <Send className="w-4 h-4 text-emerald-400" />
-                    Dispatch New Sign Mission
-                  </span>
-                  <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> Syncs directly to volunteer mobile app
-                  </span>
-                </div>
-
-                {dispatchSuccess && (
-                  <div className="mb-3.5 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold animate-slide-up space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span>Mission dispatched successfully to {lastDispatchedMission?.volunteer_name || 'volunteer'}!</span>
-                      </span>
-                      <button onClick={() => setDispatchSuccess(false)} className="text-slate-400 hover:text-white text-xs px-1">✕</button>
-                    </div>
-                    {lastDispatchedMission?.notes && (
-                      <p className="text-[11px] text-amber-200 font-medium italic pl-5">
-                        📝 Notes: &ldquo;{lastDispatchedMission.notes}&rdquo;
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <form onSubmit={handleDispatch} className="space-y-3.5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Volunteer Selector */}
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Assign To Volunteer *
-                      </label>
-                      <select
-                        value={assignedVolunteer || (volunteers[0]?.name || '')}
-                        onChange={(e) => setAssignedVolunteer(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-emerald-500 font-medium"
-                      >
-                        {volunteers.map(v => (
-                          <option key={v.id} value={v.name}>
-                            {v.name} ({v.role})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Priority Selector */}
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Urgency / Priority
-                      </label>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {[
-                          { id: 'critical', label: 'Critical', color: 'text-rose-400 border-rose-500/40 bg-rose-500/10' },
-                          { id: 'high', label: 'High', color: 'text-amber-400 border-amber-500/40 bg-amber-500/10' },
-                          { id: 'medium', label: 'Normal', color: 'text-sky-400 border-sky-500/40 bg-sky-500/10' },
-                        ].map(p => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => setAssignPriority(p.id as any)}
-                            className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition ${
-                              assignPriority === p.id
-                                ? `${p.color} ring-1 ring-white/20 font-black`
-                                : 'border-white/10 text-slate-400 hover:text-white bg-white/5'
-                            }`}
-                          >
-                            {p.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Target Location Selector */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Target Area or Intersection *
-                      </label>
-                      <span className="text-[10px] text-slate-400">Intersections, Precincts, or Custom Address</span>
-                    </div>
-
-                    <select
-                      value={selectedTargetId}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setSelectedTargetId(val);
-                        const found = TARGET_PRESETS.find(p => p.id === val);
-                        if (found) {
-                          setAssignSignType(found.recommendedSign);
-                        }
-                      }}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-emerald-500 font-medium"
-                    >
-                      <optgroup label="🚦 High-Traffic Corridors & Intersections">
-                        {TARGET_PRESETS.filter(p => p.type === 'intersection').map(p => (
-                          <option key={p.id} value={p.id}>
-                            {p.title} — {p.subtitle}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="🗳️ Bristol Voting Precincts">
-                        {TARGET_PRESETS.filter(p => p.type === 'precinct').map(p => (
-                          <option key={p.id} value={p.id}>
-                            {p.title} — {p.subtitle}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <option value="custom">📍 Custom Street Address / Specific Cross Street</option>
-                    </select>
-
-                    {/* Custom Address Input if 'custom' is selected */}
-                    {selectedTargetId === 'custom' && (
-                      <div className="mt-2.5 p-3 rounded-xl bg-white/5 border border-white/10 space-y-2 animate-slide-up">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={customTitle}
-                            onChange={(e) => setCustomTitle(e.target.value)}
-                            placeholder="Location Name (e.g. 1430 Lee Hwy near Kroger)"
-                            spellCheck={true}
-                            className="flex-1 px-3 py-1.5 text-xs rounded-lg bg-black/40 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
-                          />
-                          <DictateButton onTranscript={(txt) => setCustomTitle(txt)} size="sm" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 font-mono">
-                          <div>Lat: {customLat.toFixed(4)}</div>
-                          <div>Lng: {customLng.toFixed(4)}</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Sign Type & Quantity */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Sign Type Requested
-                      </label>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {[
-                          { id: 'yard_sign', emoji: '🏡', label: 'Yard Sign' },
-                          { id: 'large_sign', emoji: '🪧', label: 'Large 4×4' },
-                          { id: 'banner', emoji: '🚩', label: 'Banner' },
-                        ].map(t => (
-                          <button
-                            key={t.id}
-                            type="button"
-                            onClick={() => setAssignSignType(t.id as any)}
-                            className={`p-2 rounded-xl text-center border transition ${
-                              assignSignType === t.id
-                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold'
-                                : 'border-white/10 text-slate-400 hover:text-white bg-white/5'
-                            }`}
-                          >
-                            <span className="text-sm block">{t.emoji}</span>
-                            <span className="text-[10px] font-bold block mt-0.5 leading-none">{t.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Sign Quantity
-                      </label>
-                      <div className="flex items-center gap-2">
-                        {[1, 2, 3, 5, 10].map(qty => (
-                          <button
-                            key={qty}
-                            type="button"
-                            onClick={() => setAssignQty(qty)}
-                            className={`flex-1 py-2 rounded-xl text-xs font-bold border transition ${
-                              assignQty === qty
-                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                                : 'border-white/10 text-slate-400 hover:text-white bg-white/5'
-                            }`}
-                          >
-                            {qty}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Special Placement Notes */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Special Instructions / Placement Notes (Optional)
-                      </label>
-                      <DictateButton onTranscript={(txt) => setAssignNotes(prev => prev ? `${prev} ${txt}` : txt)} size="sm" />
-                    </div>
-                    <textarea
-                      value={assignNotes}
-                      onChange={(e) => setAssignNotes(e.target.value)}
-                      placeholder="e.g. Place 15ft off curb near gas station entrance. Homeowner at corner approved sign."
-                      spellCheck={true}
-                      rows={2}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 resize-none"
-                    />
-                  </div>
-
-                  {/* Immediate Dispatch Confirmation Alert */}
-                  {dispatchSuccess && lastDispatchedMission && (
-                    <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-emerald-500/20 border-2 border-emerald-400/50 shadow-xl shadow-emerald-950/40 text-white animate-slide-up space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-emerald-500/30 border border-emerald-400/60 flex items-center justify-center text-emerald-300 shrink-0">
-                            <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
-                          </div>
-                          <div>
-                            <span className="text-xs font-black uppercase text-emerald-300 tracking-wider block">
-                              ✓ Mission Dispatched Successfully!
+                      {/* INLINE DISPATCH FORM (Smoothly expands under selected volunteer) */}
+                      {isDispatchingThis && (
+                        <div className="border-t border-purple-500/30 bg-purple-950/30 p-4 sm:p-5 animate-slide-up space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black uppercase tracking-wider text-emerald-300 flex items-center gap-2">
+                              <Send className="w-4 h-4 text-emerald-400" />
+                              Dispatch Mission Directly to {vol.name}
                             </span>
-                            <p className="text-[11px] text-slate-300">
-                              Assigned to <span className="font-bold text-white">{lastDispatchedMission.volunteer_name}</span> · {lastDispatchedMission.quantity}× {lastDispatchedMission.sign_type.replace('_', ' ')}
-                            </p>
+                            <span className="text-[10px] text-purple-300 font-bold flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" /> Syncs directly to mobile app & cloud DB
+                            </span>
                           </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setDispatchSuccess(false)}
-                          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 text-xs"
-                          title="Dismiss notification"
-                        >
-                          ✕
-                        </button>
-                      </div>
 
-                      <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/10 space-y-1.5 text-xs">
-                        <p className="font-bold text-white flex items-center gap-1.5">
-                          <span>📍 Target:</span>
-                          <span className="text-slate-200">{lastDispatchedMission.title}</span>
-                        </p>
-                        {lastDispatchedMission.notes ? (
-                          <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-1.5 font-medium">
-                            <span className="shrink-0 text-sm">📝</span>
+                          <form onSubmit={handleDispatch} className="space-y-3.5">
+                            {/* Target Location Preset or Custom */}
                             <div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">Special Instructions Logged:</span>
-                              <span className="italic">&ldquo;{lastDispatchedMission.notes}&rdquo;</span>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+                                  Target Area / Intersection *
+                                </label>
+                                <span className="text-[10px] text-slate-400">High-AADT Corridors & Priority Precincts</span>
+                              </div>
+
+                              <select
+                                value={selectedTargetId}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setSelectedTargetId(val);
+                                  const found = TARGET_PRESETS.find((p) => p.id === val);
+                                  if (found) {
+                                    setAssignSignType(found.recommendedSign);
+                                  }
+                                }}
+                                className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-emerald-500 font-medium"
+                              >
+                                <optgroup label="Priority Intersections & Corridors (High Traffic)">
+                                  {TARGET_PRESETS.filter((p) => p.type === 'intersection').map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      📍 {p.title} ({p.subtitle})
+                                    </option>
+                                  ))}
+                                </optgroup>
+                                <optgroup label="Key Precincts & Neighborhoods">
+                                  {TARGET_PRESETS.filter((p) => p.type === 'precinct').map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      🗳️ {p.title} ({p.subtitle})
+                                    </option>
+                                  ))}
+                                </optgroup>
+                                <option value="custom">✏️ Enter Custom Address / Coordinates</option>
+                              </select>
                             </div>
-                          </div>
-                        ) : (
-                          <p className="text-[11px] text-slate-400 italic">No special placement notes attached.</p>
-                        )}
-                      </div>
 
-                      <div className="flex items-center justify-between text-[11px] pt-0.5">
-                        <span className="text-emerald-300 font-semibold flex items-center gap-1">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Live on volunteer&apos;s mobile field app
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDispatchSuccess(false);
-                            setLastDispatchedMission(null);
-                          }}
-                          className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 font-bold transition active:scale-95"
-                        >
-                          + Dispatch Another
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end pt-1">
-                    <button
-                      type="submit"
-                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-95 transition"
-                    >
-                      <Send className="w-3.5 h-3.5" /> Dispatch Mission to Volunteer
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Recently Dispatched Missions Feed with Notes */}
-              {assignments.length > 0 && (
-                <div className="mt-5 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                      <Target className="w-3.5 h-3.5 text-purple-400" />
-                      Recent Dispatched Missions ({assignments.filter(a => a.status !== 'completed').length} Active)
-                    </h4>
-                    <span className="text-[11px] text-slate-500">Live Sync</span>
-                  </div>
-
-                  <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-1">
-                    {assignments.slice(0, 4).map((m) => (
-                      <div
-                        key={m.id}
-                        className={`p-3 rounded-2xl border transition-all ${
-                          lastDispatchedMission?.id === m.id
-                            ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-400/30'
-                            : 'bg-white/[0.03] border-white/10'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {lastDispatchedMission?.id === m.id && (
-                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                                  Just Dispatched
-                                </span>
-                              )}
-                              <span className="text-xs font-bold text-white truncate">{m.title}</span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
-                              <span className="text-purple-300 font-semibold">{m.volunteer_name}</span>
-                              <span>•</span>
-                              <span className="text-emerald-400 font-bold">{m.quantity}× {m.sign_type.replace('_', ' ')}</span>
-                              <span>•</span>
-                              <span className="capitalize">{m.priority}</span>
-                            </div>
-                            {m.notes && (
-                              <p className="mt-1.5 text-xs text-amber-200/90 font-medium italic pl-2.5 border-l-2 border-amber-400/60 bg-amber-500/10 py-1 rounded-r-lg">
-                                📝 &ldquo;{m.notes}&rdquo;
-                              </p>
+                            {/* Custom Address Fields if selected */}
+                            {selectedTargetId === 'custom' && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/10">
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                    Location Title
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={customTitle}
+                                    onChange={(e) => setCustomTitle(e.target.value)}
+                                    placeholder="e.g. Anderson St & 9th St Corner"
+                                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                    Street Address
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={customAddress}
+                                    onChange={(e) => setCustomAddress(e.target.value)}
+                                    placeholder="e.g. 900 Anderson St, Bristol, TN"
+                                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500"
+                                  />
+                                </div>
+                              </div>
                             )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {/* Tip Note */}
-              <div className="mt-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
-                <p className="text-xs text-slate-400">
-                  <span className="text-purple-400 font-bold">💡 Tip:</span> View full interactive routes and map targets in the <span className="text-white font-semibold">Campaign Drawer → Missions</span> tab.
-                </p>
+                            {/* Sign Type, Quantity & Priority */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              {/* Format */}
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block mb-1">
+                                  Sign Format
+                                </label>
+                                <select
+                                  value={assignSignType}
+                                  onChange={(e) => setAssignSignType(e.target.value as SignType)}
+                                  className="w-full px-3 py-2 text-xs rounded-xl bg-zinc-900 border border-white/10 text-white focus:outline-none focus:border-emerald-500"
+                                >
+                                  <option value="yard_sign">Yard Sign (Standard Lawn)</option>
+                                  <option value="large_sign">4×4 Roadside Sign</option>
+                                  <option value="banner">Commercial Banner</option>
+                                  <option value="billboard">Billboard Location</option>
+                                </select>
+                              </div>
+
+                              {/* Quantity */}
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block mb-1">
+                                  Signs to Drop: <span className="text-emerald-400 font-bold">{assignQty}</span>
+                                </label>
+                                <div className="flex gap-1">
+                                  {[1, 2, 4, 6, 10].map((qty) => (
+                                    <button
+                                      key={qty}
+                                      type="button"
+                                      onClick={() => setAssignQty(qty)}
+                                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition ${
+                                        assignQty === qty
+                                          ? 'bg-emerald-500/25 border-emerald-400 text-emerald-200'
+                                          : 'border-white/10 text-slate-400 hover:text-white bg-white/5'
+                                      }`}
+                                    >
+                                      {qty}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Priority */}
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block mb-1">
+                                  Urgency
+                                </label>
+                                <div className="grid grid-cols-3 gap-1">
+                                  {[
+                                    { id: 'critical', label: 'Critical', color: 'text-rose-300 border-rose-500/40 bg-rose-500/20' },
+                                    { id: 'high', label: 'High', color: 'text-amber-300 border-amber-500/40 bg-amber-500/20' },
+                                    { id: 'medium', label: 'Normal', color: 'text-sky-300 border-sky-500/40 bg-sky-500/20' },
+                                  ].map((p) => (
+                                    <button
+                                      key={p.id}
+                                      type="button"
+                                      onClick={() => setAssignPriority(p.id as any)}
+                                      className={`py-1.5 rounded-lg text-[11px] font-bold border transition ${
+                                        assignPriority === p.id
+                                          ? `${p.color} ring-1 ring-white/20 font-black`
+                                          : 'border-white/10 text-slate-400 hover:text-white bg-white/5'
+                                      }`}
+                                    >
+                                      {p.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Special Placement Instructions & Dictation */}
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+                                  Special Instructions / Placement Notes
+                                </label>
+                                <DictateButton
+                                  onTranscript={(txt) => setAssignNotes((prev) => (prev ? `${prev} ${txt}` : txt))}
+                                  size="sm"
+                                />
+                              </div>
+                              <textarea
+                                value={assignNotes}
+                                onChange={(e) => setAssignNotes(e.target.value)}
+                                placeholder="e.g. Place 15ft off curb near gas station entrance. Homeowner approved yard placement."
+                                spellCheck={true}
+                                rows={2}
+                                className="w-full px-3 py-2 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 resize-none"
+                              />
+                            </div>
+
+                            {/* Form Submit & Cancel */}
+                            <div className="flex items-center justify-end gap-2 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setDispatchingForVolunteer(null)}
+                                className="px-3 py-2 rounded-xl border border-white/10 text-slate-300 hover:text-white text-xs font-semibold"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 active:scale-95 transition"
+                              >
+                                <Send className="w-3.5 h-3.5" /> Dispatch to {vol.name}
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+
+                      {/* INLINE ASSIGNED MISSIONS LIST (Accordion per volunteer) */}
+                      {isMissionsExpanded && (
+                        <div className="border-t border-white/10 bg-black/25 p-3.5 sm:p-4 space-y-2 animate-slide-up">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                              <Target className="w-3.5 h-3.5 text-purple-400" />
+                              Assignments for {vol.name} ({volMissions.length})
+                            </span>
+                            <span className="text-[10px] text-slate-500">Click circle to mark completed</span>
+                          </div>
+
+                          {volMissions.length === 0 ? (
+                            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                              <p className="text-xs text-slate-400">
+                                No missions currently assigned to {vol.name}.
+                              </p>
+                              <button
+                                onClick={() => setDispatchingForVolunteer(vol.name)}
+                                className="mt-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold inline-flex items-center gap-1"
+                              >
+                                <Plus className="w-3 h-3" /> Assign first mission
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {volMissions.map((m) => {
+                                const isCompleted = m.status === 'completed';
+                                return (
+                                  <div
+                                    key={m.id}
+                                    className={`p-3 rounded-xl border transition-all ${
+                                      isCompleted
+                                        ? 'bg-white/[0.01] border-white/5 opacity-60'
+                                        : 'bg-white/[0.04] border-white/10 hover:border-white/20'
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                        <button
+                                          onClick={() => handleToggleMissionComplete(m.id)}
+                                          className={`mt-0.5 p-1 rounded-lg border transition shrink-0 ${
+                                            isCompleted
+                                              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                                              : 'bg-white/5 border-white/20 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40'
+                                          }`}
+                                          title={isCompleted ? 'Mark active' : 'Mark completed'}
+                                        >
+                                          <CheckCircle2 className="w-4 h-4" />
+                                        </button>
+
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <span className={`text-xs font-bold truncate ${isCompleted ? 'line-through text-slate-400' : 'text-white'}`}>
+                                              {m.title}
+                                            </span>
+                                            <span className={`text-[10px] font-black uppercase px-2 py-0.2 rounded-full border ${
+                                              m.priority === 'critical'
+                                                ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                                                : m.priority === 'high'
+                                                ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                                                : 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+                                            }`}>
+                                              {m.priority}
+                                            </span>
+                                            {isCompleted && (
+                                              <span className="text-[10px] font-bold text-emerald-400 uppercase">
+                                                Completed
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                                            <span className="text-emerald-300 font-semibold">
+                                              {m.quantity}× {m.sign_type.replace('_', ' ')}
+                                            </span>
+                                            <span>•</span>
+                                            <span className="truncate">{m.street_address || m.title}</span>
+                                          </div>
+
+                                          {m.notes && (
+                                            <div className="mt-1.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-start gap-1.5 font-medium">
+                                              <span className="shrink-0 text-xs">📝</span>
+                                              <span className="italic">&ldquo;{m.notes}&rdquo;</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
+          {/* ========================================================
+              VIEW MODE 2: ALL CITY MISSIONS (Bird's Eye Campaign View)
+              ======================================================== */}
+          {viewMode === 'all_missions' && (
+            <div className="space-y-4">
+              {/* Filter Tabs */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 text-xs font-bold">
+                  {(['active', 'completed', 'all'] as const).map((f) => {
+                    const count =
+                      f === 'active'
+                        ? assignments.filter((a) => a.status !== 'completed').length
+                        : f === 'completed'
+                        ? assignments.filter((a) => a.status === 'completed').length
+                        : assignments.length;
+
+                    return (
+                      <button
+                        key={f}
+                        onClick={() => setMissionFilter(f)}
+                        className={`px-3 py-1.5 rounded-lg transition capitalize flex items-center gap-1.5 ${
+                          missionFilter === f
+                            ? 'bg-purple-500 text-white shadow-md'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <span>{f}</span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-black/30">
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setViewMode('crew');
+                    setDispatchingForVolunteer(volunteers[0]?.name || 'Campaign Volunteer');
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Dispatch New Mission</span>
+                </button>
+              </div>
+
+              {/* City Missions Feed */}
+              <div className="space-y-2.5">
+                {assignments
+                  .filter((a) => {
+                    if (missionFilter === 'active') return a.status !== 'completed';
+                    if (missionFilter === 'completed') return a.status === 'completed';
+                    return true;
+                  })
+                  .map((m) => {
+                    const isCompleted = m.status === 'completed';
+                    return (
+                      <div
+                        key={m.id}
+                        className={`p-3.5 rounded-2xl border transition-all ${
+                          isCompleted
+                            ? 'bg-white/[0.01] border-white/5 opacity-60'
+                            : 'bg-white/[0.03] border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <button
+                              onClick={() => handleToggleMissionComplete(m.id)}
+                              className={`mt-0.5 p-1 rounded-lg border transition shrink-0 ${
+                                isCompleted
+                                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                                  : 'bg-white/5 border-white/20 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40'
+                              }`}
+                              title={isCompleted ? 'Mark active' : 'Mark completed'}
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-xs font-bold ${isCompleted ? 'line-through text-slate-400' : 'text-white'}`}>
+                                  {m.title}
+                                </span>
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                  👤 {m.volunteer_name}
+                                </span>
+                                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                                  m.priority === 'critical'
+                                    ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                                    : m.priority === 'high'
+                                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                                    : 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+                                }`}>
+                                  {m.priority}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                                <span className="text-emerald-400 font-bold">
+                                  {m.quantity}× {m.sign_type.replace('_', ' ')}
+                                </span>
+                                <span>•</span>
+                                <span className="truncate">{m.street_address || m.title}</span>
+                              </div>
+
+                              {m.notes && (
+                                <div className="mt-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-1.5 font-medium">
+                                  <span className="shrink-0 text-sm">📝</span>
+                                  <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">
+                                      Special Placement Notes:
+                                    </span>
+                                    <span className="italic">&ldquo;{m.notes}&rdquo;</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Footer */}
         <div className="p-4 sm:p-5 border-t border-white/10 bg-black/30 flex items-center justify-between shrink-0">
-          <span className="text-[11px] text-slate-500">
-            {activeTab === 'dispatch'
-              ? 'Missions update the volunteer mobile app immediately.'
-              : 'PIN changes authorize field sessions in real time.'}
+          <span className="text-[11px] text-slate-400">
+            {viewMode === 'crew'
+              ? 'Missions and crew updates sync to volunteer field apps & cloud DB immediately.'
+              : `${activeAssignmentsCount} active field mission${activeAssignmentsCount === 1 ? '' : 's'} underway across Bristol.`}
           </span>
           <button
             onClick={onClose}

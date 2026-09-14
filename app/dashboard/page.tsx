@@ -47,116 +47,109 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
     badge: '2. Ground Force',
   },
   {
-    targetId: 'tour-missions-btn',
-    title: 'Sign Placement Missions',
-    description: 'Create targeted field missions, set sign quantities and priority intersections, and dispatch runners with 1-click turn-by-turn routes.',
+    targetId: 'tour-crew-missions-btn',
+    title: 'Crew & Missions Command',
+    description: 'Command your volunteer ground force, monitor real-time assigned tasks, generate 4-digit mobile PINs, and dispatch sign placement missions across Bristol.',
     accentColor: 'purple',
-    badge: '3. Dispatch',
-  },
-  {
-    targetId: 'tour-roster-btn',
-    title: 'Volunteer Roster & PINs',
-    description: 'Manage campaign volunteers, assign sign runner or canvasser roles, and generate secure 4-digit access PINs for the field apps.',
-    accentColor: 'purple',
-    badge: '4. Team Roster',
+    badge: '3. Crew & Dispatch',
   },
   {
     targetId: 'tour-lock-btn',
     title: 'Lock Command Center',
     description: 'Secures your strategy room. Locks the dashboard behind Campaign Security PIN when stepping away from your desk.',
     accentColor: 'rose',
-    badge: '5. Security Gate',
+    badge: '4. Security Gate',
   },
   {
     targetId: 'tour-drawer-btn',
     title: 'Analytics & Settings Drawer',
     description: 'Slide open full precinct voting breakdowns, inventory stock management, CSV export, and granular map layer controls.',
     accentColor: 'emerald',
-    badge: '6. Command Drawer',
+    badge: '5. Command Drawer',
   },
   {
     targetId: 'tour-recenter-btn',
     title: 'Recenter Map',
     description: 'One tap snaps your camera back to the geographic center of Bristol, TN whenever you pan away.',
     accentColor: 'emerald',
-    badge: '7. Recenter',
+    badge: '6. Recenter',
   },
   {
     targetId: 'tour-3d-btn, tour-orbit-btn',
     title: '3D Tilt & Cinematic Orbit',
     description: 'Angles into a 3D perspective to visualize Bristol terrain. Tap the Rotate button below it to slowly orbit the map in 3D (tap again to reset default view).',
     accentColor: 'emerald',
-    badge: '8. 3D & Orbit',
+    badge: '7. 3D & Orbit',
   },
   {
     targetId: 'tour-zoom-btns',
     title: 'Map Zoom Controls',
     description: 'Quickly zoom between street-level yard sign placements and ward-wide regional overview.',
     accentColor: 'cyan',
-    badge: '9. Zoom Stack',
+    badge: '8. Zoom Stack',
   },
   {
     targetId: 'tour-signs-toggle, tour-mobile-signs, tour-mobile-palette-toggle',
     title: 'Yard Signs Radar',
     description: 'Toggle sign markers on the map: switch between compact smart pill badges and full pin markers.',
     accentColor: 'emerald',
-    badge: '10. Sign Radar',
+    badge: '9. Sign Radar',
   },
   {
     targetId: 'tour-missions-layer',
     title: 'Target Missions Layer',
     description: 'Toggle purple target rings to see active high-priority dispatch missions deployed across Bristol.',
     accentColor: 'purple',
-    badge: '11. Missions Layer',
+    badge: '10. Missions Layer',
   },
   {
     targetId: 'tour-canvass-layer, tour-mobile-doors',
     title: 'Canvass Knocks & Flyers',
     description: 'Display teal footprint pins for every household visited, literature flyer dropped, and voter sentiment recorded.',
     accentColor: 'teal',
-    badge: '12. Canvass Doors',
+    badge: '11. Canvass Doors',
   },
   {
     targetId: 'tour-field-ops, tour-mobile-field-ops',
     title: 'Field Ops & Turf Routes',
     description: 'Live GPS volunteer tracks, walking breadcrumbs, and assigned canvass neighborhood walking loops.',
     accentColor: 'emerald',
-    badge: '13. Field Force',
+    badge: '12. Field Force',
   },
   {
     targetId: 'tour-precincts-layer, tour-mobile-precincts',
     title: 'Voting Precincts & Wards',
     description: 'Color-coded boundaries for all 12 Bristol voting precincts with turnout history and sign density benchmarks.',
     accentColor: 'emerald',
-    badge: '14. Precincts',
+    badge: '13. Precincts',
   },
   {
     targetId: 'tour-corridors-layer',
     title: 'TDOT Traffic Corridors (AADT)',
     description: 'Heat-mapped highway segments showing Annual Average Daily Traffic counts to prioritize high-visibility sign corridors.',
     accentColor: 'amber',
-    badge: '15. Traffic Corridors',
+    badge: '14. Traffic Corridors',
   },
   {
     targetId: 'tour-heatmap-layer, tour-mobile-heatmap',
     title: 'Sign Density Heatmap',
     description: 'High-visibility visual gradient showing campaign saturation hot spots versus underserved neighborhoods.',
     accentColor: 'rose',
-    badge: '16. Heatmap',
+    badge: '15. Heatmap',
   },
   {
     targetId: 'tour-map-search',
     title: 'Address & Voter Search',
     description: 'Quickly find any Bristol street address, intersection, or voter location and jump the camera directly there.',
     accentColor: 'cyan',
-    badge: '17. Map Search',
+    badge: '16. Map Search',
   },
   {
     targetId: 'tour-scout-ai',
     title: 'Scout AI Placement Advisor',
     description: 'Autonomous AI cross-references TDOT traffic volume (AADT) with major intersections to recommend high-visibility sign and banner locations.',
     accentColor: 'amber',
-    badge: '18. Scout AI',
+    badge: '17. Scout AI',
   },
 ];
 
@@ -2615,39 +2608,32 @@ export default function DashboardPage() {
               )}
             </button>
 
-            {/* Quick Access to Sign Missions on all screen sizes */}
+            {/* Unified Crew & Missions Command Hub */}
             <button
-              id="tour-missions-btn"
-              onClick={() => {
-                setModalInitialTab('dispatch');
-                setModalInitialTarget(null);
-                setShowVolunteerModal(true);
-              }}
-              className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 shadow-lg shadow-purple-500/10 active:scale-95"
-              title="Sign Placement Missions & Field Dispatch"
-            >
-              <Target className="w-4 h-4 text-purple-400" />
-              <span className="hidden sm:inline">Missions</span>
-              {activeMissionsCount > 0 && (
-                <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-purple-500/40 text-purple-100 border border-purple-400/40">
-                  {activeMissionsCount}
-                </span>
-              )}
-            </button>
-
-            {/* Quick Access to Volunteers Modal on all screen sizes */}
-            <button
-              id="tour-roster-btn"
+              id="tour-crew-missions-btn"
               onClick={() => {
                 setModalInitialTab('roster');
                 setModalInitialTarget(null);
                 setShowVolunteerModal(true);
               }}
-              className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-white/20 text-slate-300 hover:text-white active:scale-95"
-              title="Manage Volunteers & Field PINs"
+              className="glass rounded-2xl px-3 py-2 flex items-center gap-2 hover:scale-105 transition-all text-xs font-bold border border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 shadow-lg shadow-purple-500/10 active:scale-95 group"
+              title="Crew Roster, PINs & Sign Missions Dispatch"
             >
-              <Users className="w-4 h-4 text-purple-400" />
-              <span className="hidden md:inline">Roster</span>
+              <div className="flex items-center gap-1 text-purple-400 group-hover:text-purple-300">
+                <Users className="w-4 h-4" />
+                <span className="text-white/20 text-[10px]">/</span>
+                <Target className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <span className="hidden sm:inline">Crew & Missions</span>
+              {activeMissionsCount > 0 ? (
+                <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
+                  {activeMissionsCount} active
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400">
+                  Ready
+                </span>
+              )}
             </button>
 
             {/* Interactive Onboarding Mission Tour */}
