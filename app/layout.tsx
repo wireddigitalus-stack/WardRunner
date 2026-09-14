@@ -13,7 +13,7 @@ const getBaseUrl = () => {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return 'https://campaignos.app';
+  return 'https://campaignos-field.vercel.app';
 };
 
 const baseUrl = getBaseUrl();
