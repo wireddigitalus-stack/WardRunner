@@ -199,32 +199,40 @@ export default function VolunteerFilterPanel({
           </button>
         </div>
 
-        {/* Role Filter Navigation Tabs */}
-        <div className="flex border-b border-white/10 px-5 sm:px-6 bg-white/[0.02] shrink-0 overflow-x-auto no-scrollbar gap-1">
-          {GROUPS.map(g => {
-            const isSel = selectedGroup === g.id;
-            const count = groupCounts[g.id] ?? 0;
-            return (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => onSelectGroup(g.id)}
-                className={`py-3.5 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
-                  isSel
-                    ? 'border-emerald-400 text-emerald-300 font-black'
-                    : 'border-transparent text-slate-400 hover:text-white'
-                }`}
-              >
-                <span className="text-sm">{g.icon}</span>
-                <span>{g.label}</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-extrabold ${
-                  isSel ? 'bg-emerald-500/25 text-emerald-200 border border-emerald-500/30' : 'bg-white/10 text-slate-300'
-                }`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        {/* Role Filter Navigation Tabs — Responsive Grid (No Side Scrolling) */}
+        <div className="border-b border-white/10 p-2.5 sm:px-6 sm:py-3 bg-white/[0.02] shrink-0">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 sm:gap-2">
+            {GROUPS.map((g, idx) => {
+              const isSel = selectedGroup === g.id;
+              const count = groupCounts[g.id] ?? 0;
+              const isFirst = idx === 0;
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => onSelectGroup(g.id)}
+                  className={`py-2 px-2.5 sm:px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-between gap-1.5 border ${
+                    isFirst ? 'col-span-2 sm:col-span-1' : ''
+                  } ${
+                    isSel
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm font-black ring-1 ring-emerald-400/30'
+                      : 'bg-white/[0.03] hover:bg-white/[0.08] text-slate-400 hover:text-white border-white/5'
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <span className="text-sm shrink-0">{g.icon}</span>
+                    <span className="truncate hidden sm:inline">{g.label}</span>
+                    <span className="truncate sm:hidden">{g.short}</span>
+                  </span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-extrabold shrink-0 ${
+                    isSel ? 'bg-emerald-500/30 text-emerald-100 border border-emerald-500/40' : 'bg-white/10 text-slate-300'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Modal Body (Scrollable) */}
