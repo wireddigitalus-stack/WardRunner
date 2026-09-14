@@ -876,15 +876,26 @@ export default function DashboardPage() {
           } catch {}
         }
 
-        /* --- Brighten Street Name Labels on Dark Basemap --- */
+        /* --- Brighten & Enlarge Street Name Labels on Dark Basemap --- */
         try {
           const layers = map.getStyle().layers || [];
           for (const layer of layers) {
             if ((layer as any).type === 'symbol' && (layer as any).layout?.['text-field']) {
               const id = (layer as any).id as string;
-              try { map.setPaintProperty(id, 'text-color', '#d1d5db'); } catch {}
-              try { map.setPaintProperty(id, 'text-halo-color', 'rgba(0,0,0,0.9)'); } catch {}
-              try { map.setPaintProperty(id, 'text-halo-width', 1.8); } catch {}
+              try { map.setPaintProperty(id, 'text-color', '#e2e8f0'); } catch {}
+              try { map.setPaintProperty(id, 'text-halo-color', 'rgba(0,0,0,0.95)'); } catch {}
+              try { map.setPaintProperty(id, 'text-halo-width', 2); } catch {}
+              // Scale up street labels — larger when zoomed in
+              try {
+                map.setLayoutProperty(id, 'text-size', [
+                  'interpolate', ['linear'], ['zoom'],
+                  10, 10,
+                  13, 13,
+                  15, 16,
+                  17, 20,
+                  19, 26,
+                ]);
+              } catch {}
             }
           }
         } catch {}
