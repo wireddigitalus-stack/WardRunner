@@ -22,7 +22,7 @@ import ScoutRecommendationCard from './components/ScoutRecommendationCard';
 import CampaignDrawer from './components/CampaignDrawer';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON, BRISTOL_ALL_PRECINCTS_BOUNDS, BRISTOL_ALL_PRECINCTS_CENTER } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
-import { getStoredSigns, addPlacedSign, SEED_SIGNS } from '@/lib/signData';
+import { getStoredSigns, addPlacedSign, SEED_SIGNS, subscribeSigns } from '@/lib/signData';
 import { getStoredCanvassRecords, getStoredVolunteerPings, snapWalkingPathToStreets } from '@/lib/canvassData';
 import { getStoredCanvassRoutes, saveStoredCanvassRoutes, assignCanvassRoute, updateCanvassRouteStatus } from '@/lib/canvassRouteData';
 import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
@@ -561,11 +561,21 @@ export default function DashboardPage() {
         handleSignsSync();
       }
     };
-    window.addEventListener('storage', handleStorage);
+    // Remote Supabase real-time updates across volunteer devices
+    const unsubscribeRemote = subscribeSigns((remoteSigns) => {
+      if (remoteSigns && remoteSigns.length > 0) {
+        setSigns(remoteSigns);
+      }
+    });
+
+    // Background refresh fallback for field drops
+    const signInterval = setInterval(fetchSigns, 10000);
 
     return () => {
       window.removeEventListener('wardrunner_signs_updated', handleSignsSync);
       window.removeEventListener('storage', handleStorage);
+      unsubscribeRemote();
+      clearInterval(signInterval);
     };
   }, []);
 
