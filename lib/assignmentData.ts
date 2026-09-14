@@ -1,6 +1,9 @@
 import { VolunteerAssignment, SignType } from './types';
+import { fetchFromSupabase, upsertToSupabase, deleteFromSupabase, subscribeToTable } from '@/lib/syncEngine';
+import { getCampaignId } from '@/lib/auth';
 
 export const ASSIGNMENTS_STORAGE_KEY = 'wardrunner_assignments';
+const TABLE_NAME = 'volunteer_assignments';
 
 export interface TargetPreset {
   id: string;
@@ -165,53 +168,7 @@ export function getStoredAssignments(): VolunteerAssignment[] {
       localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(SEED_ASSIGNMENTS));
       return SEED_ASSIGNMENTS;
     }
-    const parsed: VolunteerAssignment[] = JSON.parse(raw);
-    let migrated = false;
-    const updated = parsed.map(item => {
-      // Fix Volunteer Pkwy & Weaver Pike legacy coordinates
-      if (item.id === 'assign-1' || item.title?.includes('Weaver Pike')) {
-        if (item.lat === 36.5870 || item.lng === -82.1856 || item.street_address?.includes('1000 Volunteer')) {
-          migrated = true;
-          return {
-            ...item,
-            street_address: '713 Volunteer Pkwy, Bristol, TN',
-            lat: 36.5831,
-            lng: -82.1859,
-          };
-        }
-      }
-      // Fix Precinct 3A - Anderson Neighborhood Grid to residential grid intersection (1100 Anderson St)
-      // to ensure it does not overlap the Precinct 3A polling center (901 9th St)
-      if (item.id === 'assign-2' || item.title?.includes('Anderson')) {
-        if (item.lat === 36.5866 || item.lng === -82.1963 || item.lng < -82.20 || item.street_address?.includes('901 9th')) {
-          migrated = true;
-          return {
-            ...item,
-            title: 'Precinct 3A – Anderson Neighborhood Grid',
-            street_address: '1100 Anderson St, Bristol, TN',
-            lat: 36.5888,
-            lng: -82.1982,
-            notes: 'Target residential front lawns along 9th and 11th Street approaching Anderson Elementary.',
-          };
-        }
-      }
-      // Fix State St & Piedmont Ave to not collide with sign #1 at 620 State St
-      if (item.id === 'assign-3' || (item.title?.includes('Piedmont') && item.lat === 36.5951 && item.lng === -82.1887)) {
-        migrated = true;
-        return {
-          ...item,
-          street_address: 'State St & Piedmont Ave, Bristol, TN',
-          lat: 36.5955,
-          lng: -82.1895,
-        };
-      }
-      return item;
-    });
-
-    if (migrated) {
-      localStorage.setItem(ASSIGNMENTS_STORAGE_KEY, JSON.stringify(updated));
-    }
-    return updated;
+    return JSON.parse(raw) as VolunteerAssignment[];
   } catch {
     return SEED_ASSIGNMENTS;
   }
@@ -228,22 +185,61 @@ export function saveStoredAssignments(assignments: VolunteerAssignment[]) {
   }
 }
 
+export async function fetchAssignments(): Promise<VolunteerAssignment[]> {
+  try {
+    return await fetchFromSupabase<VolunteerAssignment>(TABLE_NAME, ASSIGNMENTS_STORAGE_KEY, getCampaignId());
+  } catch (error) {
+    console.error('Failed to fetch assignments from Supabase:', error);
+    return getStoredAssignments();
+  }
+}
+
+export function subscribeAssignments(onUpdate: (records: VolunteerAssignment[]) => void): () => void {
+  return subscribeToTable(TABLE_NAME, getCampaignId(), (records) => {
+    saveStoredAssignments(records as VolunteerAssignment[]);
+    onUpdate(records as VolunteerAssignment[]);
+  });
+}
+
 export function addAssignment(newAssign: Omit<VolunteerAssignment, 'id' | 'created_at' | 'status'>): VolunteerAssignment {
   const current = getStoredAssignments();
-  const item: VolunteerAssignment = {
+  const item = {
     ...newAssign,
-    id: `assign-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+    id: `assign-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     status: 'assigned',
     created_at: new Date().toISOString(),
-  };
+    campaign_id: getCampaignId(),
+  } as VolunteerAssignment;
+  
   const updated = [item, ...current];
   saveStoredAssignments(updated);
+  
+  upsertToSupabase(TABLE_NAME, ASSIGNMENTS_STORAGE_KEY, item).catch(err => {
+    console.error('Failed to sync new assignment to Supabase:', err);
+  });
+  
   return item;
 }
 
 export function markAssignmentComplete(assignmentId: string): VolunteerAssignment[] {
   const current = getStoredAssignments();
-  const updated = current.map(a => a.id === assignmentId ? { ...a, status: 'completed' as const, completed_at: new Date().toISOString() } : a);
+  let updatedAssignment: VolunteerAssignment | undefined;
+
+  const updated = current.map(a => {
+    if (a.id === assignmentId) {
+      updatedAssignment = { ...a, status: 'completed' as const, completed_at: new Date().toISOString() };
+      return updatedAssignment;
+    }
+    return a;
+  });
+  
   saveStoredAssignments(updated);
+
+  if (updatedAssignment) {
+    upsertToSupabase(TABLE_NAME, ASSIGNMENTS_STORAGE_KEY, updatedAssignment).catch(err => {
+      console.error('Failed to sync completed assignment to Supabase:', err);
+    });
+  }
+  
   return updated;
 }

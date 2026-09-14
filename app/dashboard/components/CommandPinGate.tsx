@@ -1,63 +1,73 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { Shield, Lock, ArrowLeft, Check, AlertCircle, Sparkles } from 'lucide-react';
+import { Shield, Lock, ArrowLeft, Check, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
+import { validatePin } from '@/lib/auth';
 
 interface CommandPinGateProps {
   onUnlock: () => void;
-  masterPin?: string;
+  masterPin?: string; // kept for backwards compat but no longer used for client-side check
 }
 
-export default function CommandPinGate({ onUnlock, masterPin = '620620' }: CommandPinGateProps) {
+export default function CommandPinGate({ onUnlock }: CommandPinGateProps) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const attemptsRef = useRef(0);
+  const lockoutUntilRef = useRef<number>(0);
 
-  const handleVerify = useCallback((enteredPin: string) => {
+  const handleVerify = useCallback(async (enteredPin: string) => {
     setError(null);
     const clean = enteredPin.trim();
 
-    // Check master pin
-    const customMaster = typeof window !== 'undefined' ? localStorage.getItem('wardrunner_campaign_pin') : null;
-    let isMatched = clean === masterPin || clean === '620620' || (customMaster && clean === customMaster);
-
-    // Also check volunteer roster for authorized leadership pins
-    if (!isMatched && typeof window !== 'undefined') {
-      try {
-        const rawVols = localStorage.getItem('wardrunner_volunteers');
-        if (rawVols) {
-          const vols = JSON.parse(rawVols);
-          const authorized = vols.find((v: any) => v.active && v.pin === clean && (v.role === 'Field Director' || v.role === 'Precinct Captain'));
-          if (authorized) isMatched = true;
-        }
-      } catch {
-        // ignore
-      }
-    }
-
-    if (isMatched) {
-      setIsSuccess(true);
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('wardrunner_field_command_auth', 'true');
-        localStorage.setItem('wardrunner_field_command_auth', 'true');
-      }
-      setTimeout(() => {
-        onUnlock();
-      }, 450);
-    } else {
+    // Rate limiting: max 5 attempts per 60 seconds
+    const now = Date.now();
+    if (lockoutUntilRef.current > now) {
+      const secsLeft = Math.ceil((lockoutUntilRef.current - now) / 1000);
       setShake(true);
-      setError('Incorrect Master PIN. Access restricted to Field Command.');
-      setTimeout(() => {
-        setShake(false);
-        setPin('');
-      }, 600);
+      setError(`Too many attempts. Try again in ${secsLeft}s.`);
+      setTimeout(() => { setShake(false); setPin(''); }, 600);
+      return;
     }
-  }, [masterPin, onUnlock]);
+
+    setIsValidating(true);
+
+    try {
+      const result = await validatePin(clean);
+
+      if (result.valid && result.session) {
+        setIsSuccess(true);
+        attemptsRef.current = 0;
+        setTimeout(() => {
+          onUnlock();
+        }, 450);
+      } else {
+        attemptsRef.current += 1;
+        if (attemptsRef.current >= 5) {
+          lockoutUntilRef.current = Date.now() + 60000; // 60s lockout
+          attemptsRef.current = 0;
+        }
+        setShake(true);
+        setError(result.error || 'Incorrect PIN. Access restricted to Field Command.');
+        setTimeout(() => {
+          setShake(false);
+          setPin('');
+        }, 600);
+      }
+    } catch (err) {
+      setShake(true);
+      setError('Connection error. Check your internet and try again.');
+      setTimeout(() => { setShake(false); setPin(''); }, 600);
+    } finally {
+      setIsValidating(false);
+    }
+  }, [onUnlock]);
 
   const handleDigit = (digit: string) => {
-    if (isSuccess) return;
+    if (isSuccess || isValidating) return;
     setError(null);
     if (pin.length < 6) {
       const nextPin = pin + digit;
@@ -215,7 +225,7 @@ export default function CommandPinGate({ onUnlock, masterPin = '620620' }: Comma
             Back to Home
           </Link>
           <span className="text-[11px] text-slate-500 font-mono">
-            Master PIN: 620620
+            Contact Field Director for access
           </span>
         </div>
 

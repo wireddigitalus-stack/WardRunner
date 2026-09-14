@@ -1,5 +1,6 @@
 import { CanvassRecord, VolunteerLocationPing, GroundVolunteerRole } from './types';
-import { supabase } from './supabaseClient';
+import { getCampaignId } from '@/lib/auth';
+import { fetchFromSupabase, upsertToSupabase, deleteFromSupabase, subscribeToTable } from '@/lib/syncEngine';
 
 export const CANVASS_STORAGE_KEY = 'wardrunner_canvass_records';
 export const CANVASS_PING_KEY = 'wardrunner_canvass_ping';
@@ -251,11 +252,20 @@ export function saveStoredCanvassRecords(records: CanvassRecord[]): void {
   }
 }
 
+export async function fetchCanvassRecords(): Promise<CanvassRecord[]> {
+  const campaignId = getCampaignId();
+  return fetchFromSupabase<CanvassRecord>('canvass_records', CANVASS_STORAGE_KEY, campaignId);
+}
+
+export function subscribeCanvassRecords(onUpdate: (records: CanvassRecord[]) => void): () => void {
+  const campaignId = getCampaignId();
+  return subscribeToTable('canvass_records', campaignId, onUpdate);
+}
+
 export function addCanvassRecord(payload: Partial<CanvassRecord>): CanvassRecord {
-  const current = getStoredCanvassRecords();
   const newRecord: CanvassRecord = {
     id: payload.id || 'canvass-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
-    campaign_id: payload.campaign_id || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    campaign_id: payload.campaign_id || getCampaignId(),
     volunteer_name: payload.volunteer_name || 'Campaign Volunteer',
     volunteer_role: payload.volunteer_role || 'Door Canvasser',
     activity_type: payload.activity_type || 'door_knock',
@@ -271,39 +281,24 @@ export function addCanvassRecord(payload: Partial<CanvassRecord>): CanvassRecord
     created_at: payload.created_at || new Date().toISOString(),
   };
 
-  const updated = [newRecord, ...current];
-  saveStoredCanvassRecords(updated);
+  // Save locally first (synchronous, instant)
+  const current = getStoredCanvassRecords();
+  saveStoredCanvassRecords([newRecord, ...current]);
 
-  // Asynchronously sync to Supabase in background if available
-  try {
-    const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your-publishable-key');
-    if (!isPlaceholder) {
-      supabase.from('canvass_records').insert([newRecord]).then(({ error }) => {
-        if (error) console.warn('Supabase remote canvass sync error:', error);
-      });
-    }
-  } catch (err) {
-    console.warn('Supabase remote canvass sync offline/deferred:', err);
-  }
+  // Fire-and-forget Supabase sync
+  upsertToSupabase<CanvassRecord>('canvass_records', CANVASS_STORAGE_KEY, newRecord).catch(err => {
+    console.warn('Failed to sync canvass record to Supabase:', err);
+  });
 
   return newRecord;
 }
 
-export function deleteCanvassRecord(id: string): void {
+export async function deleteCanvassRecord(id: string): Promise<void> {
   const current = getStoredCanvassRecords();
   const filtered = current.filter(r => r.id !== id);
   saveStoredCanvassRecords(filtered);
 
-  try {
-    const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your-publishable-key');
-    if (!isPlaceholder) {
-      supabase.from('canvass_records').delete().eq('id', id).then(({ error }) => {
-        if (error) console.warn('Supabase remote canvass delete error:', error);
-      });
-    }
-  } catch (err) {
-    console.warn('Supabase remote canvass delete offline/deferred:', err);
-  }
+  await deleteFromSupabase('canvass_records', CANVASS_STORAGE_KEY, id);
 }
 
 /* =========================================================================
@@ -348,6 +343,16 @@ export function saveStoredVolunteerPings(pings: VolunteerLocationPing[]): void {
   } catch (e) {
     console.warn('Failed to save volunteer pings to localStorage:', e);
   }
+}
+
+export async function fetchVolunteerPings(): Promise<VolunteerLocationPing[]> {
+  const campaignId = getCampaignId();
+  return fetchFromSupabase<VolunteerLocationPing>('volunteer_pings', VOLUNTEER_PINGS_STORAGE_KEY, campaignId);
+}
+
+export function subscribeVolunteerPings(onUpdate: (records: VolunteerLocationPing[]) => void): () => void {
+  const campaignId = getCampaignId();
+  return subscribeToTable('volunteer_pings', campaignId, onUpdate);
 }
 
 /**
@@ -400,6 +405,17 @@ export function reportVolunteerPing(ping: Partial<VolunteerLocationPing> & { vol
   }
 
   saveStoredVolunteerPings(current);
+
+  // Sync to Supabase asynchronously — add synthetic id for upsert compatibility
+  const pingWithId = {
+    ...updatedPing,
+    id: `ping-${updatedPing.volunteer_name.replace(/\s+/g, '-').toLowerCase()}`,
+    campaign_id: getCampaignId(),
+  };
+  upsertToSupabase('volunteer_pings', VOLUNTEER_PINGS_STORAGE_KEY, pingWithId as any).catch(err => {
+    console.warn('Failed to upsert ping to Supabase:', err);
+  });
+
   return updatedPing;
 }
 

@@ -1,8 +1,12 @@
 import { CanvassRoute, CanvassRouteStatus, CanvassRecord } from './types';
 import { snapWalkingPathToStreets } from './canvassData';
+import { fetchFromSupabase, upsertToSupabase, deleteFromSupabase, subscribeToTable } from '@/lib/syncEngine';
+import { getCampaignId } from '@/lib/auth';
 
 export const CANVASS_ROUTES_STORAGE_KEY = 'wardrunner_canvass_routes';
 export const CANVASS_ROUTES_PING_KEY = 'wardrunner_canvass_routes_ping';
+
+const TABLE_NAME = 'canvass_routes';
 
 export const SEED_CANVASS_ROUTES: CanvassRoute[] = [
   {
@@ -172,10 +176,36 @@ export function saveStoredCanvassRoutes(routes: CanvassRoute[]): void {
   }
 }
 
+// NEW: Supabase-primary fetching
+export async function fetchCanvassRoutes(): Promise<CanvassRoute[]> {
+  try {
+    const campaignId = getCampaignId();
+    const routes = await fetchFromSupabase<CanvassRoute>(TABLE_NAME, CANVASS_ROUTES_STORAGE_KEY, campaignId);
+    if (routes && routes.length > 0) {
+      saveStoredCanvassRoutes(routes); // Update local cache
+      return routes;
+    }
+    return getStoredCanvassRoutes(); // Fallback
+  } catch (error) {
+    console.error('Error fetching canvass routes:', error);
+    return getStoredCanvassRoutes();
+  }
+}
+
+// NEW: Real-time subscription
+export function subscribeCanvassRoutes(onUpdate: (routes: CanvassRoute[]) => void): () => void {
+  const campaignId = getCampaignId();
+  return subscribeToTable(TABLE_NAME, campaignId, (records) => {
+    const routes = records as CanvassRoute[];
+    saveStoredCanvassRoutes(routes);
+    onUpdate(routes);
+  });
+}
+
 /**
  * Assign a canvass route to a volunteer (or unassign if volunteerName is null).
  */
-export function assignCanvassRoute(routeId: string, volunteerName: string | null): CanvassRoute | null {
+export async function assignCanvassRoute(routeId: string, volunteerName: string | null): Promise<CanvassRoute | null> {
   const current = getStoredCanvassRoutes();
   const index = current.findIndex(r => r.id === routeId);
   if (index === -1) return null;
@@ -188,14 +218,21 @@ export function assignCanvassRoute(routeId: string, volunteerName: string | null
   };
 
   current[index] = updatedRoute;
-  saveStoredCanvassRoutes(current);
+  saveStoredCanvassRoutes(current); // Optimistic UI update
+
+  try {
+    await upsertToSupabase(TABLE_NAME, CANVASS_ROUTES_STORAGE_KEY, updatedRoute);
+  } catch (error) {
+    console.error('Error assigning route in Supabase:', error);
+  }
+
   return updatedRoute;
 }
 
 /**
  * Update the status of a route (draft, assigned, in_progress, completed).
  */
-export function updateCanvassRouteStatus(routeId: string, status: CanvassRouteStatus): CanvassRoute | null {
+export async function updateCanvassRouteStatus(routeId: string, status: CanvassRouteStatus): Promise<CanvassRoute | null> {
   const current = getStoredCanvassRoutes();
   const index = current.findIndex(r => r.id === routeId);
   if (index === -1) return null;
@@ -207,7 +244,14 @@ export function updateCanvassRouteStatus(routeId: string, status: CanvassRouteSt
   };
 
   current[index] = updatedRoute;
-  saveStoredCanvassRoutes(current);
+  saveStoredCanvassRoutes(current); // Optimistic UI update
+
+  try {
+    await upsertToSupabase(TABLE_NAME, CANVASS_ROUTES_STORAGE_KEY, updatedRoute);
+  } catch (error) {
+    console.error('Error updating route status in Supabase:', error);
+  }
+
   return updatedRoute;
 }
 
@@ -225,9 +269,11 @@ export async function addCanvassRoute(payload: Partial<CanvassRoute>): Promise<C
     } catch {}
   }
 
+  const campaignId = getCampaignId();
+
   const newRoute: CanvassRoute = {
     id: payload.id || 'route-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-    campaign_id: payload.campaign_id || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    campaign_id: payload.campaign_id || campaignId,
     name: payload.name || 'New Canvass Turf',
     precinct_code: payload.precinct_code || '3A',
     precinct_name: payload.precinct_name || 'Precinct 3A',
@@ -249,17 +295,30 @@ export async function addCanvassRoute(payload: Partial<CanvassRoute>): Promise<C
   };
 
   const updated = [newRoute, ...current];
-  saveStoredCanvassRoutes(updated);
+  saveStoredCanvassRoutes(updated); // Optimistic update
+
+  try {
+    await upsertToSupabase(TABLE_NAME, CANVASS_ROUTES_STORAGE_KEY, newRoute);
+  } catch (error) {
+    console.error('Error saving new route to Supabase:', error);
+  }
+
   return newRoute;
 }
 
 /**
  * Delete a canvass route.
  */
-export function deleteCanvassRoute(routeId: string): void {
+export async function deleteCanvassRoute(routeId: string): Promise<void> {
   const current = getStoredCanvassRoutes();
   const filtered = current.filter(r => r.id !== routeId);
   saveStoredCanvassRoutes(filtered);
+
+  try {
+    await deleteFromSupabase(TABLE_NAME, CANVASS_ROUTES_STORAGE_KEY, routeId);
+  } catch (error) {
+    console.error('Error deleting route from Supabase:', error);
+  }
 }
 
 /**

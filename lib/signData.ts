@@ -1,5 +1,6 @@
 import { Sign, SignStatus, SignType } from './types';
-import { supabase } from './supabaseClient';
+import { getCampaignId } from '@/lib/auth';
+import { fetchFromSupabase, upsertToSupabase, subscribeToTable } from '@/lib/syncEngine';
 
 export const SEED_SIGNS: Sign[] = [
   { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Campaign Volunteer', street_address: '620 State Street', sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
@@ -17,6 +18,12 @@ export const SIGNS_PING_KEY = 'wardrunner_signs_ping';
 
 export function getStoredSigns(): Sign[] {
   if (typeof window === 'undefined') return SEED_SIGNS;
+
+  // Kick off an async Supabase fetch in the background to update the cache
+  setTimeout(() => {
+    fetchSigns().catch(e => console.warn('Background fetch failed:', e));
+  }, 0);
+
   try {
     const raw = localStorage.getItem(SIGNS_STORAGE_KEY);
     if (!raw) {
@@ -25,19 +32,6 @@ export function getStoredSigns(): Sign[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      // Auto-migrate Sign 2 if it's still at 36.6010 (covering Marcus Taylor's first stop)
-      let needsUpdate = false;
-      const updated = parsed.map((s: Sign) => {
-        if (s.id === '2' && Math.abs(s.latitude - 36.6010) < 0.0005) {
-          needsUpdate = true;
-          return { ...s, latitude: 36.5990, longitude: -82.1815 };
-        }
-        return s;
-      });
-      if (needsUpdate) {
-        localStorage.setItem(SIGNS_STORAGE_KEY, JSON.stringify(updated));
-        return updated;
-      }
       return parsed;
     }
     return SEED_SIGNS;
@@ -58,9 +52,10 @@ export function saveStoredSigns(signs: Sign[]): void {
 }
 
 export async function addPlacedSign(payload: Partial<Sign>): Promise<Sign> {
+  const campaignId = getCampaignId();
   const newSign: Sign = {
     id: payload.id || 'sign-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
-    campaign_id: payload.campaign_id || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    campaign_id: payload.campaign_id || campaignId,
     latitude: Number(payload.latitude) || 36.595,
     longitude: Number(payload.longitude) || -82.188,
     placed_by_name: payload.placed_by_name || 'Campaign Volunteer',
@@ -78,12 +73,9 @@ export async function addPlacedSign(payload: Partial<Sign>): Promise<Sign> {
   const updated = [newSign, ...current.filter(s => s.id !== newSign.id)];
   saveStoredSigns(updated);
 
-  // 2. Asynchronously sync to Supabase in background if available
+  // 2. Asynchronously sync to Supabase via sync engine
   try {
-    const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your-publishable-key');
-    if (!isPlaceholder) {
-      await supabase.from('signs').insert([newSign]);
-    }
+    await upsertToSupabase('signs', SIGNS_STORAGE_KEY, newSign);
   } catch (err) {
     console.warn('Supabase remote sign sync offline/deferred:', err);
   }
@@ -93,24 +85,53 @@ export async function addPlacedSign(payload: Partial<Sign>): Promise<Sign> {
 
 export async function markSignRetrieved(signId: string): Promise<void> {
   const current = getStoredSigns();
+  let updatedSign: Sign | undefined;
+
   const updated = current.map(s => {
     if (s.id === signId) {
-      return {
+      updatedSign = {
         ...s,
         status: 'retrieved' as SignStatus,
         retrieved_at: new Date().toISOString(),
       };
+      return updatedSign;
     }
     return s;
   });
   saveStoredSigns(updated);
 
-  try {
-    const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('your-publishable-key');
-    if (!isPlaceholder) {
-      await supabase.from('signs').update({ status: 'retrieved', retrieved_at: new Date().toISOString() }).eq('id', signId);
+  if (updatedSign) {
+    try {
+      await upsertToSupabase('signs', SIGNS_STORAGE_KEY, updatedSign);
+    } catch (err) {
+      console.warn('Supabase remote retrieval sync offline/deferred:', err);
     }
-  } catch (err) {
-    console.warn('Supabase remote retrieval sync offline/deferred:', err);
   }
+}
+
+export async function fetchSigns(): Promise<Sign[]> {
+  const campaignId = getCampaignId();
+  try {
+    // Primary: fetch from Supabase
+    return await fetchFromSupabase<Sign>('signs', SIGNS_STORAGE_KEY, campaignId);
+  } catch (err) {
+    console.warn('Failed to fetch from Supabase, falling back to local cache', err);
+    // Fallback: localStorage
+    if (typeof window === 'undefined') return SEED_SIGNS;
+    try {
+      const raw = localStorage.getItem(SIGNS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return SEED_SIGNS;
+  }
+}
+
+export function subscribeSigns(onUpdate: (signs: Sign[]) => void): () => void {
+  const campaignId = getCampaignId();
+  return subscribeToTable('signs', campaignId, (records) => {
+    onUpdate(records as Sign[]);
+  });
 }
