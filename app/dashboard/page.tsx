@@ -23,7 +23,7 @@ import CampaignDrawer from './components/CampaignDrawer';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON, BRISTOL_ALL_PRECINCTS_BOUNDS, BRISTOL_ALL_PRECINCTS_CENTER } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS, subscribeSigns } from '@/lib/signData';
-import { getStoredCanvassRecords, getStoredVolunteerPings, snapWalkingPathToStreets } from '@/lib/canvassData';
+import { getStoredCanvassRecords, getStoredVolunteerPings, snapWalkingPathToStreets, SEED_CANVASS_RECORDS } from '@/lib/canvassData';
 import { getStoredCanvassRoutes, saveStoredCanvassRoutes, assignCanvassRoute, updateCanvassRouteStatus } from '@/lib/canvassRouteData';
 import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
@@ -408,8 +408,8 @@ export default function DashboardPage() {
       setShowFieldForceLayer(true);
       if (mapRef.current) {
         mapRef.current.flyTo({
-          center: [-82.1985, 36.5905],
-          zoom: 16.0,
+          center: [-82.1953, 36.5852],
+          zoom: 16.2,
           pitch: is3D ? 45 : 0,
           duration: 900,
         });
@@ -445,9 +445,22 @@ export default function DashboardPage() {
         if (!isPlaceholder) {
           const { data, error } = await supabase.from('canvass_records').select('*').order('created_at', { ascending: false });
           if (data && data.length > 0 && !error) {
-            const localIds = new Set(data.map((d: any) => d.id));
+            const canonicalMap = new Map(SEED_CANVASS_RECORDS.slice(0, 5).map(s => [s.id, s]));
+            const sanitized = data.map((d: any) => {
+              if (canonicalMap.has(d.id)) {
+                const seed = canonicalMap.get(d.id)!;
+                return {
+                  ...d,
+                  latitude: seed.latitude,
+                  longitude: seed.longitude,
+                  street_address: seed.street_address,
+                };
+              }
+              return d;
+            });
+            const localIds = new Set(sanitized.map((d: any) => d.id));
             const onlyLocal = localRecords.filter(s => !localIds.has(s.id));
-            const merged = [...onlyLocal, ...data];
+            const merged = [...onlyLocal, ...sanitized];
             setCanvassRecords(merged);
           }
         }
