@@ -371,7 +371,7 @@ export default function FieldPage() {
     setAuthError(null);
 
     if (pinInput.trim().length < 4) {
-      setAuthError('Please enter a valid 4-6 digit Campaign PIN.');
+      setAuthError('Please enter your 4-digit Campaign PIN.');
       return;
     }
     if (!nameInput.trim()) {
@@ -719,14 +719,14 @@ export default function FieldPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Campaign 6-Digit PIN
+                  Campaign 4-Digit PIN
                 </label>
                 <input
                   type="password"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={6}
-                  placeholder="Enter 6-digit PIN"
+                  maxLength={4}
+                  placeholder="Enter 4-digit PIN"
                   value={pinInput}
                   onChange={(e) => setPinInput(e.target.value)}
                   className="w-full h-14 px-4 text-center text-2xl font-mono tracking-widest bg-slate-950 border border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-white placeholder:text-slate-600 transition"

@@ -39,6 +39,16 @@ export default function CommandPinGate({ onUnlock }: CommandPinGateProps) {
       const result = await validatePin(clean);
 
       if (result.valid && result.session) {
+        // Command Center is VIP-only: Field Directors and Precinct Captains
+        const vipRoles = ['Field Director', 'Precinct Captain'];
+        const isVip = result.session.authType === 'master' || vipRoles.includes(result.session.role);
+        if (!isVip) {
+          setShake(true);
+          setError('Command Center is VIP-only. Use the Field Portal for sign & canvass operations.');
+          setTimeout(() => { setShake(false); setPin(''); }, 600);
+          setIsValidating(false);
+          return;
+        }
         setIsSuccess(true);
         attemptsRef.current = 0;
         setTimeout(() => {
@@ -69,10 +79,10 @@ export default function CommandPinGate({ onUnlock }: CommandPinGateProps) {
   const handleDigit = (digit: string) => {
     if (isSuccess || isValidating) return;
     setError(null);
-    if (pin.length < 6) {
+    if (pin.length < 4) {
       const nextPin = pin + digit;
       setPin(nextPin);
-      if (nextPin.length === 6) {
+      if (nextPin.length === 4) {
         handleVerify(nextPin);
       }
     }
@@ -142,13 +152,13 @@ export default function CommandPinGate({ onUnlock }: CommandPinGateProps) {
             Security Gate
           </h1>
           <p className="text-xs text-slate-400 max-w-xs">
-            Enter the 6-digit Master PIN to unlock Field Command operations for <strong className="text-slate-200">Bristol TN</strong>.
+            Enter the 4-digit VIP PIN to unlock Field Command operations for <strong className="text-slate-200">Bristol TN</strong>.
           </p>
         </div>
 
-        {/* 6-Digit PIN Indicators */}
+        {/* 4-Digit PIN Indicators */}
         <div className="flex items-center gap-3 mb-6">
-          {[0, 1, 2, 3, 4, 5].map((index) => {
+          {[0, 1, 2, 3].map((index) => {
             const hasDigit = index < pin.length;
             return (
               <div
@@ -179,7 +189,7 @@ export default function CommandPinGate({ onUnlock }: CommandPinGateProps) {
             </div>
           ) : (
             <span className="text-[11px] text-slate-500 font-mono tracking-wider">
-              {pin.length > 0 ? `${pin.length} of 6 digits entered` : 'Type or tap PIN below'}
+              {pin.length > 0 ? `${pin.length} of 4 digits entered` : 'Type or tap PIN below'}
             </span>
           )}
         </div>

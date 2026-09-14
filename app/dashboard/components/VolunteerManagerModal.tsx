@@ -56,7 +56,7 @@ interface VolunteerManagerModalProps {
   } | null;
 }
 
-const DEFAULT_MASTER_PIN = process.env.NEXT_PUBLIC_DEFAULT_PIN || '246810';
+const DEFAULT_MASTER_PIN = process.env.NEXT_PUBLIC_DEFAULT_PIN || '2468';
 
 const DEFAULT_VOLUNTEERS: Volunteer[] = [
   {
@@ -72,7 +72,7 @@ const DEFAULT_VOLUNTEERS: Volunteer[] = [
     id: 'vol-2',
     name: 'Sarah Jenkins',
     role: 'Precinct Captain',
-    pin: '849201',
+    pin: '8492',
     phone: '(423) 555-0188',
     created_at: new Date(Date.now() - 3600000 * 36).toISOString(),
     active: true,
@@ -90,7 +90,7 @@ const DEFAULT_VOLUNTEERS: Volunteer[] = [
     id: 'vol-4',
     name: 'David Vance',
     role: 'Field Director',
-    pin: '394812',
+    pin: '3948',
     phone: '(423) 555-0112',
     created_at: new Date(Date.now() - 3600000 * 72).toISOString(),
     active: true,
@@ -206,8 +206,8 @@ export default function VolunteerManagerModal({
 
   const handleSaveMasterPin = () => {
     const cleaned = tempMasterPin.trim();
-    if (cleaned.length < 4 || cleaned.length > 6) {
-      alert('Master PIN must be 4 to 6 digits.');
+    if (cleaned.length !== 4 || !/^\d{4}$/.test(cleaned)) {
+      alert('Master PIN must be exactly 4 digits.');
       return;
     }
     setMasterPin(cleaned);
@@ -227,8 +227,8 @@ export default function VolunteerManagerModal({
       return;
     }
 
-    if (customPin && (customPin.trim().length < 4 || customPin.trim().length > 6)) {
-      setFormError('Custom PIN must be 4 to 6 digits.');
+    if (customPin && (customPin.trim().length !== 4 || !/^\d{4}$/.test(customPin.trim()))) {
+      setFormError('Custom PIN must be exactly 4 digits.');
       return;
     }
 
@@ -421,10 +421,10 @@ export default function VolunteerManagerModal({
                         <input
                           type="text"
                           value={tempMasterPin}
-                          onChange={(e) => setTempMasterPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          onChange={(e) => setTempMasterPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
                           className="w-28 px-2.5 py-1 text-sm font-mono font-bold bg-white/10 rounded-lg border border-emerald-500 text-white focus:outline-none"
                           autoFocus
-                          maxLength={6}
+                          maxLength={4}
                         />
                         <button
                           onClick={handleSaveMasterPin}
@@ -534,14 +534,14 @@ export default function VolunteerManagerModal({
 
                     <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        Dedicated PIN (4-6 digits)
+                        Dedicated PIN (4 digits)
                       </label>
                       <input
                         type="text"
                         value={customPin}
-                        onChange={(e) => setCustomPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        onChange={(e) => setCustomPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
                         placeholder={`Leave blank to use ${masterPin}`}
-                        maxLength={6}
+                        maxLength={4}
                         className="w-full px-3 py-2 text-xs font-mono rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
                       />
                     </div>

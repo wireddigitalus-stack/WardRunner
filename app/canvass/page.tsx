@@ -350,7 +350,7 @@ export default function CanvassPage() {
     setAuthError(null);
 
     if (pinInput.trim().length < 4) {
-      setAuthError('Please enter a valid 4-6 digit Campaign PIN.');
+      setAuthError('Please enter your 4-digit Campaign PIN.');
       setIsAuthenticating(false);
       return;
     }
@@ -612,10 +612,10 @@ export default function CanvassPage() {
                 <input
                   type="password"
                   inputMode="numeric"
-                  maxLength={6}
+                  maxLength={4}
                   value={pinInput}
                   onChange={(e) => setPinInput(e.target.value)}
-                  placeholder="Enter Campaign PIN"
+                  placeholder="Enter 4-digit PIN"
                   className="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-2xl px-4 py-3.5 text-center font-mono text-xl tracking-widest text-white focus:outline-none transition shadow-inner"
                   autoFocus
                 />
