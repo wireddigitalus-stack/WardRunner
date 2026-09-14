@@ -364,7 +364,7 @@ export default function DashboardPage() {
   const [showSignsLayer, setShowSignsLayer] = useState(false);
 
   // Street-Level Precision Micro Dot Mode
-  const [useDotMode, setUseDotMode] = useState(false);
+  const [useDotMode, setUseDotMode] = useState(true);
 
   // Ground Campaign & Field Force State
   const [canvassRecords, setCanvassRecords] = useState<CanvassRecord[]>([]);
@@ -1505,30 +1505,44 @@ export default function DashboardPage() {
         const tooltipType = SIGN_TYPE_META[sign.sign_type]?.label || 'Sign';
 
         if (useDotMode) {
+          // Smart Pill Badge — compact but type-identifiable
+          const pillW = isSel ? 36 : 30;
+          const pillH = isSel ? 18 : 15;
+          const fontSize = isSel ? 9 : 7.5;
           el.innerHTML = `
-            <div style="position:relative;width:${isSel ? 22 : 16}px;height:${isSel ? 22 : 16}px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              ${/* If selected: glowing active radar pulse */''}
+            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
               ${isSel ? `
                 <div class="animate-radar" style="
-                  width: 28px;
-                  height: 28px;
+                  width: ${pillW + 14}px;
+                  height: ${pillW + 14}px;
                   background: ${glowColor};
                   border: 2px solid #ffffff;
                 "></div>
               ` : ''}
 
-              ${/* Street-Level Precision Micro Dot */''}
               <div class="street-dot" style="
-                width: 100%;
-                height: 100%;
-                border-radius: 50%;
-                background: ${bgColor};
-                border: 2px solid white;
-                box-shadow: 0 0 10px ${glowColor}, 0 2px 5px rgba(0,0,0,0.6);
+                width: ${pillW}px;
+                height: ${pillH}px;
+                border-radius: 9px;
+                background: linear-gradient(135deg, ${bgColor}, ${bgColorDark});
+                border: 1.5px solid rgba(255,255,255,0.9);
+                box-shadow: 0 0 8px ${glowColor}, 0 1px 4px rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
                 position: relative;
                 z-index: 10;
-              "></div>
+              ">
+                <span style="
+                  color: white;
+                  font-size: ${fontSize}px;
+                  font-weight: 900;
+                  letter-spacing: 0.3px;
+                  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+                  line-height: 1;
+                ">${pinLabel}</span>
+              </div>
 
               ${/* Hover Tooltip */''}
               <div class="
@@ -1539,20 +1553,14 @@ export default function DashboardPage() {
                 <div style="
                   background: rgba(15,23,42,0.94);
                   backdrop-filter: blur(12px);
-                  border-radius: 12px;
-                  padding: 7px 12px;
+                  border-radius: 10px;
+                  padding: 6px 10px;
                   white-space: nowrap;
-                  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-                  border: 1px solid rgba(255,255,255,0.12);
-                  text-align: center;
+                  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+                  border: 1px solid rgba(255,255,255,0.1);
                 ">
-                  <div style="display:flex;align-items:center;gap:5px;justify-content:center;">
-                    <span style="width:8px;height:8px;border-radius:50%;background:${bgColor};display:inline-block;"></span>
-                    <span style="color:white;font-size:12px;font-weight:800;line-height:1.2;">${tooltipName}</span>
-                  </div>
-                  <div style="color:rgba(255,255,255,0.6);font-size:10px;font-weight:600;margin-top:2px;">
-                    ${tooltipType} · ${sign.is_competitor ? 'Opponent Sighting' : 'Official Campaign'}
-                  </div>
+                  <div style="color:white;font-size:11px;font-weight:800;line-height:1.3;">${tooltipName}</div>
+                  <div style="color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;margin-top:1px;">${tooltipType}</div>
                   ${sign.street_address ? `<div style="color:#38bdf8;font-size:10px;margin-top:2px;">${sign.street_address}</div>` : ''}
                 </div>
                 <div style="
