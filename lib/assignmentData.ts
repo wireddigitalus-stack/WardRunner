@@ -210,6 +210,7 @@ export function addAssignment(newAssign: Omit<VolunteerAssignment, 'id' | 'creat
     status: 'assigned',
     created_at: new Date().toISOString(),
     campaign_id: getCampaignId(),
+    notes: newAssign.notes ? newAssign.notes.trim() : null,
   } as VolunteerAssignment;
   
   const updated = [item, ...current];

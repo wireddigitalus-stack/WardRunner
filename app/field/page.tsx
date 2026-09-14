@@ -923,28 +923,40 @@ export default function FieldPage() {
         <div id="placement-form" className="px-4 py-2 space-y-4">
           {/* Active Mission In-Progress Banner */}
           {activeMission && (
-            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/25 via-indigo-500/20 to-emerald-500/25 border border-purple-500/40 text-xs text-white shadow-xl animate-slide-up flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-purple-500/30 border border-purple-400/50 flex items-center justify-center text-purple-300 shrink-0">
-                  <Target className="w-4 h-4" />
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/25 via-indigo-500/20 to-emerald-500/25 border border-purple-500/40 text-xs text-white shadow-xl animate-slide-up space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-purple-500/30 border border-purple-400/50 flex items-center justify-center text-purple-300 shrink-0">
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-black uppercase text-purple-300 tracking-wider block">
+                      Active Sign Mission
+                    </span>
+                    <p className="font-extrabold text-sm text-white truncate">{activeMission.title}</p>
+                    <p className="text-[11px] text-emerald-300 font-bold">
+                      Pre-filled: {activeMission.quantity}× {activeMission.sign_type.replace('_', ' ')}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <span className="text-[10px] font-black uppercase text-purple-300 tracking-wider block">
-                    Active Sign Mission
-                  </span>
-                  <p className="font-extrabold text-sm text-white truncate">{activeMission.title}</p>
-                  <p className="text-[10px] text-emerald-300">
-                    Pre-filled: {activeMission.quantity}× {activeMission.sign_type.replace('_', ' ')}
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveMission(null)}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 hover:bg-white/15 text-slate-300 transition shrink-0"
+                >
+                  Clear
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setActiveMission(null)}
-                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 hover:bg-white/15 text-slate-300 transition shrink-0"
-              >
-                Clear
-              </button>
+
+              {activeMission.notes && (
+                <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs font-medium flex items-start gap-2">
+                  <span className="shrink-0 text-sm">📝</span>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">Placement Instructions</span>
+                    <p className="italic leading-relaxed">{activeMission.notes}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

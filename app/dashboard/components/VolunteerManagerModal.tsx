@@ -142,6 +142,27 @@ export default function VolunteerManagerModal({
   const [assignPriority, setAssignPriority] = useState<'critical' | 'high' | 'medium'>('high');
   const [assignNotes, setAssignNotes] = useState('');
   const [dispatchSuccess, setDispatchSuccess] = useState(false);
+  const [lastDispatchedMission, setLastDispatchedMission] = useState<VolunteerAssignment | null>(null);
+
+  // Play audio confirmation chime on dispatch
+  const playDispatchChime = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 triumphant chime
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + idx * 0.08);
+        osc.stop(audioCtx.currentTime + idx * 0.08 + 0.3);
+      });
+    } catch {}
+  };
 
   // Load Volunteers & Assignments
   useEffect(() => {
@@ -301,6 +322,8 @@ export default function VolunteerManagerModal({
       }
     }
 
+    const trimmedNotes = assignNotes.trim();
+
     const newAssign = addAssignment({
       volunteer_name: volName,
       target_type,
@@ -311,13 +334,14 @@ export default function VolunteerManagerModal({
       lat,
       lng,
       priority: assignPriority,
-      notes: assignNotes.trim() || undefined,
+      notes: trimmedNotes || undefined,
     });
 
     setAssignments(prev => [newAssign, ...prev]);
-    setAssignNotes('');
+    setLastDispatchedMission(newAssign);
     setDispatchSuccess(true);
-    setTimeout(() => setDispatchSuccess(false), 2500);
+    setAssignNotes('');
+    playDispatchChime();
   };
 
   const activeAssignmentsCount = assignments.filter(a => a.status !== 'completed').length;
@@ -694,9 +718,19 @@ export default function VolunteerManagerModal({
                 </div>
 
                 {dispatchSuccess && (
-                  <div className="mb-3 p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-slide-up">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                    Mission dispatched! The volunteer will see this at the top of their field dashboard.
+                  <div className="mb-3.5 p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold animate-slide-up space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>Mission dispatched successfully to {lastDispatchedMission?.volunteer_name || 'volunteer'}!</span>
+                      </span>
+                      <button onClick={() => setDispatchSuccess(false)} className="text-slate-400 hover:text-white text-xs px-1">✕</button>
+                    </div>
+                    {lastDispatchedMission?.notes && (
+                      <p className="text-[11px] text-amber-200 font-medium italic pl-5">
+                        📝 Notes: &ldquo;{lastDispatchedMission.notes}&rdquo;
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -878,6 +912,70 @@ export default function VolunteerManagerModal({
                     />
                   </div>
 
+                  {/* Immediate Dispatch Confirmation Alert */}
+                  {dispatchSuccess && lastDispatchedMission && (
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-teal-500/15 to-emerald-500/20 border-2 border-emerald-400/50 shadow-xl shadow-emerald-950/40 text-white animate-slide-up space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-500/30 border border-emerald-400/60 flex items-center justify-center text-emerald-300 shrink-0">
+                            <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-black uppercase text-emerald-300 tracking-wider block">
+                              ✓ Mission Dispatched Successfully!
+                            </span>
+                            <p className="text-[11px] text-slate-300">
+                              Assigned to <span className="font-bold text-white">{lastDispatchedMission.volunteer_name}</span> · {lastDispatchedMission.quantity}× {lastDispatchedMission.sign_type.replace('_', ' ')}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setDispatchSuccess(false)}
+                          className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 text-xs"
+                          title="Dismiss notification"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-slate-950/70 border border-white/10 space-y-1.5 text-xs">
+                        <p className="font-bold text-white flex items-center gap-1.5">
+                          <span>📍 Target:</span>
+                          <span className="text-slate-200">{lastDispatchedMission.title}</span>
+                        </p>
+                        {lastDispatchedMission.notes ? (
+                          <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-start gap-1.5 font-medium">
+                            <span className="shrink-0 text-sm">📝</span>
+                            <div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">Special Instructions Logged:</span>
+                              <span className="italic">&ldquo;{lastDispatchedMission.notes}&rdquo;</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-slate-400 italic">No special placement notes attached.</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] pt-0.5">
+                        <span className="text-emerald-300 font-semibold flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Live on volunteer&apos;s mobile field app
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDispatchSuccess(false);
+                            setLastDispatchedMission(null);
+                          }}
+                          className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 font-bold transition active:scale-95"
+                        >
+                          + Dispatch Another
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex justify-end pt-1">
                     <button
                       type="submit"
@@ -889,10 +987,61 @@ export default function VolunteerManagerModal({
                 </form>
               </div>
 
+              {/* Recently Dispatched Missions Feed with Notes */}
+              {assignments.length > 0 && (
+                <div className="mt-5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-purple-400" />
+                      Recent Dispatched Missions ({assignments.filter(a => a.status !== 'completed').length} Active)
+                    </h4>
+                    <span className="text-[11px] text-slate-500">Live Sync</span>
+                  </div>
+
+                  <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-1">
+                    {assignments.slice(0, 4).map((m) => (
+                      <div
+                        key={m.id}
+                        className={`p-3 rounded-2xl border transition-all ${
+                          lastDispatchedMission?.id === m.id
+                            ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-400/30'
+                            : 'bg-white/[0.03] border-white/10'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {lastDispatchedMission?.id === m.id && (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                  Just Dispatched
+                                </span>
+                              )}
+                              <span className="text-xs font-bold text-white truncate">{m.title}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                              <span className="text-purple-300 font-semibold">{m.volunteer_name}</span>
+                              <span>•</span>
+                              <span className="text-emerald-400 font-bold">{m.quantity}× {m.sign_type.replace('_', ' ')}</span>
+                              <span>•</span>
+                              <span className="capitalize">{m.priority}</span>
+                            </div>
+                            {m.notes && (
+                              <p className="mt-1.5 text-xs text-amber-200/90 font-medium italic pl-2.5 border-l-2 border-amber-400/60 bg-amber-500/10 py-1 rounded-r-lg">
+                                📝 &ldquo;{m.notes}&rdquo;
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Tip Note */}
-              <div className="mt-6 p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
+              <div className="mt-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
                 <p className="text-xs text-slate-400">
-                  <span className="text-purple-400 font-bold">💡 Tip:</span> View and manage all dispatched missions in the <span className="text-white font-semibold">Campaign Drawer → Missions</span> tab.
+                  <span className="text-purple-400 font-bold">💡 Tip:</span> View full interactive routes and map targets in the <span className="text-white font-semibold">Campaign Drawer → Missions</span> tab.
                 </p>
               </div>
             </div>
