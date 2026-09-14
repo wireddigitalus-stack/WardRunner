@@ -2778,123 +2778,117 @@ export default function DashboardPage() {
           <button onClick={() => mapRef.current?.zoomOut()} className="p-2.5 rounded-xl hover:bg-white/10 text-sm font-bold active:scale-90 transition-all leading-none">−</button>
         </div>
 
-        {/* Layer Toggles */}
-        <div className="glass rounded-2xl p-1 flex flex-col items-center gap-0.5">
-          {/* Yard Signs (3-State Cycle: Pins -> Dots -> Off) */}
-          <button
-            id="tour-signs-toggle"
-            onClick={() => {
-              if (!showSignsLayer) {
-                setShowSignsLayer(true);
-                setUseDotMode(false);
-              } else if (!useDotMode) {
-                setUseDotMode(true);
-              } else {
-                setShowSignsLayer(false);
-                setUseDotMode(false);
-              }
-            }}
-            title={
-              showSignsLayer
-                ? useDotMode
-                  ? "Yard Signs: Dots Active (tap to hide)"
-                  : "Yard Signs: Pins Active (tap for Dots)"
-                : "Show Yard Signs (Pins)"
+        {/* Layer Toggles — Slide-Out Pill Badges */}
+        <div className="glass rounded-2xl p-1.5 flex flex-col items-end gap-1">
+          {[
+            {
+              id: 'tour-signs-toggle',
+              label: 'Signs',
+              icon: showSignsLayer && useDotMode ? <CircleDot className="w-3.5 h-3.5" /> : <MapPin className="w-3.5 h-3.5" />,
+              active: showSignsLayer,
+              color: useDotMode ? 'cyan' : 'emerald',
+              onClick: () => {
+                if (!showSignsLayer) { setShowSignsLayer(true); setUseDotMode(true); }
+                else if (useDotMode) { setUseDotMode(false); }
+                else { setShowSignsLayer(false); setUseDotMode(true); }
+              },
+            },
+            {
+              id: 'tour-missions-layer',
+              label: 'Missions',
+              icon: <Target className="w-3.5 h-3.5" />,
+              active: showMissionsLayer,
+              color: 'purple',
+              onClick: () => setShowMissionsLayer(!showMissionsLayer),
+            },
+            {
+              id: 'tour-canvass-layer',
+              label: 'Canvass',
+              icon: <Home className="w-3.5 h-3.5" />,
+              active: showCanvassLayer,
+              color: 'teal',
+              onClick: () => handleToggleCanvassLayer(),
+            },
+            {
+              id: 'tour-field-ops',
+              label: 'Field Ops',
+              icon: <Users className="w-3.5 h-3.5" />,
+              active: showFieldForceLayer || showRoutesLayer,
+              color: 'emerald',
+              onClick: () => {
+                if (showFieldForceLayer || showRoutesLayer) {
+                  setShowFieldForceLayer(false); setShowRoutesLayer(false);
+                } else {
+                  setShowFieldForceLayer(true); setShowRoutesLayer(true);
+                }
+              },
+            },
+            { divider: true } as any,
+            {
+              id: 'tour-precincts-layer',
+              label: 'Precincts',
+              icon: <Vote className="w-3.5 h-3.5" />,
+              active: showPrecincts,
+              color: 'emerald',
+              onClick: () => setShowPrecincts(!showPrecincts),
+            },
+            {
+              id: 'tour-boundary',
+              label: 'Boundary',
+              icon: <Building2 className="w-3.5 h-3.5" />,
+              active: showBoundary,
+              color: 'sky',
+              onClick: () => { const next = !showBoundary; setShowBoundary(next); if (!next) setShowBristolFacts(false); },
+            },
+            {
+              id: 'tour-corridors-layer',
+              label: 'AADT',
+              icon: <TrendingUp className="w-3.5 h-3.5" />,
+              active: showCorridors,
+              color: 'amber',
+              onClick: () => setShowCorridors(!showCorridors),
+            },
+            {
+              id: 'tour-heatmap-layer',
+              label: 'Heat',
+              icon: <Flame className="w-3.5 h-3.5" />,
+              active: showHeatmap,
+              color: 'rose',
+              onClick: () => setShowHeatmap(!showHeatmap),
+            },
+          ].map((item: any, idx) => {
+            if (item.divider) {
+              return <div key={`div-${idx}`} className={`w-full h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />;
             }
-            className={`p-2 rounded-xl transition-all ${
-              showSignsLayer
-                ? useDotMode
-                  ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 shadow-md shadow-cyan-500/20'
-                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            {showSignsLayer && useDotMode ? (
-              <CircleDot className="w-4 h-4" />
-            ) : (
-              <MapPin className="w-4 h-4" />
-            )}
-          </button>
-          <button
-            id="tour-missions-layer"
-            onClick={() => setShowMissionsLayer(!showMissionsLayer)}
-            title={showMissionsLayer ? "Hide Target Missions" : "Show Target Missions"}
-            className={`p-2 rounded-xl transition-all ${showMissionsLayer ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-md shadow-purple-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
-          >
-            <Target className="w-4 h-4" />
-          </button>
-          {/* Canvass Houses & Breadcrumbs */}
-          <button
-            id="tour-canvass-layer"
-            onClick={() => handleToggleCanvassLayer()}
-            title={showCanvassLayer ? "Hide Canvass Houses & Breadcrumbs" : "Show Canvass Houses & Breadcrumbs"}
-            className={`p-2 rounded-xl transition-all ${showCanvassLayer ? 'bg-teal-500/25 text-teal-300 border border-teal-500/40 shadow-md shadow-teal-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
-          >
-            <Home className="w-4 h-4" />
-          </button>
-          {/* Consolidated Field Ops & Turf Routes */}
-          <button
-            id="tour-field-ops"
-            onClick={() => {
-              if (showFieldForceLayer || showRoutesLayer) {
-                setShowFieldForceLayer(false);
-                setShowRoutesLayer(false);
-              } else {
-                setShowFieldForceLayer(true);
-                setShowRoutesLayer(true);
-              }
-            }}
-            title={
-              (showFieldForceLayer || showRoutesLayer)
-                ? "Hide Field Operations & Turf Routes"
-                : "Show Field Operations & Turf Routes"
-            }
-            className={`p-2 rounded-xl transition-all ${
-              (showFieldForceLayer || showRoutesLayer)
-                ? 'bg-gradient-to-r from-emerald-500/25 to-teal-500/25 text-emerald-300 border border-emerald-500/40 shadow-md shadow-emerald-500/20'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-          </button>
-          <div className={`w-5 h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />
-          <button
-            id="tour-precincts-layer"
-            onClick={() => setShowPrecincts(!showPrecincts)}
-            title="Voting Precincts & Turnout Grid"
-            className={`p-2 rounded-xl transition-all ${showPrecincts ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
-          >
-            <Vote className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => {
-              const next = !showBoundary;
-              setShowBoundary(next);
-              if (!next) {
-                setShowBristolFacts(false);
-              }
-            }}
-            title={showBoundary ? "Hide Bristol Boundary Overlay" : "Show Bristol Boundary Overlay"}
-            className={`p-2 rounded-xl transition-all ${showBoundary ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-md shadow-sky-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
-          >
-            <Building2 className="w-4 h-4" />
-          </button>
-          <button
-            id="tour-corridors-layer"
-            onClick={() => setShowCorridors(!showCorridors)}
-            title="AADT Corridors"
-            className={`p-2 rounded-xl transition-all ${showCorridors ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-md shadow-amber-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
-          >
-            <TrendingUp className="w-4 h-4" />
-          </button>
-          <button
-            id="tour-heatmap-layer"
-            onClick={() => setShowHeatmap(!showHeatmap)}
-            title="Sign Density Heatmap"
-            className={`p-2 rounded-xl transition-all ${showHeatmap ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30 shadow-md shadow-rose-500/20' : 'text-zinc-400 hover:text-zinc-200'}`}
-          >
-            <Flame className="w-4 h-4" />
-          </button>
+            const colorMap: Record<string, { bg: string; text: string; border: string; shadow: string; glow: string }> = {
+              emerald: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/40', shadow: 'shadow-emerald-500/20', glow: 'ring-emerald-400/30' },
+              cyan:    { bg: 'bg-cyan-500/25',    text: 'text-cyan-300',    border: 'border-cyan-500/40',    shadow: 'shadow-cyan-500/20',    glow: 'ring-cyan-400/30' },
+              teal:    { bg: 'bg-teal-500/25',    text: 'text-teal-300',    border: 'border-teal-500/40',    shadow: 'shadow-teal-500/20',    glow: 'ring-teal-400/30' },
+              purple:  { bg: 'bg-purple-500/20',  text: 'text-purple-300',  border: 'border-purple-500/30',  shadow: 'shadow-purple-500/20',  glow: 'ring-purple-400/30' },
+              sky:     { bg: 'bg-sky-500/15',     text: 'text-sky-400',     border: 'border-sky-500/30',     shadow: 'shadow-sky-500/20',     glow: 'ring-sky-400/30' },
+              amber:   { bg: 'bg-amber-500/15',   text: 'text-amber-400',   border: 'border-amber-500/30',   shadow: 'shadow-amber-500/20',   glow: 'ring-amber-400/30' },
+              rose:    { bg: 'bg-rose-500/15',    text: 'text-rose-400',    border: 'border-rose-500/30',    shadow: 'shadow-rose-500/20',    glow: 'ring-rose-400/30' },
+            };
+            const c = colorMap[item.color] || colorMap.emerald;
+            return (
+              <button
+                key={item.id}
+                id={item.id}
+                onClick={item.onClick}
+                className={`group flex items-center gap-1.5 rounded-xl transition-all duration-200 active:scale-95 ${
+                  item.active
+                    ? `${c.bg} ${c.text} border ${c.border} shadow-md ${c.shadow} ring-1 ${c.glow} pl-2.5 pr-2 py-1.5`
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 px-2 py-1.5'
+                }`}
+                title={item.label}
+              >
+                <span className={`transition-all duration-200 ${item.active ? 'text-[10px] font-black uppercase tracking-wider opacity-100 max-w-[60px]' : 'text-[0px] max-w-0 opacity-0 overflow-hidden'}`}>
+                  {item.label}
+                </span>
+                {item.icon}
+              </button>
+            );
+          })}
         </div>
       </div>
 
