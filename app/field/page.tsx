@@ -59,46 +59,53 @@ const FIELD_TOUR_STEPS: TourStep[] = [
     badge: '2. GPS Precision',
   },
   {
+    targetId: 'tour-field-missions',
+    title: 'Dispatched Missions Feed',
+    description: 'Special sign drop assignments dispatched by Field Command appear here in real time. Tap "Accept Mission" to auto-fill location and placement instructions.',
+    accentColor: 'purple',
+    badge: '3. Assigned Missions',
+  },
+  {
     targetId: 'tour-field-modetabs',
     title: 'Place vs. Retrieve Mode',
     description: 'Switch between dropping new signs during the race and retrieving signs for post-election cleanup or damaged signs.',
     accentColor: 'amber',
-    badge: '3. Mode Switch',
+    badge: '4. Mode Switch',
   },
   {
     targetId: 'tour-field-drop-btn',
     title: 'Giant 1-Tap Drop Button (Main Action)',
     description: 'Punch the giant button to lock your GPS coordinates and log the sign drop in 1 second. Pre-set for Melissa K. Brown Yard Sign by default.',
     accentColor: 'emerald',
-    badge: '4. Main Action',
+    badge: '5. Main Action',
   },
   {
     targetId: 'tour-field-signtype',
     title: 'Sign Format Selector',
     description: 'Quick 1-tap chips to switch format between Yard Sign, Roadside 4x4, Overpass Banner, or Billboard.',
     accentColor: 'cyan',
-    badge: '5. Sign Format',
+    badge: '6. Sign Format',
   },
   {
     targetId: 'tour-field-camera',
     title: 'AI Photo Sign Scanner (Secondary Tool)',
     description: 'Optional tool: point your camera at any sign for Gemini AI to auto-recognize the candidate, sign size, and competitor status.',
     accentColor: 'purple',
-    badge: '6. AI Camera Tool',
+    badge: '7. AI Camera Tool',
   },
   {
     targetId: 'tour-field-ownership',
     title: 'Whose Sign Is This?',
     description: '1-tap toggle between our campaign (Melissa K. Brown) and competitor intel sightings without typing.',
     accentColor: 'emerald',
-    badge: '7. Ownership',
+    badge: '8. Ownership',
   },
   {
     targetId: 'tour-field-canvass-link',
     title: 'Switch to Door Canvassing',
     description: 'Transition directly to the Door Knocker portal without having to re-enter your volunteer PIN.',
     accentColor: 'teal',
-    badge: '8. Canvass Switch',
+    badge: '9. Canvass Switch',
   },
 ];
 
@@ -978,7 +985,7 @@ export default function FieldPage() {
 
           {/* Assigned Sign Placement Missions Dispatch Card */}
           {myMissions.length > 0 && !activeMission && (
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-950/30 via-slate-900 to-slate-900 border border-purple-500/30 shadow-xl space-y-3">
+            <div id="tour-field-missions" className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-950/30 via-slate-900 to-slate-900 border border-purple-500/30 shadow-xl space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
