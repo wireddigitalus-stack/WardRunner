@@ -2880,9 +2880,9 @@ export default function DashboardPage() {
           </div>
 
           {/* — Center: Campaign Title (Top Dead Center) & KPI HUD — */}
-          <div className="hidden md:flex items-center gap-2 pointer-events-auto animate-slide-up" style={{ animationDelay: '80ms' }}>
+          <div className="hidden md:flex flex-col items-center gap-1.5 pointer-events-auto animate-slide-up" style={{ animationDelay: '80ms' }}>
             {/* Top Dead Center Campaign Title */}
-            <div className="glass rounded-2xl px-3.5 py-2 flex items-center gap-2 border border-white/10 shadow-lg shadow-black/20 h-[38px]">
+            <div className="glass rounded-2xl px-3.5 py-1.5 flex items-center gap-2 border border-white/10 shadow-lg shadow-black/20 h-[34px]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span className="font-extrabold text-xs tracking-tight text-white whitespace-nowrap">
                 Melissa K. Brown
@@ -2894,162 +2894,173 @@ export default function DashboardPage() {
             </div>
 
             {/* KPI Pills */}
-            <div id="tour-stats-hud" className="hidden xl:flex glass rounded-2xl px-1 py-1 items-center gap-1 h-[38px]">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+            <div id="tour-stats-hud" className="hidden lg:flex glass rounded-2xl px-1 py-0.5 items-center gap-0.5 h-[30px] border border-white/10">
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl" title="Official Campaign Signs">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/40" />
-                <span className="text-[11px] font-medium opacity-60">Our Signs</span>
+                <span className="text-[10px] font-medium opacity-60">Signs</span>
                 <span className="text-xs font-black text-emerald-400 animate-count-up">{stats.ours}</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl" title="Sign Inventory Placed / Total">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/40" />
-                <span className="text-[11px] font-medium opacity-60">Inventory</span>
+                <span className="text-[10px] font-medium opacity-60">Inv</span>
                 <span className="text-xs font-black text-amber-400 animate-count-up">{inventoryStats.totalPlaced}/{inventoryStats.totalStock}</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl" title="Competitor Signs Sighted">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-sm shadow-rose-400/40" />
-                <span className="text-[11px] font-medium opacity-60">Competitor</span>
+                <span className="text-[10px] font-medium opacity-60">Opp</span>
                 <span className="text-xs font-black text-rose-400 animate-count-up">{stats.theirs}</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl" title="High-Dwell Arterials">
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-sm shadow-sky-400/40" />
-                <span className="text-[11px] font-medium opacity-60">Arterials</span>
+                <span className="text-[10px] font-medium opacity-60">Arterials</span>
                 <span className="text-xs font-black text-sky-400 animate-count-up">{stats.highImpact}</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl" title="Doors Knocked">
                 <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-sm shadow-teal-400/40" />
-                <span className="text-[11px] font-medium opacity-60">Doors</span>
+                <span className="text-[10px] font-medium opacity-60">Doors</span>
                 <span className="text-xs font-black text-teal-400 animate-count-up">{canvassRecords.length}</span>
               </div>
             </div>
           </div>
 
-          {/* — Right Controls — */}
-          <div className="pointer-events-auto flex items-center gap-2 animate-slide-up" style={{ animationDelay: '160ms' }}>
-            {/* Quick Access to Field Force / Volunteer Filter */}
-            <button
-              id="tour-ground-force"
-              onClick={() => setIsVolunteerFilterOpen(!isVolunteerFilterOpen)}
-              className={`glass rounded-2xl px-3 py-2 flex items-center gap-1.5 transition-all text-xs font-bold active:scale-95 ${
-                selectedVolunteerFilter || isVolunteerFilterOpen
-                  ? 'bg-teal-500/25 text-teal-200 border border-teal-500/50 shadow-lg shadow-teal-500/20'
-                  : 'hover:scale-105 border border-white/10 text-slate-300 hover:text-white'
-              }`}
-              title="Filter map by volunteer individual or team"
-            >
-              <Users className="w-4 h-4 text-teal-400" />
-              <span className="hidden sm:inline">
-                {selectedVolunteerFilter ? selectedVolunteerFilter.split(' ')[0] : 'Ground Force'}
-              </span>
-              {selectedVolunteerFilter && (
-                <span
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedVolunteerFilter(null);
-                  }}
-                  className="ml-0.5 text-xs text-teal-300 hover:text-white"
+          {/* — Right Controls (Stacked in 2 Sleek Rows: Ops above Utilities) — */}
+          <div className="pointer-events-auto flex flex-col items-end gap-1.5 animate-slide-up" style={{ animationDelay: '160ms' }}>
+            {/* Row 1: Ground Force & Missions Hub */}
+            <div className="flex items-center gap-1.5">
+              {/* Quick Access to Field Force / Volunteer Filter */}
+              <button
+                id="tour-ground-force"
+                onClick={() => setIsVolunteerFilterOpen(!isVolunteerFilterOpen)}
+                className={`glass rounded-2xl px-3 py-1.5 flex items-center gap-1.5 transition-all text-xs font-bold active:scale-95 h-[34px] ${
+                  selectedVolunteerFilter || isVolunteerFilterOpen
+                    ? 'bg-teal-500/25 text-teal-200 border border-teal-500/50 shadow-lg shadow-teal-500/20'
+                    : 'hover:scale-105 border border-white/10 text-slate-300 hover:text-white'
+                }`}
+                title="Filter map by volunteer individual or team"
+              >
+                <Users className="w-3.5 h-3.5 text-teal-400" />
+                <span>
+                  {selectedVolunteerFilter ? selectedVolunteerFilter.split(' ')[0] : 'Ground Force'}
+                </span>
+                {selectedVolunteerFilter && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedVolunteerFilter(null);
+                    }}
+                    className="ml-0.5 text-xs text-teal-300 hover:text-white"
+                  >
+                    ✕
+                  </span>
+                )}
+              </button>
+
+              {/* Unified Crew & Missions Command Hub */}
+              <button
+                id="tour-crew-missions-btn"
+                onClick={() => {
+                  setModalInitialTab('roster');
+                  setModalInitialTarget(null);
+                  setShowVolunteerModal(true);
+                }}
+                className="glass rounded-2xl px-3 py-1.5 flex items-center gap-2 hover:scale-105 transition-all text-xs font-bold border border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 shadow-lg shadow-purple-500/10 active:scale-95 group h-[34px]"
+                title="Crew Roster, PINs & Sign Missions Dispatch"
+              >
+                <div className="flex items-center gap-1 text-purple-400 group-hover:text-purple-300">
+                  <Users className="w-3.5 h-3.5" />
+                  <span className="text-white/20 text-[10px]">/</span>
+                  <Target className="w-3 h-3 text-emerald-400" />
+                </div>
+                <span>Crew & Missions</span>
+                {activeMissionsCount > 0 ? (
+                  <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
+                    {activeMissionsCount}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400">
+                    Ready
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Row 2: Utilities (Tour, War Room, Lock, Settings) */}
+            <div className="flex items-center gap-1.5">
+              {/* Interactive Onboarding Mission Tour */}
+              <button
+                id="tour-replay-btn"
+                onClick={() => setIsTourOpen(true)}
+                className="glass rounded-2xl px-2.5 py-1 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 active:scale-95 group shadow-sm shadow-emerald-500/10 h-[30px]"
+                title="Interactive Briefing Tour"
+              >
+                <Sparkles className="w-3 h-3 text-emerald-400 group-hover:rotate-12 transition-transform" />
+                <span>Tour</span>
+              </button>
+
+              {/* War Room Remote Presentation Sync Button */}
+              {liveMode === 'commander' ? (
+                <button
+                  id="tour-war-room-btn"
+                  onClick={() => setShowWarRoomModal(true)}
+                  className="glass rounded-2xl px-2.5 py-1 flex items-center gap-1.5 border border-purple-500/50 bg-purple-500/20 text-purple-200 shadow-md shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all text-xs font-bold h-[30px]"
+                  title="Commander Pilot Active — Broadcasting to War Room"
                 >
-                  ✕
-                </span>
-              )}
-            </button>
-
-            {/* Unified Crew & Missions Command Hub */}
-            <button
-              id="tour-crew-missions-btn"
-              onClick={() => {
-                setModalInitialTab('roster');
-                setModalInitialTarget(null);
-                setShowVolunteerModal(true);
-              }}
-              className="glass rounded-2xl px-3 py-2 flex items-center gap-2 hover:scale-105 transition-all text-xs font-bold border border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 shadow-lg shadow-purple-500/10 active:scale-95 group"
-              title="Crew Roster, PINs & Sign Missions Dispatch"
-            >
-              <div className="flex items-center gap-1 text-purple-400 group-hover:text-purple-300">
-                <Users className="w-4 h-4" />
-                <span className="text-white/20 text-[10px]">/</span>
-                <Target className="w-3.5 h-3.5 text-emerald-400" />
-              </div>
-              <span className="hidden sm:inline">Crew & Missions</span>
-              {activeMissionsCount > 0 ? (
-                <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
-                  {activeMissionsCount} active
-                </span>
+                  <Radio className="w-3 h-3 text-purple-400 animate-pulse" />
+                  <span>Commander</span>
+                  <span className="text-[9px] font-mono px-1 py-0.2 rounded-full bg-purple-500/30 text-purple-200">
+                    LIVE
+                  </span>
+                </button>
+              ) : liveMode === 'display' ? (
+                <button
+                  id="tour-war-room-btn"
+                  onClick={() => setShowWarRoomModal(true)}
+                  className="glass rounded-2xl px-2.5 py-1 flex items-center gap-1.5 border border-emerald-500/50 bg-emerald-500/20 text-emerald-200 shadow-md shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all text-xs font-bold h-[30px]"
+                  title="War Room Display Connected to Commander"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>War Room</span>
+                  <span className="text-[9px] font-mono px-1 py-0.2 rounded-full bg-emerald-500/30 text-emerald-200">
+                    SYNCED
+                  </span>
+                </button>
               ) : (
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400">
-                  Ready
-                </span>
+                <button
+                  id="tour-war-room-btn"
+                  onClick={() => setShowWarRoomModal(true)}
+                  className="glass rounded-2xl px-2.5 py-1 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-purple-500/40 text-slate-300 hover:text-purple-300 active:scale-95 group shadow-sm shadow-purple-500/5 h-[30px]"
+                  title="War Room Remote Presentation Sync"
+                >
+                  <Radio className="w-3 h-3 text-slate-400 group-hover:text-purple-400 transition-colors" />
+                  <span>War Room</span>
+                </button>
               )}
-            </button>
 
-            {/* Interactive Onboarding Mission Tour */}
-            <button
-              id="tour-replay-btn"
-              onClick={() => setIsTourOpen(true)}
-              className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 active:scale-95 group shadow-sm shadow-emerald-500/10"
-              title="Interactive Briefing Tour"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-12 transition-transform" />
-              <span className="hidden md:inline">Tour</span>
-            </button>
-
-            {/* War Room Remote Presentation Sync Button */}
-            {liveMode === 'commander' ? (
+              {/* Lock Field Command Security Gate */}
               <button
-                id="tour-war-room-btn"
-                onClick={() => setShowWarRoomModal(true)}
-                className="glass rounded-2xl px-3 py-2 flex items-center gap-2 border border-purple-500/50 bg-purple-500/20 text-purple-200 shadow-md shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all text-xs font-bold"
-                title="Commander Pilot Active — Broadcasting to War Room"
+                id="tour-lock-btn"
+                onClick={handleLockCommand}
+                className="glass rounded-2xl px-2.5 py-1 flex items-center gap-1 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 active:scale-95 group h-[30px]"
+                title="Lock Field Command Gate"
               >
-                <Radio className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
-                <span className="hidden lg:inline">Commander</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-purple-500/30 text-purple-200">
-                  LIVE
-                </span>
+                <Lock className="w-3 h-3 text-slate-400 group-hover:text-rose-400 transition-colors" />
+                <span>Lock</span>
               </button>
-            ) : liveMode === 'display' ? (
-              <button
-                id="tour-war-room-btn"
-                onClick={() => setShowWarRoomModal(true)}
-                className="glass rounded-2xl px-3 py-2 flex items-center gap-2 border border-emerald-500/50 bg-emerald-500/20 text-emerald-200 shadow-md shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all text-xs font-bold"
-                title="War Room Display Connected to Commander"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="hidden lg:inline">War Room</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200">
-                  SYNCED
-                </span>
-              </button>
-            ) : (
-              <button
-                id="tour-war-room-btn"
-                onClick={() => setShowWarRoomModal(true)}
-                className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-purple-500/40 text-slate-300 hover:text-purple-300 active:scale-95 group shadow-sm shadow-purple-500/5"
-                title="War Room Remote Presentation Sync"
-              >
-                <Radio className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-400 transition-colors" />
-                <span className="hidden xl:inline">War Room</span>
-              </button>
-            )}
 
-            {/* Lock Field Command Security Gate */}
-            <button
-              id="tour-lock-btn"
-              onClick={handleLockCommand}
-              className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 active:scale-95 group"
-              title="Lock Field Command Gate"
-            >
-              <Lock className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-400 transition-colors" />
-              <span className="hidden md:inline">Lock</span>
-            </button>
-
-            {/* Drawer Toggle */}
-            <button
-              id="tour-drawer-btn"
-              onClick={() => setDrawerOpen(!drawerOpen)}
-              className={`glass rounded-2xl p-2.5 transition-all duration-300 ${drawerOpen ? 'bg-emerald-500 !border-emerald-400 text-white shadow-lg shadow-emerald-500/30' : 'hover:scale-105'}`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-            </button>
+              {/* Drawer Toggle / Setting */}
+              <button
+                id="tour-drawer-btn"
+                onClick={() => setDrawerOpen(!drawerOpen)}
+                className={`glass rounded-2xl px-2 py-1 flex items-center justify-center transition-all duration-300 h-[30px] w-[30px] ${
+                  drawerOpen
+                    ? 'bg-emerald-500 !border-emerald-400 text-white shadow-lg shadow-emerald-500/30'
+                    : 'hover:scale-105 border border-white/10 text-slate-300 hover:text-white'
+                }`}
+                title="Settings & Campaign Drawer (D)"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
