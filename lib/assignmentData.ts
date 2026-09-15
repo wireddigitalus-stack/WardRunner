@@ -29,7 +29,7 @@ export const TARGET_PRESETS: TargetPreset[] = [
   {
     id: 'int-2',
     type: 'intersection',
-    title: 'State St & Piedmont Ave',
+    title: 'State St & Volunteer Pkwy',
     subtitle: 'Historic Downtown Gateway · 21,500 AADT',
     lat: 36.5951,
     lng: -82.1887,

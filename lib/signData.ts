@@ -3,7 +3,7 @@ import { getCampaignId } from '@/lib/auth';
 import { fetchFromSupabase, upsertToSupabase, subscribeToTable } from '@/lib/syncEngine';
 
 export const SEED_SIGNS: Sign[] = [
-  { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Campaign Volunteer', street_address: '620 State Street', sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
+  { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Campaign Volunteer', street_address: 'State St & Volunteer Pkwy', sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
   { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5990, longitude: -82.1815, placed_by_name: 'Campaign Volunteer', street_address: '1430 Lee Highway', sign_type: 'banner', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
   { id: '3', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5880, longitude: -82.1861, placed_by_name: 'Campaign Volunteer', street_address: '920 Volunteer Parkway', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 12).toISOString() },
   { id: '4', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5975, longitude: -82.1830, placed_by_name: 'Opponent Volunteer', street_address: '412 State Street', sign_type: 'yard_sign', is_competitor: true, competitor_name: 'Bob Reynolds', status: 'placed', created_at: new Date(Date.now() - 3600000 * 8).toISOString() },
@@ -32,7 +32,21 @@ export function getStoredSigns(): Sign[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+      // Automatic migration: update 620 State Street to State St & Volunteer Pkwy
+      let modified = false;
+      const migrated = parsed.map(s => {
+        if (s.id === '1' || s.street_address === '620 State Street') {
+          if (s.street_address !== 'State St & Volunteer Pkwy') {
+            modified = true;
+            return { ...s, street_address: 'State St & Volunteer Pkwy' };
+          }
+        }
+        return s;
+      });
+      if (modified) {
+        localStorage.setItem(SIGNS_STORAGE_KEY, JSON.stringify(migrated));
+      }
+      return migrated;
     }
     return SEED_SIGNS;
   } catch {

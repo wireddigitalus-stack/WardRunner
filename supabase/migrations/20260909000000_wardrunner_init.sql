@@ -177,7 +177,7 @@ ON CONFLICT (id) DO UPDATE SET
 INSERT INTO public.signs (
     id, campaign_id, latitude, longitude, placed_by_name, street_address, sign_type, is_competitor, competitor_name, status, created_at
 ) VALUES 
-('1', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5951, -82.1887, 'Campaign Volunteer', '620 State Street', 'large_sign', false, NULL, 'placed', now() - interval '2 hours'),
+('1', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5951, -82.1887, 'Campaign Volunteer', 'State St & Volunteer Pkwy', 'large_sign', false, NULL, 'placed', now() - interval '2 hours'),
 ('2', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5990, -82.1815, 'Campaign Volunteer', '1430 Lee Highway', 'banner', false, NULL, 'placed', now() - interval '5 hours'),
 ('3', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5880, -82.1861, 'Campaign Volunteer', '920 Volunteer Parkway', 'yard_sign', false, NULL, 'placed', now() - interval '12 hours'),
 ('4', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5975, -82.1830, 'Opponent Volunteer', '412 State Street', 'yard_sign', true, 'Bob Reynolds', 'placed', now() - interval '8 hours'),
