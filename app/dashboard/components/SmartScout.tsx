@@ -224,7 +224,7 @@ export default function SmartScout({
           LEFT RAIL: MAP LEGEND & SCOUT CARD (level with right nav)
           ============================================ */}
       <div
-        className="absolute top-[68px] sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-88px)] sm:w-[340px] max-w-[340px] flex flex-col gap-2 max-h-[calc(100vh-84px)] sm:max-h-[calc(100vh-96px)] animate-slide-up"
+        className="absolute top-[68px] sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-88px)] sm:w-[340px] max-w-[340px] flex flex-col gap-2 animate-slide-up"
         style={{ animationDelay: '200ms' }}
       >
 
@@ -328,7 +328,7 @@ export default function SmartScout({
 
         {/* --- Expanded Panel --- */}
         {expanded && (
-          <div className="glass rounded-2xl overflow-hidden animate-fade-in flex flex-col w-full max-w-full shadow-2xl flex-1 min-h-0">
+          <div className="glass rounded-2xl overflow-hidden animate-fade-in flex flex-col w-full max-w-full shadow-2xl max-h-[calc(100vh-210px)] sm:max-h-[calc(100vh-290px)]">
 
             {/* Tab Switcher */}
             <div className="px-3 pt-3 pb-2 shrink-0 w-full">
@@ -421,14 +421,6 @@ export default function SmartScout({
                           </button>
                         );
                       })}
-
-                      {/* Show All on Map */}
-                      <button
-                        onClick={() => onShowOnMap(recs)}
-                        className="w-full max-w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 active:scale-[0.97] transition-all truncate"
-                      >
-                        <Target className="w-3.5 h-3.5 shrink-0" /> <span>Show All on Map</span>
-                      </button>
                     </>
                   )}
 
@@ -673,6 +665,19 @@ export default function SmartScout({
                 </div>
               )}
             </div>
+
+            {/* Pinned Action Footer for Signs tab */}
+            {tab === 'recs' && !loading && !error && recs.length > 0 && (
+              <div className="p-2.5 border-t border-white/[0.08] shrink-0 w-full min-w-0 bg-slate-950/60 backdrop-blur-md">
+                <button
+                  onClick={() => onShowOnMap(recs)}
+                  className="w-full max-w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 active:scale-[0.97] transition-all truncate"
+                >
+                  <Target className="w-3.5 h-3.5 shrink-0" />
+                  <span>Show All on Map ({recs.length})</span>
+                </button>
+              </div>
+            )}
 
             {/* Chat Input */}
             {tab === 'chat' && (
