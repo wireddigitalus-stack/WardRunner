@@ -2866,46 +2866,60 @@ export default function DashboardPage() {
       <header className="hidden md:block absolute top-0 inset-x-0 z-20 pointer-events-none p-3 sm:p-4">
         <div className="w-full flex items-start justify-between gap-3">
 
-          {/* — Brand Capsule — */}
-          <div className="pointer-events-auto glass rounded-2xl px-4 py-2.5 flex items-center gap-3 animate-slide-up">
-            <div className="w-9 h-9 min-w-9 min-h-9 shrink-0 aspect-square rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-              <span className="text-white font-black text-xs leading-none tracking-wider select-none">COS</span>
+          {/* — Brand Capsule (Compact, Single-Line, Matches Top Bar Height) — */}
+          <div className="pointer-events-auto glass rounded-2xl px-3 py-2 flex items-center gap-2.5 animate-slide-up h-[38px]">
+            <div className="w-6 h-6 min-w-6 min-h-6 shrink-0 aspect-square rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/30">
+              <span className="text-white font-black text-[9px] leading-none tracking-wider select-none">COS</span>
             </div>
-            <div className="hidden sm:block">
-              <div className="flex items-center gap-2">
-                <h1 className="font-extrabold text-sm tracking-tight">Field Command</h1>
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">LIVE</span>
-              </div>
-              <p className="text-[11px] opacity-50 leading-none mt-0.5">CampaignOS • Melissa K. Brown • Bristol TN City Council</p>
+            <div className="flex items-center gap-1.5">
+              <h1 className="font-extrabold text-xs tracking-tight text-white whitespace-nowrap">Field Command</h1>
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 leading-none">
+                LIVE
+              </span>
             </div>
           </div>
 
-          {/* — KPI Pills — */}
-          <div id="tour-stats-hud" className="hidden lg:flex pointer-events-auto glass rounded-2xl px-1 py-1 items-center gap-1 animate-slide-up" style={{ animationDelay: '80ms' }}>
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/40" />
-              <span className="text-[11px] font-medium opacity-60">Our Signs</span>
-              <span className="text-sm font-black text-emerald-400 animate-count-up">{stats.ours}</span>
+          {/* — Center: Campaign Title (Top Dead Center) & KPI HUD — */}
+          <div className="hidden md:flex items-center gap-2 pointer-events-auto animate-slide-up" style={{ animationDelay: '80ms' }}>
+            {/* Top Dead Center Campaign Title */}
+            <div className="glass rounded-2xl px-3.5 py-2 flex items-center gap-2 border border-white/10 shadow-lg shadow-black/20 h-[38px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="font-extrabold text-xs tracking-tight text-white whitespace-nowrap">
+                Melissa K. Brown
+              </span>
+              <span className="text-white/20 text-[10px] font-bold">•</span>
+              <span className="text-[11px] font-semibold text-emerald-300 whitespace-nowrap">
+                Bristol TN City Council
+              </span>
             </div>
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-md shadow-amber-400/40" />
-              <span className="text-[11px] font-medium opacity-60">Inventory</span>
-              <span className="text-sm font-black text-amber-400 animate-count-up">{inventoryStats.totalPlaced}/{inventoryStats.totalStock}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-rose-400 shadow-md shadow-rose-400/40" />
-              <span className="text-[11px] font-medium opacity-60">Competitor</span>
-              <span className="text-sm font-black text-rose-400 animate-count-up">{stats.theirs}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-sky-400 shadow-md shadow-sky-400/40" />
-              <span className="text-[11px] font-medium opacity-60">Arterials</span>
-              <span className="text-sm font-black text-sky-400 animate-count-up">{stats.highImpact}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl">
-              <span className="w-2 h-2 rounded-full bg-teal-400 shadow-md shadow-teal-400/40" />
-              <span className="text-[11px] font-medium opacity-60">Doors</span>
-              <span className="text-sm font-black text-teal-400 animate-count-up">{canvassRecords.length}</span>
+
+            {/* KPI Pills */}
+            <div id="tour-stats-hud" className="hidden xl:flex glass rounded-2xl px-1 py-1 items-center gap-1 h-[38px]">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/40" />
+                <span className="text-[11px] font-medium opacity-60">Our Signs</span>
+                <span className="text-xs font-black text-emerald-400 animate-count-up">{stats.ours}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/40" />
+                <span className="text-[11px] font-medium opacity-60">Inventory</span>
+                <span className="text-xs font-black text-amber-400 animate-count-up">{inventoryStats.totalPlaced}/{inventoryStats.totalStock}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-sm shadow-rose-400/40" />
+                <span className="text-[11px] font-medium opacity-60">Competitor</span>
+                <span className="text-xs font-black text-rose-400 animate-count-up">{stats.theirs}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-sm shadow-sky-400/40" />
+                <span className="text-[11px] font-medium opacity-60">Arterials</span>
+                <span className="text-xs font-black text-sky-400 animate-count-up">{stats.highImpact}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-sm shadow-teal-400/40" />
+                <span className="text-[11px] font-medium opacity-60">Doors</span>
+                <span className="text-xs font-black text-teal-400 animate-count-up">{canvassRecords.length}</span>
+              </div>
             </div>
           </div>
 
