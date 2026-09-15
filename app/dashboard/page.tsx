@@ -20,6 +20,7 @@ import SignInspectionCard from './components/SignInspectionCard';
 import CanvassInspectionCard from './components/CanvassInspectionCard';
 import ScoutRecommendationCard from './components/ScoutRecommendationCard';
 import CampaignDrawer from './components/CampaignDrawer';
+import TacticalMinimap from './components/TacticalMinimap';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON, BRISTOL_ALL_PRECINCTS_BOUNDS, BRISTOL_ALL_PRECINCTS_CENTER } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS, subscribeSigns } from '@/lib/signData';
@@ -158,6 +159,13 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
     accentColor: 'amber',
     badge: '18. Scout AI',
   },
+  {
+    targetId: 'tour-minimap-hud, tour-minimap-toggle',
+    title: 'Tactical Radar Minimap HUD',
+    description: 'Square bird’s-eye radar in the bottom-left showing color-coded asset dots and a live dynamic camera bounding box that tracks your exact viewport when zoomed into street view. Click anywhere to teleport!',
+    accentColor: 'cyan',
+    badge: '19. Radar HUD',
+  },
 ];
 
 const DASHBOARD_MOBILE_STEPS: TourStep[] = [
@@ -234,6 +242,7 @@ import {
   CircleDot,
   Lock,
   Compass,
+  Radio,
 } from 'lucide-react';
 
 /* ================================================================
@@ -313,6 +322,48 @@ export default function DashboardPage() {
   const [showCorridors, setShowCorridors] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showMinimap, setShowMinimap] = useState(true);
+
+  // Load minimap visibility preference
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('campaignos_minimap_visible');
+      if (saved !== null) {
+        setShowMinimap(saved === 'true');
+      }
+    } catch {}
+  }, []);
+
+  const handleToggleMinimap = useCallback((open: boolean) => {
+    setShowMinimap(open);
+    try {
+      localStorage.setItem('campaignos_minimap_visible', String(open));
+    } catch {}
+  }, []);
+
+  // Global hotkey 'M' to toggle Tactical Radar Minimap
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement)?.isContentEditable
+      ) {
+        return;
+      }
+      if (e.key === 'm' || e.key === 'M') {
+        setShowMinimap((prev) => {
+          const next = !prev;
+          try {
+            localStorage.setItem('campaignos_minimap_visible', String(next));
+          } catch {}
+          return next;
+        });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Traffic data from TDOT + OSM
   const [trafficStations, setTrafficStations] = useState<TrafficStation[]>([]);
@@ -860,7 +911,7 @@ export default function DashboardPage() {
         attributionControl: false,
       } as any);
 
-      map.addControl(new mgl.AttributionControl({ compact: true }), 'bottom-left');
+      map.addControl(new mgl.AttributionControl({ compact: true }), 'bottom-right');
 
       map.on('load', () => {
         if (!alive) return;
@@ -2852,6 +2903,15 @@ export default function DashboardPage() {
               color: 'rose',
               onClick: () => setShowHeatmap(!showHeatmap),
             },
+            {
+              id: 'tour-minimap-toggle',
+              label: 'Radar',
+              tip: 'Tactical Overview Radar HUD (M)',
+              icon: <Radio className="w-3.5 h-3.5" />,
+              active: showMinimap,
+              color: 'cyan',
+              onClick: () => handleToggleMinimap(!showMinimap),
+            },
           ].map((item: any, idx) => {
             if (item.divider) {
               return <div key={`div-${idx}`} className={`w-full h-px my-0.5 ${isDark ? 'bg-white/10' : 'bg-black/10'}`} />;
@@ -3145,6 +3205,19 @@ export default function DashboardPage() {
           setRoutes(getStoredCanvassRoutes());
         }}
         availableVolunteers={availableVolunteersList}
+      />
+
+      {/* ============================================================
+          TACTICAL OVERVIEW RADAR MINIMAP (Lower Left Corner)
+          ============================================================ */}
+      <TacticalMinimap
+        mapRef={mapRef}
+        signs={signs}
+        canvassRecords={canvassRecords}
+        assignments={assignments}
+        isDark={isDark}
+        isOpen={showMinimap}
+        onToggle={handleToggleMinimap}
       />
 
       {/* ============================================================
