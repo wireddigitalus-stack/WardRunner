@@ -110,12 +110,18 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
         {/* Header */}
         <div className={`p-5 flex items-center justify-between border-b ${isDark ? 'border-white/[0.06]' : 'border-black/[0.06]'}`}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/30 animate-throbbing-blue shrink-0">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-sm">Campaign Intel</h2>
-              <p className="text-[11px] opacity-40">{filtered.length} placements visible</p>
+              <div className="flex items-center gap-2">
+                <h2 className="font-extrabold text-sm text-white">Campaign Intel</h2>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-80" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400 shadow-[0_0_6px_#38bdf8]" />
+                </span>
+              </div>
+              <p className="text-[11px] text-sky-300/80 font-medium">{filtered.length} tactical placements visible</p>
             </div>
           </div>
           <button onClick={onClose} className={`p-2 rounded-xl transition ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>

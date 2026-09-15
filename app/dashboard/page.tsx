@@ -65,10 +65,10 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
   },
   {
     targetId: 'tour-drawer-btn',
-    title: 'Analytics & Settings Drawer',
+    title: 'Campaign Intel & Analytics Drawer',
     description: 'Slide open full precinct voting breakdowns, inventory stock management, CSV export, and granular map layer controls.',
-    accentColor: 'emerald',
-    badge: '5. Command Drawer',
+    accentColor: 'cyan',
+    badge: '5. Campaign Intel',
   },
   {
     targetId: 'tour-recenter-btn',
@@ -3047,18 +3047,23 @@ export default function DashboardPage() {
                 <span>Lock</span>
               </button>
 
-              {/* Drawer Toggle / Setting */}
+              {/* Campaign Intel Drawer Toggle */}
               <button
                 id="tour-drawer-btn"
                 onClick={() => setDrawerOpen(!drawerOpen)}
-                className={`glass rounded-2xl px-2 py-1 flex items-center justify-center transition-all duration-300 h-[30px] w-[30px] ${
+                className={`glass rounded-2xl px-2.5 py-1 flex items-center gap-1.5 transition-all duration-300 h-[30px] text-xs font-black tracking-wide border group active:scale-95 ${
                   drawerOpen
-                    ? 'bg-emerald-500 !border-emerald-400 text-white shadow-lg shadow-emerald-500/30'
-                    : 'hover:scale-105 border border-white/10 text-slate-300 hover:text-white'
+                    ? 'bg-sky-500 !border-sky-300 text-white shadow-lg shadow-sky-500/50'
+                    : 'bg-sky-500/15 border-sky-400/60 text-sky-200 hover:text-white hover:bg-sky-500/25 hover:border-sky-300 animate-throbbing-blue'
                 }`}
-                title="Settings & Campaign Drawer (D)"
+                title="Campaign Intel Drawer (D)"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-80" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400 shadow-[0_0_8px_#38bdf8]" />
+                </span>
+                <SlidersHorizontal className="w-3 h-3 text-sky-300 group-hover:rotate-45 transition-transform shrink-0" />
+                <span className="whitespace-nowrap">Campaign Intel</span>
               </button>
             </div>
           </div>

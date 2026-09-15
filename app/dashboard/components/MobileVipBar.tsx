@@ -454,8 +454,11 @@ export default function MobileVipBar({
               onClick={() => setIsTrayExpanded(!isTrayExpanded)}
               className="flex items-center gap-2 hover:text-white active:scale-95 transition"
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-black tracking-wider uppercase text-white">VIP Intel & SitRep</span>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-80" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400 shadow-[0_0_8px_#38bdf8]" />
+              </span>
+              <span className="text-xs font-black tracking-wider uppercase text-sky-200">Campaign Intel & SitRep</span>
             </button>
 
             <div className="flex items-center gap-1.5">
