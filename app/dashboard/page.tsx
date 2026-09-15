@@ -21,6 +21,8 @@ import CanvassInspectionCard from './components/CanvassInspectionCard';
 import ScoutRecommendationCard from './components/ScoutRecommendationCard';
 import CampaignDrawer from './components/CampaignDrawer';
 import TacticalMinimap from './components/TacticalMinimap';
+import WarRoomSyncModal from './components/WarRoomSyncModal';
+import { initRemoteChannel, LiveMode, CommandAction } from '@/lib/remoteCommander';
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON, BRISTOL_ALL_PRECINCTS_BOUNDS, BRISTOL_ALL_PRECINCTS_CENTER } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS, subscribeSigns } from '@/lib/signData';
@@ -363,6 +365,29 @@ export default function DashboardPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // ================================================================
+  // WAR ROOM PRESENTATION SYNC (Remote Commander via WebSockets)
+  // ================================================================
+  const [liveMode, setLiveMode] = useState<LiveMode>('off');
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
+  const [showWarRoomModal, setShowWarRoomModal] = useState<boolean>(false);
+  const remoteSenderRef = useRef<((action: CommandAction) => void) | null>(null);
+  const isApplyingRemoteRef = useRef<boolean>(false);
+  const lastBroadcastCameraTime = useRef<number>(0);
+
+  // Auto-detect ?live= query parameter on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const liveParam = params.get('live');
+      if (liveParam === 'commander' || liveParam === 'host' || liveParam === 'pilot') {
+        setLiveMode('commander');
+      } else if (liveParam === 'display' || liveParam === 'sync' || liveParam === 'viewer' || liveParam === 'war_room') {
+        setLiveMode('display');
+      }
+    }
   }, []);
 
   // Traffic data from TDOT + OSM
@@ -2564,6 +2589,228 @@ export default function DashboardPage() {
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
+  // Handle incoming remote commands (Display / War Room Screen mode)
+  const handleRemoteAction = useCallback((action: CommandAction) => {
+    switch (action.type) {
+      case 'CAMERA_MOVE':
+        if (mapRef.current) {
+          isApplyingRemoteRef.current = true;
+          mapRef.current.easeTo({
+            center: action.center,
+            zoom: action.zoom,
+            pitch: action.pitch,
+            bearing: action.bearing,
+            duration: action.duration || 500,
+          });
+          setTimeout(() => {
+            isApplyingRemoteRef.current = false;
+          }, (action.duration || 500) + 50);
+        }
+        break;
+      case 'LAYER_TOGGLE':
+        switch (action.layer) {
+          case 'signs': setShowSignsLayer(action.active); break;
+          case 'corridors': setShowCorridors(action.active); break;
+          case 'heatmap': setShowHeatmap(action.active); break;
+          case 'precincts': setShowPrecincts(action.active); break;
+          case 'boundary': setShowBoundary(action.active); break;
+          case 'missions': setShowMissionsLayer(action.active); break;
+          case 'canvass': setShowCanvassLayer(action.active); break;
+          case 'minimap': setShowMinimap(action.active); break;
+          case 'field_ops':
+            setShowFieldForceLayer(action.active);
+            setShowRoutesLayer(action.active);
+            break;
+        }
+        break;
+      case 'FILTER_VOLUNTEER':
+        setSelectedVolunteerFilter(action.volunteerName);
+        if (action.volunteerGroup) setSelectedVolunteerGroup(action.volunteerGroup);
+        break;
+      case 'SELECT_SIGN':
+        if (!action.signId) {
+          setSelectedSign(null);
+        } else {
+          setSigns((prev) => {
+            const found = prev.find((s) => s.id === action.signId);
+            if (found) setSelectedSign(found);
+            return prev;
+          });
+        }
+        break;
+      case 'SELECT_MISSION':
+        if (!action.missionId) {
+          setSelectedMission(null);
+        } else {
+          setAssignments((prev) => {
+            const found = prev.find((a) => a.id === action.missionId);
+            if (found) setSelectedMission(found);
+            return prev;
+          });
+        }
+        break;
+      case 'SELECT_PRECINCT':
+        if (!action.precinctCode) {
+          setSelectedPrecinct(null);
+        } else {
+          const found = BRISTOL_PRECINCTS.find((p) => p.code === action.precinctCode);
+          if (found) setSelectedPrecinct(found);
+        }
+        break;
+      case 'TRIGGER_ORBIT':
+        setIsOrbiting(action.active);
+        break;
+      case 'TOUR_SYNC':
+        setIsTourOpen(action.isOpen);
+        break;
+    }
+  }, []);
+
+  // Connect / disconnect Supabase Realtime channel
+  useEffect(() => {
+    if (liveMode === 'off') {
+      remoteSenderRef.current = null;
+      setIsLiveConnected(false);
+      return;
+    }
+
+    const { sendAction, disconnect } = initRemoteChannel(
+      liveMode,
+      (action: CommandAction) => {
+        handleRemoteAction(action);
+      },
+      (status) => {
+        setIsLiveConnected(status === 'connected');
+      }
+    );
+
+    remoteSenderRef.current = sendAction;
+
+    return () => {
+      disconnect();
+    };
+  }, [liveMode, handleRemoteAction]);
+
+  // Hook map camera updates in commander mode
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || liveMode !== 'commander') return;
+
+    const handleCameraChange = () => {
+      if (isApplyingRemoteRef.current || !remoteSenderRef.current) return;
+      const now = Date.now();
+      if (now - lastBroadcastCameraTime.current > 70) {
+        lastBroadcastCameraTime.current = now;
+        const c = map.getCenter();
+        remoteSenderRef.current({
+          type: 'CAMERA_MOVE',
+          center: [c.lng, c.lat],
+          zoom: map.getZoom(),
+          pitch: map.getPitch(),
+          bearing: map.getBearing(),
+          duration: 90,
+        });
+      }
+    };
+
+    map.on('move', handleCameraChange);
+    map.on('zoom', handleCameraChange);
+    map.on('rotate', handleCameraChange);
+    map.on('pitch', handleCameraChange);
+
+    return () => {
+      map.off('move', handleCameraChange);
+      map.off('zoom', handleCameraChange);
+      map.off('rotate', handleCameraChange);
+      map.off('pitch', handleCameraChange);
+    };
+  }, [liveMode]);
+
+  // Broadcast state updates from Commander to meeting room
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'LAYER_TOGGLE', layer: 'signs', active: showSignsLayer });
+    }
+  }, [showSignsLayer, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'LAYER_TOGGLE', layer: 'corridors', active: showCorridors });
+    }
+  }, [showCorridors, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'LAYER_TOGGLE', layer: 'heatmap', active: showHeatmap });
+    }
+  }, [showHeatmap, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'LAYER_TOGGLE', layer: 'precincts', active: showPrecincts });
+    }
+  }, [showPrecincts, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'LAYER_TOGGLE', layer: 'boundary', active: showBoundary });
+    }
+  }, [showBoundary, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'LAYER_TOGGLE', layer: 'missions', active: showMissionsLayer });
+    }
+  }, [showMissionsLayer, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'LAYER_TOGGLE', layer: 'canvass', active: showCanvassLayer });
+    }
+  }, [showCanvassLayer, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'LAYER_TOGGLE', layer: 'minimap', active: showMinimap });
+    }
+  }, [showMinimap, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'FILTER_VOLUNTEER', volunteerName: selectedVolunteerFilter, volunteerGroup: selectedVolunteerGroup });
+    }
+  }, [selectedVolunteerFilter, selectedVolunteerGroup, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'TRIGGER_ORBIT', active: isOrbiting });
+    }
+  }, [isOrbiting, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'SELECT_SIGN', signId: selectedSign?.id || null });
+    }
+  }, [selectedSign, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'SELECT_MISSION', missionId: selectedMission?.id || null });
+    }
+  }, [selectedMission, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'SELECT_PRECINCT', precinctCode: selectedPrecinct?.code || null });
+    }
+  }, [selectedPrecinct, liveMode]);
+
+  useEffect(() => {
+    if (liveMode === 'commander' && remoteSenderRef.current) {
+      remoteSenderRef.current({ type: 'TOUR_SYNC', isOpen: isTourOpen });
+    }
+  }, [isTourOpen, liveMode]);
+
   /* ================================================================
      RENDER
      ================================================================ */
@@ -2704,6 +2951,45 @@ export default function DashboardPage() {
               <Sparkles className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-12 transition-transform" />
               <span className="hidden md:inline">Tour</span>
             </button>
+
+            {/* War Room Remote Presentation Sync Button */}
+            {liveMode === 'commander' ? (
+              <button
+                id="tour-war-room-btn"
+                onClick={() => setShowWarRoomModal(true)}
+                className="glass rounded-2xl px-3 py-2 flex items-center gap-2 border border-purple-500/50 bg-purple-500/20 text-purple-200 shadow-md shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all text-xs font-bold"
+                title="Commander Pilot Active — Broadcasting to War Room"
+              >
+                <Radio className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                <span className="hidden lg:inline">Commander</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-purple-500/30 text-purple-200">
+                  LIVE
+                </span>
+              </button>
+            ) : liveMode === 'display' ? (
+              <button
+                id="tour-war-room-btn"
+                onClick={() => setShowWarRoomModal(true)}
+                className="glass rounded-2xl px-3 py-2 flex items-center gap-2 border border-emerald-500/50 bg-emerald-500/20 text-emerald-200 shadow-md shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all text-xs font-bold"
+                title="War Room Display Connected to Commander"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span className="hidden lg:inline">War Room</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200">
+                  SYNCED
+                </span>
+              </button>
+            ) : (
+              <button
+                id="tour-war-room-btn"
+                onClick={() => setShowWarRoomModal(true)}
+                className="glass rounded-2xl px-3 py-2 flex items-center gap-1.5 hover:scale-105 transition-all text-xs font-bold border border-white/10 hover:border-purple-500/40 text-slate-300 hover:text-purple-300 active:scale-95 group shadow-sm shadow-purple-500/5"
+                title="War Room Remote Presentation Sync"
+              >
+                <Radio className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-400 transition-colors" />
+                <span className="hidden xl:inline">War Room</span>
+              </button>
+            )}
 
             {/* Lock Field Command Security Gate */}
             <button
@@ -3400,6 +3686,15 @@ export default function DashboardPage() {
           onClose={() => setIsTourOpen(false)}
         />
       )}
+
+      {/* War Room Remote Presentation Sync Modal */}
+      <WarRoomSyncModal
+        isOpen={showWarRoomModal}
+        onClose={() => setShowWarRoomModal(false)}
+        liveMode={liveMode}
+        onSetLiveMode={(mode) => setLiveMode(mode)}
+        isConnected={isLiveConnected}
+      />
     </div>
   );
 }
