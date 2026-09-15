@@ -62,6 +62,7 @@ interface TacticalMinimapProps {
   isDark?: boolean;
   isOpen: boolean;
   onToggle: (open: boolean) => void;
+  isScoutExpanded?: boolean;
 }
 
 export default function TacticalMinimap({
@@ -72,10 +73,12 @@ export default function TacticalMinimap({
   isDark = true,
   isOpen,
   onToggle,
+  isScoutExpanded = false,
 }: TacticalMinimapProps) {
-  // Dimensions of the square radar screen
-  const width = 230;
-  const height = 200;
+  // Dimensions of the radar screen matching Scout width (340px outer -> 338px inner)
+  // Height calculated to match Bristol geographic aspect ratio (1.625) -> 208px
+  const width = 338;
+  const height = 208;
 
   // Camera viewport polygon projected onto minimap pixels
   const [viewportPoly, setViewportPoly] = useState<[number, number][] | null>(null);
@@ -169,8 +172,8 @@ export default function TacticalMinimap({
   const handleMinimapClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current || !mapRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
+    const clickX = ((e.clientX - rect.left) / rect.width) * width;
+    const clickY = ((e.clientY - rect.top) / rect.height) * height;
 
     const [targetLng, targetLat] = unproject(clickX, clickY);
 
@@ -185,8 +188,8 @@ export default function TacticalMinimap({
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = ((e.clientX - rect.left) / rect.width) * width;
+    const y = ((e.clientY - rect.top) / rect.height) * height;
 
     if (x >= 0 && x <= width && y >= 0 && y <= height) {
       const [lng, lat] = unproject(x, y);
@@ -294,11 +297,18 @@ export default function TacticalMinimap({
   };
 
   // -------------------------------------------------------------
+  // If Scout is expanded, hide radar so Scout has full left rail
+  // -------------------------------------------------------------
+  if (isScoutExpanded) {
+    return null;
+  }
+
+  // -------------------------------------------------------------
   // COLLAPSED MODE: Sleek Floating Capsule
   // -------------------------------------------------------------
   if (!isOpen) {
     return (
-      <div className="fixed bottom-5 left-4 z-20 pointer-events-auto select-none">
+      <div className="fixed bottom-5 left-3 sm:left-4 z-20 pointer-events-auto select-none">
         <button
           onClick={() => onToggle(true)}
           className="glass group flex items-center gap-2 px-3 py-2 rounded-2xl border border-white/15 bg-slate-950/80 hover:bg-slate-900/90 text-white shadow-xl shadow-black/40 hover:scale-105 active:scale-95 transition-all duration-200"
@@ -320,14 +330,14 @@ export default function TacticalMinimap({
   }
 
   // -------------------------------------------------------------
-  // EXPANDED MODE: Full Square Tactical HUD
+  // EXPANDED MODE: Full Tactical HUD Matching Scout Width
   // -------------------------------------------------------------
   return (
     <div
       id="tour-minimap-hud"
-      className="fixed bottom-5 left-4 z-20 pointer-events-auto select-none animate-slide-up"
+      className="fixed bottom-5 left-3 sm:left-4 z-20 pointer-events-auto select-none animate-slide-up w-[calc(100vw-88px)] sm:w-[340px] max-w-[340px]"
     >
-      <div className="glass w-[246px] rounded-2xl border border-white/20 bg-slate-950/90 backdrop-blur-2xl shadow-2xl shadow-black/60 overflow-hidden ring-1 ring-white/10">
+      <div className="glass w-full rounded-2xl border border-white/20 bg-slate-950/90 backdrop-blur-2xl shadow-2xl shadow-black/60 overflow-hidden ring-1 ring-white/10">
         
         {/* --- Header Bar --- */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/[0.03]">
@@ -366,8 +376,8 @@ export default function TacticalMinimap({
 
         {/* --- Interactive Radar Viewport --- */}
         <div
-          className="relative bg-slate-950/95 cursor-crosshair overflow-hidden"
-          style={{ width: `${width}px`, height: `${height}px`, margin: '0 auto' }}
+          className="relative bg-slate-950/95 cursor-crosshair overflow-hidden w-full"
+          style={{ height: `${height}px` }}
         >
           {/* Subtle Radar Background Grid */}
           <div
@@ -375,21 +385,20 @@ export default function TacticalMinimap({
             style={{
               backgroundImage: `linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
                                 linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-              backgroundSize: '28.75px 25px',
+              backgroundSize: '42px 26px',
             }}
           />
 
           {/* SVG Map Projection */}
           <svg
             ref={svgRef}
-            width={width}
-            height={height}
+            viewBox={`0 0 ${width} ${height}`}
             onClick={handleMinimapClick}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setHoverCoord(null)}
             onMouseDown={() => setIsDragging(true)}
             onMouseUp={() => setIsDragging(false)}
-            className="w-full h-full block"
+            className="w-full h-full block select-none"
           >
             {/* Bristol Municipal Boundary Outline */}
             <path
@@ -542,8 +551,8 @@ export default function TacticalMinimap({
         </div>
 
         {/* --- Footer Mini Legend Strip --- */}
-        <div className="px-2.5 py-1.5 border-t border-white/10 bg-slate-950/80 flex items-center justify-between text-[9px] font-bold">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="px-3 py-2 border-t border-white/10 bg-slate-950/80 flex items-center justify-between text-[10px] font-bold">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <span className="flex items-center gap-1 text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
               Yard
@@ -566,8 +575,8 @@ export default function TacticalMinimap({
             </span>
           </div>
 
-          <span className="text-[8.5px] font-mono text-cyan-300 font-extrabold shrink-0 pl-1">
-            BRISTOL
+          <span className="text-[9px] font-mono text-cyan-300 font-extrabold shrink-0 pl-1">
+            BRISTOL TN
           </span>
         </div>
 

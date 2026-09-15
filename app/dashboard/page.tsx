@@ -325,23 +325,46 @@ export default function DashboardPage() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showMinimap, setShowMinimap] = useState(true);
+  const [isScoutExpanded, setIsScoutExpanded] = useState(false);
+  const [radarWasOpenBeforeScout, setRadarWasOpenBeforeScout] = useState(true);
 
   // Load minimap visibility preference
   useEffect(() => {
     try {
       const saved = localStorage.getItem('campaignos_minimap_visible');
       if (saved !== null) {
-        setShowMinimap(saved === 'true');
+        const val = saved === 'true';
+        setShowMinimap(val);
+        setRadarWasOpenBeforeScout(val);
       }
     } catch {}
   }, []);
 
   const handleToggleMinimap = useCallback((open: boolean) => {
     setShowMinimap(open);
+    if (open) {
+      setIsScoutExpanded(false); // If radar is opened, collapse Scout
+    }
     try {
       localStorage.setItem('campaignos_minimap_visible', String(open));
     } catch {}
   }, []);
+
+  const handleScoutExpandChange = useCallback((expanded: boolean) => {
+    setIsScoutExpanded(expanded);
+    if (expanded) {
+      // Auto-collapse radar when Scout opens
+      setShowMinimap((prev) => {
+        setRadarWasOpenBeforeScout(prev);
+        return false;
+      });
+    } else {
+      // Restore radar when Scout collapses if it was open before
+      if (radarWasOpenBeforeScout) {
+        setShowMinimap(true);
+      }
+    }
+  }, [radarWasOpenBeforeScout]);
 
   // Global hotkey 'M' to toggle Tactical Radar Minimap
   useEffect(() => {
@@ -356,6 +379,9 @@ export default function DashboardPage() {
       if (e.key === 'm' || e.key === 'M') {
         setShowMinimap((prev) => {
           const next = !prev;
+          if (next) {
+            setIsScoutExpanded(false);
+          }
           try {
             localStorage.setItem('campaignos_minimap_visible', String(next));
           } catch {}
@@ -3371,6 +3397,8 @@ export default function DashboardPage() {
         showHeatmap={showHeatmap}
         recs={scoutRecs}
         setRecs={setScoutRecs}
+        isExpanded={isScoutExpanded}
+        onExpandedChange={handleScoutExpandChange}
         searchBar={
           <div id="tour-map-search" className="w-full">
             <MapSearchBar
@@ -3504,6 +3532,7 @@ export default function DashboardPage() {
         isDark={isDark}
         isOpen={showMinimap}
         onToggle={handleToggleMinimap}
+        isScoutExpanded={isScoutExpanded}
       />
 
       {/* ============================================================

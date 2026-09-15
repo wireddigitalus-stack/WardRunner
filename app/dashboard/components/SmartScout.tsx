@@ -42,6 +42,8 @@ interface SmartScoutProps {
   onAddRoute?: (route: CanvassRoute) => void;
   availableVolunteers?: { id: string; name: string; role: string }[];
   showHeatmap?: boolean;
+  isExpanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 export default function SmartScout({
@@ -61,8 +63,23 @@ export default function SmartScout({
   onAddRoute,
   availableVolunteers = [],
   showHeatmap = false,
+  isExpanded,
+  onExpandedChange,
 }: SmartScoutProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const expanded = isExpanded !== undefined ? isExpanded : internalExpanded;
+
+  const toggleExpanded = (nextVal?: boolean) => {
+    const val = nextVal !== undefined ? nextVal : !expanded;
+    if (onExpandedChange) {
+      onExpandedChange(val);
+    }
+    setInternalExpanded(val);
+    if (val && recs.length === 0 && !loading) {
+      fetchRecommendations();
+    }
+  };
+
   const [tab, setTab] = useState<'recs' | 'turf' | 'chat'>('recs');
   const [loading, setLoading] = useState(false);
   const [turfLoading, setTurfLoading] = useState(false);
@@ -84,7 +101,7 @@ export default function SmartScout({
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
+  }, [chatMessages, chatLoading]);
 
   const fetchRecommendations = async () => {
     setLoading(true);
@@ -206,10 +223,13 @@ export default function SmartScout({
       {/* ============================================
           LEFT RAIL: MAP LEGEND & SCOUT CARD (level with right nav)
           ============================================ */}
-      <div className="absolute top-[68px] sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-88px)] sm:w-[340px] max-w-[340px] flex flex-col gap-2 animate-slide-up" style={{ animationDelay: '200ms' }}>
+      <div
+        className="absolute top-[68px] sm:top-20 left-3 sm:left-4 z-20 pointer-events-auto w-[calc(100vw-88px)] sm:w-[340px] max-w-[340px] flex flex-col gap-2 max-h-[calc(100vh-84px)] sm:max-h-[calc(100vh-96px)] animate-slide-up"
+        style={{ animationDelay: '200ms' }}
+      >
 
         {/* --- Map Legend (Desktop Left Rail) --- */}
-        <div className="hidden sm:block pointer-events-auto w-full max-w-full">
+        <div className="hidden sm:block pointer-events-auto w-full max-w-full shrink-0">
           <div className="glass rounded-2xl px-3 py-2 text-[11px] space-y-1.5 overflow-hidden w-full max-w-full">
             {/* Row 1: Signs */}
             <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1">
@@ -266,7 +286,7 @@ export default function SmartScout({
 
         {/* --- Fast Map Search Bar (Directly Under Map Legend) --- */}
         {searchBar && (
-          <div className="pointer-events-auto w-full max-w-full overflow-hidden">
+          <div className="pointer-events-auto w-full max-w-full overflow-hidden shrink-0">
             {searchBar}
           </div>
         )}
@@ -274,8 +294,8 @@ export default function SmartScout({
         {/* --- Scout Bar --- */}
         <div
           id="tour-scout-ai"
-          onClick={() => { setExpanded(!expanded); if (!expanded && recs.length === 0 && !loading) fetchRecommendations(); }}
-          className="glass rounded-2xl px-3.5 py-2.5 flex items-center justify-between cursor-pointer hover:border-amber-500/30 transition-all group active:scale-[0.98] w-full max-w-full overflow-hidden"
+          onClick={() => toggleExpanded()}
+          className="glass rounded-2xl px-3.5 py-2.5 flex items-center justify-between cursor-pointer hover:border-amber-500/30 transition-all group active:scale-[0.98] w-full max-w-full overflow-hidden shrink-0"
         >
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/30 shrink-0">
@@ -308,7 +328,7 @@ export default function SmartScout({
 
         {/* --- Expanded Panel --- */}
         {expanded && (
-          <div className="glass rounded-2xl overflow-hidden animate-fade-in flex flex-col w-full max-w-full shadow-2xl" style={{ maxHeight: 'calc(100vh - 170px)' }}>
+          <div className="glass rounded-2xl overflow-hidden animate-fade-in flex flex-col w-full max-w-full shadow-2xl flex-1 min-h-0">
 
             {/* Tab Switcher */}
             <div className="px-3 pt-3 pb-2 shrink-0 w-full">
@@ -338,7 +358,7 @@ export default function SmartScout({
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar px-3 pb-3 space-y-2 min-h-0 w-full max-w-full">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar px-3 pb-3 space-y-2 min-h-0 w-full max-w-full overscroll-contain">
 
               {/* === RECOMMENDATIONS === */}
               {tab === 'recs' && (
@@ -656,7 +676,7 @@ export default function SmartScout({
 
             {/* Chat Input */}
             {tab === 'chat' && (
-              <div className="p-2.5 border-t border-white/[0.06] shrink-0 w-full min-w-0">
+              <div className="p-2.5 border-t border-white/[0.06] shrink-0 w-full min-w-0 bg-slate-950/40 backdrop-blur-md">
                 <div className="flex items-center gap-1.5 w-full min-w-0">
                   <input
                     type="text"
