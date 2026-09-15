@@ -120,6 +120,18 @@ export default function CommandPinGate({ onUnlock }: CommandPinGateProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [pin, handleVerify]);
 
+  // Support direct pre-authenticated URL link (?pin=2468)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlPin = params.get('pin');
+      if (urlPin && urlPin.trim().length >= 4) {
+        setPin(urlPin.trim());
+        handleVerify(urlPin.trim());
+      }
+    }
+  }, [handleVerify]);
+
   return (
     <div className="fixed inset-0 z-[10000] bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 text-white select-none">
       {/* Background Ambient Glows */}

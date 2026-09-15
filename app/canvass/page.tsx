@@ -237,6 +237,23 @@ export default function CanvassPage() {
       const urlName = params.get('name');
       if (urlPin) setPinInput(urlPin);
       if (urlName) setNameInput(urlName);
+
+      if (urlPin && urlPin.trim().length >= 4 && !saved) {
+        const nameToUse = urlName?.trim() || 'Campaign Volunteer';
+        validatePin(urlPin.trim()).then((result) => {
+          if (result.valid) {
+            const newSession: VolunteerSession = {
+              campaignId: result.session?.campaignId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+              campaignName: result.session?.campaignName || 'Melissa K. Brown for Bristol TN City Council',
+              pin: urlPin.trim(),
+              volunteerName: result.session?.volunteerName && result.session?.volunteerName !== 'Field Director' ? result.session.volunteerName : nameToUse,
+            };
+            localStorage.setItem('campaignos_session', JSON.stringify(newSession));
+            setSession(newSession);
+            requestWakeLock();
+          }
+        }).catch(console.error);
+      }
     }
     fetchLocation();
     requestWakeLock();
