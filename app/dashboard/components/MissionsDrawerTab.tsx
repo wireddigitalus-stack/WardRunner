@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Target, Users, Plus, Navigation, CheckCircle2, Clock, MapPin, Send, AlertCircle } from 'lucide-react';
+import { Target, Users, Plus, Navigation, CheckCircle2, Clock, MapPin, Send, AlertCircle, Search, X } from 'lucide-react';
 import type { VolunteerAssignment } from '@/lib/types';
+import DictateButton from '@/app/components/DictateButton';
 
 interface MissionsDrawerTabProps {
   assignments: VolunteerAssignment[];
@@ -20,13 +21,22 @@ export default function MissionsDrawerTab({
   isDark = true,
 }: MissionsDrawerTabProps) {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('active');
+  const [searchQ, setSearchQ] = useState('');
 
   const activeCount = assignments.filter(a => a.status !== 'completed').length;
   const completedCount = assignments.filter(a => a.status === 'completed').length;
 
   const filtered = assignments.filter(a => {
-    if (filter === 'active') return a.status !== 'completed';
-    if (filter === 'completed') return a.status === 'completed';
+    if (filter === 'active' && a.status === 'completed') return false;
+    if (filter === 'completed' && a.status !== 'completed') return false;
+    if (searchQ.trim()) {
+      const q = searchQ.toLowerCase().trim();
+      const matchTitle = a.title.toLowerCase().includes(q);
+      const matchVol = (a.volunteer_name || '').toLowerCase().includes(q);
+      const matchAddr = (a.street_address || '').toLowerCase().includes(q);
+      const matchType = a.sign_type.replace('_', ' ').toLowerCase().includes(q);
+      if (!matchTitle && !matchVol && !matchAddr && !matchType) return false;
+    }
     return true;
   });
 
@@ -89,6 +99,35 @@ export default function MissionsDrawerTab({
           <span>Done</span>
           <span className="text-[10px] font-mono">({completedCount})</span>
         </button>
+      </div>
+
+      {/* Mission Search Bar with Dictation */}
+      <div className="relative flex items-center">
+        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Search missions, volunteers, streets..."
+          value={searchQ}
+          onChange={(e) => setSearchQ(e.target.value)}
+          className="w-full h-8 pl-8 pr-14 text-xs bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50 transition"
+        />
+        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {searchQ && (
+            <button
+              type="button"
+              onClick={() => setSearchQ('')}
+              className="text-slate-400 hover:text-white p-0.5 rounded"
+              title="Clear search"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+          <DictateButton
+            onTranscript={(dictated) => setSearchQ(dictated)}
+            size="sm"
+            title="Push to dictate mission search"
+          />
+        </div>
       </div>
 
       {/* Missions List */}

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { VolunteerLocationPing, CanvassRecord, Sign } from '@/lib/types';
 import { useDraggable } from '@/lib/useDraggable';
+import DictateButton from '@/app/components/DictateButton';
 
 interface VolunteerFilterPanelProps {
   isOpen: boolean;
@@ -307,18 +308,25 @@ export default function VolunteerFilterPanel({
                 placeholder="Search field volunteers by name, role, or action..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-9 text-xs bg-slate-900/80 border border-white/10 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/50 transition shadow-inner"
+                className="w-full h-10 pl-10 pr-16 text-xs bg-slate-900/80 border border-white/10 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/50 transition shadow-inner"
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
-                  title="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="text-slate-400 hover:text-white p-1 rounded-md"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <DictateButton
+                  onTranscript={(dictated) => setSearchQuery(dictated)}
+                  size="sm"
+                  title="Push to dictate volunteer search"
+                />
+              </div>
             </div>
 
             {/* Quick Option: Turf Walking Loops */}

@@ -1202,9 +1202,16 @@ export default function CanvassPage() {
               {/* Voter Name & Street Address */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">
-                    Voter Name (Optional)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-400">
+                      Voter Name (Optional)
+                    </label>
+                    <DictateButton
+                      onTranscript={(text) => setVoterName(text)}
+                      className="scale-90 origin-right"
+                      title="Push to dictate voter name"
+                    />
+                  </div>
                   <input
                     type="text"
                     value={voterName}
@@ -1215,9 +1222,16 @@ export default function CanvassPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">
-                    Street Address (Optional)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-400">
+                      Street Address (Optional)
+                    </label>
+                    <DictateButton
+                      onTranscript={(text) => setStreetAddress(text)}
+                      className="scale-90 origin-right"
+                      title="Push to dictate street address"
+                    />
+                  </div>
                   <input
                     type="text"
                     value={streetAddress}

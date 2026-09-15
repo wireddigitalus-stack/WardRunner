@@ -22,6 +22,7 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
+  Search,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 import type { SignType, VolunteerAssignment } from '@/lib/types';
@@ -132,6 +133,7 @@ export default function VolunteerManagerModal({
   const [customPin, setCustomPin] = useState('');
   const [phone, setPhone] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [volunteerSearchQuery, setVolunteerSearchQuery] = useState('');
 
   // Copy feedback
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -607,14 +609,21 @@ export default function VolunteerManagerModal({
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                       Full Name *
                     </label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Rachel Adams"
-                      spellCheck={true}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
-                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g. Rachel Adams"
+                        spellCheck={true}
+                        className="flex-1 px-3 py-2 text-xs rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500"
+                      />
+                      <DictateButton
+                        onTranscript={(dictated) => setName(dictated)}
+                        size="sm"
+                        title="Push to dictate volunteer name"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -749,7 +758,7 @@ export default function VolunteerManagerModal({
               ======================================================== */}
           {viewMode === 'crew' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <span className="text-xs font-black uppercase tracking-wider text-slate-300">
                   Active Volunteer Ground Force ({volunteers.length})
                 </span>
@@ -758,8 +767,41 @@ export default function VolunteerManagerModal({
                 </span>
               </div>
 
+              {/* Voice-Enabled Crew Search Bar */}
+              <div className="relative flex items-center">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Filter crew by name, role, or phone..."
+                  value={volunteerSearchQuery}
+                  onChange={(e) => setVolunteerSearchQuery(e.target.value)}
+                  className="w-full h-8 pl-8 pr-14 text-xs bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50 transition"
+                />
+                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {volunteerSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setVolunteerSearchQuery('')}
+                      className="text-slate-400 hover:text-white p-0.5 rounded"
+                      title="Clear filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                  <DictateButton
+                    onTranscript={(dictated) => setVolunteerSearchQuery(dictated)}
+                    size="sm"
+                    title="Push to dictate crew filter"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-3">
-                {volunteers.map((vol) => {
+                {volunteers.filter(v => {
+                  if (!volunteerSearchQuery.trim()) return true;
+                  const q = volunteerSearchQuery.toLowerCase().trim();
+                  return v.name.toLowerCase().includes(q) || v.role.toLowerCase().includes(q) || (v.phone && v.phone.toLowerCase().includes(q));
+                }).map((vol) => {
                   const badge = ROLE_BADGES[vol.role] || ROLE_BADGES['Field Volunteer'];
                   const placedCount = signsCountByVolunteer[vol.name] || 0;
                   const isCopied = copiedId === vol.id;
@@ -950,25 +992,39 @@ export default function VolunteerManagerModal({
                                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                                     Location Title
                                   </label>
-                                  <input
-                                    type="text"
-                                    value={customTitle}
-                                    onChange={(e) => setCustomTitle(e.target.value)}
-                                    placeholder="e.g. Anderson St & 9th St Corner"
-                                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500"
-                                  />
+                                  <div className="flex items-center gap-1.5">
+                                    <input
+                                      type="text"
+                                      value={customTitle}
+                                      onChange={(e) => setCustomTitle(e.target.value)}
+                                      placeholder="e.g. Anderson St & 9th St Corner"
+                                      className="flex-1 px-3 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500"
+                                    />
+                                    <DictateButton
+                                      onTranscript={(dictated) => setCustomTitle(dictated)}
+                                      size="sm"
+                                      title="Push to dictate location title"
+                                    />
+                                  </div>
                                 </div>
                                 <div>
                                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                                     Street Address
                                   </label>
-                                  <input
-                                    type="text"
-                                    value={customAddress}
-                                    onChange={(e) => setCustomAddress(e.target.value)}
-                                    placeholder="e.g. 900 Anderson St, Bristol, TN"
-                                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500"
-                                  />
+                                  <div className="flex items-center gap-1.5">
+                                    <input
+                                      type="text"
+                                      value={customAddress}
+                                      onChange={(e) => setCustomAddress(e.target.value)}
+                                      placeholder="e.g. 900 Anderson St, Bristol, TN"
+                                      className="flex-1 px-3 py-1.5 text-xs rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-slate-500"
+                                    />
+                                    <DictateButton
+                                      onTranscript={(dictated) => setCustomAddress(dictated)}
+                                      size="sm"
+                                      title="Push to dictate street address"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             )}
