@@ -301,12 +301,19 @@ button, input, select {
 }
 
 /* ============================================================
-   MOBILE SAFE AREA UTILITIES (iOS Dynamic Island & Notch support)
+   MOBILE SAFE AREA UTILITIES (iOS Standalone PWA, Dynamic Island & Notch)
    ============================================================ */
 .pt-safe {
-  padding-top: max(0.875rem, env(safe-area-inset-top, 0.875rem));
+  padding-top: max(1.25rem, env(safe-area-inset-top, 1.25rem));
 }
 
 .pt-safe-header {
-  padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
+  padding-top: max(2.25rem, calc(env(safe-area-inset-top, 0px) + 1.25rem));
+}
+
+/* When launched from iOS Home Screen shortcut as standalone frameless web app */
+@media all and (display-mode: standalone) {
+  .pt-safe-header {
+    padding-top: max(2.75rem, calc(env(safe-area-inset-top, 0px) + 1.5rem));
+  }
 }

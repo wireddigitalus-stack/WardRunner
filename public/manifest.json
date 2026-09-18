@@ -9,9 +9,16 @@
   "orientation": "portrait",
   "icons": [
     {
+      "src": "/apple-touch-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/campaignos-social-icon.jpg",
       "sizes": "1024x1024",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "maskable any"
     }
   ]
 }

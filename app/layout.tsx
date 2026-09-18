@@ -25,13 +25,16 @@ export const metadata: Metadata = {
   applicationName: 'CampaignOS',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'CampaignOS',
   },
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
-    apple: '/campaignos-social-icon.jpg',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '1024x1024' },
+      { url: '/campaignos-social-icon.jpg', sizes: '1024x1024' },
+    ],
   },
   openGraph: {
     title: 'CampaignOS | Field Logistics & Yard Sign Intelligence',
