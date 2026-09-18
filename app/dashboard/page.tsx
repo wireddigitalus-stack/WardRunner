@@ -616,23 +616,8 @@ export default function DashboardPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Auto-launch Onboarding Briefing for first-time dashboard visitors ONLY AFTER successful PIN login (Desktop only)
-  useEffect(() => {
-    if (!checkedAuth || !isCommandAuthorized) return;
-    if (isMobileScreen || (typeof window !== 'undefined' && window.innerWidth < 768)) return;
-    try {
-      const key = 'campaignos_tour_completed_dashboard_v1';
-      const seen = localStorage.getItem(key) || localStorage.getItem('wardrunner_tour_completed_wardrunner_dashboard_tour_v1');
-      if (!seen) {
-        const timer = setTimeout(() => {
-          setIsTourOpen(true);
-        }, 1000);
-        return () => clearTimeout(timer);
-      }
-    } catch {
-      // ignore
-    }
-  }, [checkedAuth, isCommandAuthorized, isMobileScreen]);
+  // Tour is manual-only — users click the Tour button when they want it
+  // (Auto-launch disabled to keep the dashboard clean on first visit)
 
   // Reverse geocoding for street names
   const [streetAddress, setStreetAddress] = useState<string>('');
@@ -2915,55 +2900,7 @@ export default function DashboardPage() {
 
           {/* — Right Controls (Stacked in 2 Sleek Rows: Ops above Utilities) — */}
           <div className="pointer-events-auto flex flex-col items-end gap-1.5 animate-slide-up" style={{ animationDelay: '160ms' }}>
-            {/* Row 1: Unified Crew & Mission Control */}
-            <div className="flex items-center gap-1.5">
-              <button
-                id="tour-crew-control"
-                onClick={() => {
-                  setCrewPanelInitialTab('tracker');
-                  setModalInitialTarget(null);
-                  setIsCrewPanelOpen(true);
-                }}
-                className={`glass rounded-2xl px-3.5 py-2 flex items-center gap-2 transition-all text-sm font-black border active:scale-95 h-[38px] ${
-                  selectedVolunteerFilter || isCrewPanelOpen
-                    ? 'bg-emerald-500/25 text-emerald-200 border-emerald-500/50 shadow-lg shadow-emerald-500/20'
-                    : 'hover:scale-105 border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 shadow-lg shadow-purple-500/10'
-                }`}
-                title="Crew & Mission Control — Field Tracker, Roster, Dispatch"
-              >
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4 text-emerald-400" />
-                  <span className="text-white/20 text-[10px]">/</span>
-                  <Target className="w-3.5 h-3.5 text-amber-400" />
-                </div>
-                <span>
-                  {selectedVolunteerFilter ? selectedVolunteerFilter.split(' ')[0] : 'Crew & Missions'}
-                </span>
-                {selectedVolunteerFilter && (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedVolunteerFilter(null);
-                    }}
-                    className="ml-0.5 text-xs text-teal-300 hover:text-white cursor-pointer"
-                  >
-                    ✕
-                  </span>
-                )}
-                {!selectedVolunteerFilter && activeMissionsCount > 0 && (
-                  <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
-                    {activeMissionsCount}
-                  </span>
-                )}
-                {!selectedVolunteerFilter && activeMissionsCount === 0 && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400">
-                    Ready
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Row 2: Utilities (Tour, War Room, Lock, Settings) */}
+            {/* Row 1: Tour, War Room, Lock */}
             <div className="flex items-center gap-1.5">
               {/* Interactive Onboarding Mission Tour */}
               <button
@@ -3025,12 +2962,61 @@ export default function DashboardPage() {
                 <Lock className="w-3 h-3 text-slate-400 group-hover:text-rose-400 transition-colors" />
                 <span>Lock</span>
               </button>
+            </div>
+
+            {/* Row 2: Crew & Missions + Campaign Intel */}
+            <div className="flex items-center gap-1.5">
+              {/* Unified Crew & Mission Control */}
+              <button
+                id="tour-crew-control"
+                onClick={() => {
+                  setCrewPanelInitialTab('tracker');
+                  setModalInitialTarget(null);
+                  setIsCrewPanelOpen(true);
+                }}
+                className={`glass rounded-2xl px-3 py-1.5 flex items-center gap-2 transition-all text-xs font-black border active:scale-95 h-[34px] ${
+                  selectedVolunteerFilter || isCrewPanelOpen
+                    ? 'bg-emerald-500/25 text-emerald-200 border-emerald-500/50 shadow-lg shadow-emerald-500/20'
+                    : 'hover:scale-105 border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 shadow-lg shadow-purple-500/10'
+                }`}
+                title="Crew & Mission Control — Field Tracker, Roster, Dispatch"
+              >
+                <div className="flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-white/20 text-[10px]">/</span>
+                  <Target className="w-3 h-3 text-amber-400" />
+                </div>
+                <span>
+                  {selectedVolunteerFilter ? selectedVolunteerFilter.split(' ')[0] : 'Crew & Missions'}
+                </span>
+                {selectedVolunteerFilter && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedVolunteerFilter(null);
+                    }}
+                    className="ml-0.5 text-xs text-teal-300 hover:text-white cursor-pointer"
+                  >
+                    ✕
+                  </span>
+                )}
+                {!selectedVolunteerFilter && activeMissionsCount > 0 && (
+                  <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
+                    {activeMissionsCount}
+                  </span>
+                )}
+                {!selectedVolunteerFilter && activeMissionsCount === 0 && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400">
+                    Ready
+                  </span>
+                )}
+              </button>
 
               {/* Campaign Intel Drawer Toggle */}
               <button
                 id="tour-drawer-btn"
                 onClick={() => setDrawerOpen(!drawerOpen)}
-                className={`glass rounded-2xl px-2.5 py-1 flex items-center gap-1.5 transition-all duration-300 h-[30px] text-xs font-black tracking-wide border group active:scale-95 ${
+                className={`glass rounded-2xl px-2.5 py-1.5 flex items-center gap-1.5 transition-all duration-300 h-[34px] text-xs font-black tracking-wide border group active:scale-95 ${
                   drawerOpen
                     ? 'bg-sky-500 !border-sky-300 text-white shadow-lg shadow-sky-500/50'
                     : 'bg-sky-500/15 border-sky-400/60 text-sky-200 hover:text-white hover:bg-sky-500/25 hover:border-sky-300 animate-throbbing-blue'
