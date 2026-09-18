@@ -156,10 +156,5 @@ BEGIN
 END $$;
 
 
--- 8. Seed volunteer data
-INSERT INTO public.volunteers (id, campaign_id, name, pin_hash, role, active)
-VALUES
-('vol-1', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', '1234', 'Precinct Captain', true),
-('vol-2', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Marcus Taylor', '5678', 'Door Canvasser', true),
-('vol-3', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Ashley Rivera', '9012', 'Field Scout', true)
-ON CONFLICT (id) DO NOTHING;
+-- Seed volunteers removed for clean slate field testing
+-- Volunteers will be added through the Crew Manager UI

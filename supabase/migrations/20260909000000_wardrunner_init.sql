@@ -173,27 +173,8 @@ ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     access_pin = EXCLUDED.access_pin;
 
--- Seed Bristol TN Sign Placements
-INSERT INTO public.signs (
-    id, campaign_id, latitude, longitude, placed_by_name, street_address, sign_type, is_competitor, competitor_name, status, created_at
-) VALUES 
-('1', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5951, -82.1887, 'Campaign Volunteer', 'State St & Volunteer Pkwy', 'large_sign', false, NULL, 'placed', now() - interval '2 hours'),
-('2', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5990, -82.1815, 'Campaign Volunteer', '1430 Lee Highway', 'banner', false, NULL, 'placed', now() - interval '5 hours'),
-('3', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5880, -82.1861, 'Campaign Volunteer', '920 Volunteer Parkway', 'yard_sign', false, NULL, 'placed', now() - interval '12 hours'),
-('4', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5975, -82.1830, 'Opponent Volunteer', '412 State Street', 'yard_sign', true, 'Bob Reynolds', 'placed', now() - interval '8 hours'),
-('5', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.6085, -82.1720, 'Campaign Volunteer', '2105 Lee Highway', 'billboard', false, NULL, 'placed', now() - interval '24 hours'),
-('6', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5840, -82.1810, 'Campaign Volunteer', '1750 Bluff City Highway', 'yard_sign', false, NULL, 'placed', now() - interval '4 hours'),
-('7', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.6030, -82.1920, 'Campaign Volunteer', '1100 West State Street', 'yard_sign', false, NULL, 'placed', now() - interval '1 hour'),
-('8', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 36.5860, -82.1750, 'Opponent Volunteer', '1820 Bluff City Highway', 'large_sign', true, 'Common Sense Slate', 'placed', now() - interval '6 hours')
-ON CONFLICT (id) DO NOTHING;
+-- Seed signs removed for clean slate field testing
+-- Sign data will be created by real volunteers in the field
 
--- Seed Bristol TN Canvass Records
-INSERT INTO public.canvass_records (
-    id, campaign_id, volunteer_name, volunteer_role, activity_type, result, sentiment, latitude, longitude, street_address, voter_name, wants_yard_sign, notes, created_at
-) VALUES
-('canvass-1', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'contact', 'strong_support', 36.5910, -82.1945, '916 Anderson St', 'Linda Campbell', true, 'Very excited about Melissa. Requested a yard sign for the front lawn.', now() - interval '90 minutes'),
-('canvass-2', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'no_contact', NULL, 36.5908, -82.1965, '1008 Anderson St', NULL, false, NULL, now() - interval '80 minutes'),
-('canvass-3', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'flyer_hang', 'left_flyer', NULL, 36.5905, -82.1985, '1032 Anderson St', NULL, false, 'Left full candidate platform door hanger on screen door handle.', now() - interval '70 minutes'),
-('canvass-4', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'contact', 'undecided', 36.5902, -82.2005, '1118 Anderson St', 'Robert Miller', false, 'Concerned about local street paving. Left candidate cell phone card.', now() - interval '50 minutes'),
-('canvass-5', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Sarah Jenkins', 'Door Canvasser', 'door_knock', 'contact', 'strong_support', 36.5899, -82.2025, '1206 Anderson St', 'Doris Jenkins', true, 'Loves our infrastructure plan. Put her on volunteer list for phone banks.', now() - interval '25 minutes')
-ON CONFLICT (id) DO NOTHING;
+-- Seed canvass records removed for clean slate field testing
+-- Canvass data will be created by real volunteers in the field

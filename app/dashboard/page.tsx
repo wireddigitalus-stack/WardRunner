@@ -253,10 +253,10 @@ import {
 const BRISTOL_CENTER: [number, number] = [-82.1887, 36.5951];
 
 const DEFAULT_INVENTORY_STOCK: InventoryStock = {
-  yard_sign: 250,
-  large_sign: 25,
-  banner: 10,
-  billboard: 4,
+  yard_sign: 50,
+  large_sign: 10,
+  banner: 5,
+  billboard: 2,
 };
 
 const SIGN_TYPE_META: Record<string, { emoji: string; label: string; short: string }> = {

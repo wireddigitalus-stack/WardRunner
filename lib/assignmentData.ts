@@ -111,54 +111,7 @@ export const TARGET_PRESETS: TargetPreset[] = [
   },
 ];
 
-export const SEED_ASSIGNMENTS: VolunteerAssignment[] = [
-  {
-    id: 'assign-1',
-    volunteer_name: 'Sarah Jenkins',
-    target_type: 'intersection',
-    title: 'Volunteer Pkwy & Weaver Pike',
-    street_address: '713 Volunteer Pkwy, Bristol, TN',
-    sign_type: 'yard_sign',
-    quantity: 2,
-    lat: 36.5831,
-    lng: -82.1859,
-    priority: 'critical',
-    notes: 'Secure corner visibility at Parkway Executive Plaza / Weaver Pike turn. Ensure signs are 15ft off curb.',
-    status: 'assigned',
-    created_at: new Date(Date.now() - 3600000 * 3).toISOString(),
-  },
-  {
-    id: 'assign-2',
-    volunteer_name: 'Marcus Taylor',
-    target_type: 'precinct',
-    title: 'Precinct 3A – Anderson Neighborhood Grid',
-    street_address: '1100 Anderson St, Bristol, TN',
-    sign_type: 'yard_sign',
-    quantity: 5,
-    lat: 36.5888,
-    lng: -82.1982,
-    priority: 'high',
-    notes: 'Target residential front lawns along 9th and 11th Street approaching Anderson Elementary.',
-    status: 'assigned',
-    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-  },
-  {
-    id: 'assign-3',
-    volunteer_name: 'Campaign Volunteer',
-    target_type: 'intersection',
-    title: 'State St & Piedmont Ave',
-    street_address: 'State St & Piedmont Ave, Bristol, TN',
-    sign_type: 'large_sign',
-    quantity: 1,
-    lat: 36.5955,
-    lng: -82.1895,
-    priority: 'high',
-    notes: 'Place 4×4 sign near high-visibility pedestrian crosswalk on the TN side.',
-    status: 'completed',
-    created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-    completed_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-  },
-];
+export const SEED_ASSIGNMENTS: VolunteerAssignment[] = [];
 
 export function getStoredAssignments(): VolunteerAssignment[] {
   if (typeof window === 'undefined') return SEED_ASSIGNMENTS;

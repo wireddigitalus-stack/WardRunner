@@ -65,44 +65,7 @@ interface VolunteerManagerModalProps {
 
 const DEFAULT_MASTER_PIN = process.env.NEXT_PUBLIC_DEFAULT_PIN || '2468';
 
-const DEFAULT_VOLUNTEERS: Volunteer[] = [
-  {
-    id: 'vol-1',
-    name: 'Campaign Volunteer',
-    role: 'Field Volunteer',
-    pin: DEFAULT_MASTER_PIN,
-    phone: '(423) 555-0142',
-    created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
-    active: true,
-  },
-  {
-    id: 'vol-2',
-    name: 'Sarah Jenkins',
-    role: 'Precinct Captain',
-    pin: '8492',
-    phone: '(423) 555-0188',
-    created_at: new Date(Date.now() - 3600000 * 36).toISOString(),
-    active: true,
-  },
-  {
-    id: 'vol-3',
-    name: 'Marcus Taylor',
-    role: 'Field Scout',
-    pin: DEFAULT_MASTER_PIN,
-    phone: '(423) 555-0199',
-    created_at: new Date(Date.now() - 3600000 * 20).toISOString(),
-    active: true,
-  },
-  {
-    id: 'vol-4',
-    name: 'David Vance',
-    role: 'Field Director',
-    pin: '3948',
-    phone: '(423) 555-0112',
-    created_at: new Date(Date.now() - 3600000 * 72).toISOString(),
-    active: true,
-  },
-];
+const DEFAULT_VOLUNTEERS: Volunteer[] = [];
 
 const ROLE_BADGES: Record<string, { bg: string; text: string; border: string }> = {
   'Field Volunteer': { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/20' },

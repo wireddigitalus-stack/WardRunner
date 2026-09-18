@@ -2,22 +2,46 @@ import { Sign, SignStatus, SignType } from './types';
 import { getCampaignId } from '@/lib/auth';
 import { fetchFromSupabase, upsertToSupabase, subscribeToTable } from '@/lib/syncEngine';
 
-export const SEED_SIGNS: Sign[] = [
-  { id: '1', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5951, longitude: -82.1887, placed_by_name: 'Campaign Volunteer', street_address: 'State St & Volunteer Pkwy', sign_type: 'large_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 2).toISOString() },
-  { id: '2', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5990, longitude: -82.1815, placed_by_name: 'Campaign Volunteer', street_address: '1430 Lee Highway', sign_type: 'banner', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 5).toISOString() },
-  { id: '3', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5880, longitude: -82.1861, placed_by_name: 'Campaign Volunteer', street_address: '920 Volunteer Parkway', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 12).toISOString() },
-  { id: '4', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5975, longitude: -82.1830, placed_by_name: 'Opponent Volunteer', street_address: '412 State Street', sign_type: 'yard_sign', is_competitor: true, competitor_name: 'Bob Reynolds', status: 'placed', created_at: new Date(Date.now() - 3600000 * 8).toISOString() },
-  { id: '5', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6085, longitude: -82.1720, placed_by_name: 'Campaign Volunteer', street_address: '2105 Lee Highway', sign_type: 'billboard', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 24).toISOString() },
-  { id: '6', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5840, longitude: -82.1810, placed_by_name: 'Campaign Volunteer', street_address: '1750 Bluff City Highway', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 4).toISOString() },
-  { id: '7', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.6030, longitude: -82.1920, placed_by_name: 'Campaign Volunteer', street_address: '1100 West State Street', sign_type: 'yard_sign', is_competitor: false, status: 'placed', created_at: new Date(Date.now() - 3600000 * 1).toISOString() },
-  { id: '8', campaign_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', latitude: 36.5860, longitude: -82.1750, placed_by_name: 'Opponent Volunteer', street_address: '1820 Bluff City Highway', sign_type: 'large_sign', is_competitor: true, competitor_name: 'Common Sense Slate', status: 'placed', created_at: new Date(Date.now() - 3600000 * 6).toISOString() },
-];
+export const SEED_SIGNS: Sign[] = [];
 
 export const SIGNS_STORAGE_KEY = 'campaignos_signs_data';
 export const SIGNS_PING_KEY = 'campaignos_signs_ping';
 
+// Data version stamp — bump to force client-side cache reset
+const DATA_VERSION = '2';
+const DATA_VERSION_KEY = 'campaignos_data_version';
+
+function checkDataVersion(): boolean {
+  if (typeof window === 'undefined') return false;
+  const stored = localStorage.getItem(DATA_VERSION_KEY);
+  if (stored !== DATA_VERSION) {
+    // Clean slate: clear all field data localStorage keys
+    [
+      'campaignos_signs_data', 'campaignos_signs_ping',
+      'campaignos_canvass_records', 'campaignos_canvass_ping',
+      'campaignos_volunteer_pings', 'campaignos_volunteer_pings_tick',
+      'campaignos_assignments',
+      'campaignos_volunteers',
+      'campaignos_inventory_stock',
+      'campaignos_sync_queue',
+      'campaignos_canvass_routes', 'campaignos_canvass_routes_ping',
+      // Legacy keys
+      'wardrunner_signs_data', 'wardrunner_canvass_records',
+      'wardrunner_volunteer_pings', 'wardrunner_assignments',
+      'wardrunner_volunteers', 'wardrunner_sync_queue',
+      'wardrunner_canvass_routes',
+    ].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(DATA_VERSION_KEY, DATA_VERSION);
+    return true;
+  }
+  return false;
+}
+
 export function getStoredSigns(): Sign[] {
   if (typeof window === 'undefined') return SEED_SIGNS;
+
+  // Force reset if data version changed (clean slate deploy)
+  checkDataVersion();
 
   // Kick off an async Supabase fetch in the background to update the cache
   setTimeout(() => {
@@ -31,23 +55,7 @@ export function getStoredSigns(): Sign[] {
       return SEED_SIGNS;
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      // Automatic migration: update 620 State Street to State St & Volunteer Pkwy
-      let modified = false;
-      const migrated = parsed.map(s => {
-        if (s.id === '1' || s.street_address === '620 State Street') {
-          if (s.street_address !== 'State St & Volunteer Pkwy') {
-            modified = true;
-            return { ...s, street_address: 'State St & Volunteer Pkwy' };
-          }
-        }
-        return s;
-      });
-      if (modified) {
-        localStorage.setItem(SIGNS_STORAGE_KEY, JSON.stringify(migrated));
-      }
-      return migrated;
-    }
+    if (Array.isArray(parsed)) return parsed;
     return SEED_SIGNS;
   } catch {
     return SEED_SIGNS;
@@ -132,15 +140,15 @@ export async function fetchSigns(): Promise<Sign[]> {
   } catch (err) {
     console.warn('Failed to fetch from Supabase, falling back to local cache', err);
     // Fallback: localStorage
-    if (typeof window === 'undefined') return SEED_SIGNS;
+    if (typeof window === 'undefined') return [];
     try {
       const raw = localStorage.getItem(SIGNS_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
-    return SEED_SIGNS;
+    return [];
   }
 }
 
