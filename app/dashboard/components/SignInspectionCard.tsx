@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { Navigation, MapPin, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Navigation, MapPin, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import { Sign, SignType } from '@/lib/types';
+import { deleteSign } from '@/lib/signData';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
 import CampaignWindowFrame from './CampaignWindowFrame';
 
@@ -31,6 +32,7 @@ interface SignInspectionCardProps {
   dragProps?: Record<string, any>;
   resetPosition?: () => void;
   onDismiss: () => void;
+  onDelete?: (signId: string) => void;
 }
 
 export default function SignInspectionCard({
@@ -39,10 +41,24 @@ export default function SignInspectionCard({
   streetAddress,
   loadingAddress,
   onDismiss,
+  onDelete,
 }: SignInspectionCardProps) {
   const meta = SIGN_TYPE_META[sign.sign_type] || { emoji: '📍', label: sign.sign_type };
   const candidateName = sign.is_competitor ? (sign.competitor_name || 'Opponent Candidate') : 'Melissa K. Brown';
   const displayAddress = streetAddress || sign.street_address || 'Bristol, TN';
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const handleDelete = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      setTimeout(() => setConfirmDelete(false), 3000); // auto-reset after 3s
+      return;
+    }
+    deleteSign(sign.id);
+    onDelete?.(sign.id);
+    onDismiss();
+  };
 
   return (
     <CampaignWindowFrame
@@ -118,6 +134,20 @@ export default function SignInspectionCard({
                 className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition"
               >
                 Dismiss
+              </button>
+              {/* 2-Click Delete: small trash icon → confirm tap */}
+              <button
+                type="button"
+                onClick={handleDelete}
+                className={`px-2.5 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 flex items-center gap-1 shrink-0 ${
+                  confirmDelete
+                    ? 'bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-md shadow-rose-500/20'
+                    : 'text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent'
+                }`}
+                title={confirmDelete ? 'Tap again to permanently delete this sign' : 'Remove sign from map'}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {confirmDelete && <span className="text-[10px] font-black">Confirm?</span>}
               </button>
             </div>
           </div>

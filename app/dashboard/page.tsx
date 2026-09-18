@@ -3279,6 +3279,10 @@ export default function DashboardPage() {
           dragStyle={signDrag.style} dragProps={signDrag.dragProps}
           resetPosition={signDrag.resetPosition}
           onDismiss={() => setSelectedSign(null)}
+          onDelete={(signId) => {
+            setSigns(prev => prev.filter(s => s.id !== signId));
+            setSelectedSign(null);
+          }}
         />
       )}
 

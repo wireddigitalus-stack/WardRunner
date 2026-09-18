@@ -1,6 +1,6 @@
 import { Sign, SignStatus, SignType } from './types';
 import { getCampaignId } from '@/lib/auth';
-import { fetchFromSupabase, upsertToSupabase, subscribeToTable } from '@/lib/syncEngine';
+import { fetchFromSupabase, upsertToSupabase, deleteFromSupabase, subscribeToTable } from '@/lib/syncEngine';
 
 export const SEED_SIGNS: Sign[] = [];
 
@@ -129,6 +129,18 @@ export async function markSignRetrieved(signId: string): Promise<void> {
     } catch (err) {
       console.warn('Supabase remote retrieval sync offline/deferred:', err);
     }
+  }
+}
+
+export async function deleteSign(signId: string): Promise<void> {
+  const current = getStoredSigns();
+  const updated = current.filter(s => s.id !== signId);
+  saveStoredSigns(updated);
+
+  try {
+    await deleteFromSupabase('signs', SIGNS_STORAGE_KEY, signId);
+  } catch (err) {
+    console.warn('Supabase remote sign delete offline/deferred:', err);
   }
 }
 
