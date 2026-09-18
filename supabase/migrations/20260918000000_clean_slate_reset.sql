@@ -22,8 +22,8 @@ DELETE FROM public.canvass_routes WHERE campaign_id = 'a0eebc99-9c0b-4ef8-bb6d-6
 -- 6. Clear volunteer roster (volunteers will be re-added via Crew Manager)
 DELETE FROM public.volunteers WHERE campaign_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
--- 7. Clear uploaded sign photos from storage bucket
-DELETE FROM storage.objects WHERE bucket_id = 'sign-photos';
+-- 7. Sign photos: clear manually via Supabase Dashboard > Storage > sign-photos > Select All > Delete
+-- (Direct DELETE from storage.objects is blocked by Supabase's protect_delete() trigger)
 
 -- Campaign row stays intact:
 -- id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
