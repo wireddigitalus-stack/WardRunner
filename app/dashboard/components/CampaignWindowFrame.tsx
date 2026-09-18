@@ -185,7 +185,7 @@ export default function CampaignWindowFrame({
             onPointerMove={handleDragPointerMove}
             onPointerUp={handleDragPointerUp}
             onPointerCancel={handleDragPointerUp}
-            className="group flex items-center gap-3 px-3.5 py-2.5 rounded-2xl glass-heavy border border-amber-500/30 shadow-2xl shadow-black/80 cursor-grab active:cursor-grabbing hover:border-amber-400/50 transition-all backdrop-blur-2xl"
+            className="group flex items-center gap-3 px-3.5 py-2.5 rounded-2xl glass-heavy border border-amber-500/30 shadow-2xl shadow-black/80 cursor-grab active:cursor-grabbing hover:border-amber-400/50 transition-all backdrop-blur-2xl touch-none"
             title="CampaignOS Window Minimized • Drag to move • Click to restore"
           >
             {/* Traffic Light Dots */}
@@ -260,7 +260,7 @@ export default function CampaignWindowFrame({
             onPointerUp={handleDragPointerUp}
             onPointerCancel={handleDragPointerUp}
             onDoubleClick={handleToggleDoubleSize}
-            className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-slate-950/40 select-none cursor-grab active:cursor-grabbing shrink-0"
+            className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-slate-950/40 select-none cursor-grab active:cursor-grabbing shrink-0 touch-none"
             title="CampaignOS Window • Drag titlebar to move over map • Double-click to toggle Double-Size"
           >
             {/* Traffic Light Window Controls */}
