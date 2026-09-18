@@ -299,3 +299,14 @@ button, input, select {
 .search-target-marker {
   z-index: 300 !important;
 }
+
+/* ============================================================
+   MOBILE SAFE AREA UTILITIES (iOS Dynamic Island & Notch support)
+   ============================================================ */
+.pt-safe {
+  padding-top: max(0.875rem, env(safe-area-inset-top, 0.875rem));
+}
+
+.pt-safe-header {
+  padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
+}

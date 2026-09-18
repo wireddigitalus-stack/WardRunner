@@ -602,8 +602,8 @@ export default function CanvassPage() {
   // =========================================================================
   if (!session) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 max-w-md mx-auto select-none overflow-x-hidden w-full">
-        <div className="pt-6">
+      <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 pt-safe-header max-w-md mx-auto select-none overflow-x-hidden w-full">
+        <div className="pt-2">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 min-w-12 min-h-12 shrink-0 aspect-square rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-lg leading-none shadow-lg shadow-emerald-500/20 select-none">
               COS
@@ -714,7 +714,7 @@ export default function CanvassPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-16 max-w-md mx-auto select-none overflow-x-hidden w-full">
       {/* 1. Header Bar with Volunteer & GPS Status */}
-      <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
+      <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 pt-safe-header pb-3 shadow-md">
         <div className="flex items-center justify-between">
           <div id="tour-canvass-session" className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 aspect-square rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs leading-none tracking-tight select-none">
