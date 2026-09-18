@@ -5,13 +5,11 @@ import { supabase } from '@/lib/supabaseClient';
 import { getTrafficData, stationsToGeoJSON, intersectionsToGeoJSON, TrafficStation, Intersection } from '@/lib/trafficData';
 import realCorridors from '@/lib/realCorridors.json';
 import SmartScout from './components/SmartScout';
-import VolunteerManagerModal from './components/VolunteerManagerModal';
-import VolunteerFilterPanel from './components/VolunteerFilterPanel';
+import CrewMissionControl from './components/CrewMissionControl';
 import MapSearchBar from './components/MapSearchBar';
 import PrecinctLeaderboard from './components/PrecinctLeaderboard';
 import PrecinctDetailCard from './components/PrecinctDetailCard';
 import MissionDetailCard from './components/MissionDetailCard';
-import MissionsDrawerTab from './components/MissionsDrawerTab';
 import CommandPinGate from './components/CommandPinGate';
 import RouteDetailCard from './components/RouteDetailCard';
 import MobileVipBar from './components/MobileVipBar';
@@ -43,130 +41,123 @@ const DASHBOARD_TOUR_STEPS: TourStep[] = [
     badge: '1. Campaign HUD',
   },
   {
-    targetId: 'tour-ground-force',
-    title: 'Ground Force Intel Filter',
-    description: 'Filter map markers to view the exact activity, GPS breadcrumbs, and doors knocked for any individual volunteer or field team.',
-    accentColor: 'teal',
-    badge: '2. Ground Force',
-  },
-  {
-    targetId: 'tour-crew-missions-btn',
-    title: 'Unified Crew & Missions Hub',
-    description: 'All-in-one personnel & dispatch hub: view volunteer status, live mission accordions, 4-digit mobile PINs, and dispatch sign drops with placement instructions in real time.',
-    accentColor: 'purple',
-    badge: '3. Crew & Missions',
+    targetId: 'tour-crew-control',
+    title: 'Crew & Mission Control',
+    description: 'Your unified command center: track live volunteer GPS locations, manage crew roster & PINs, and dispatch sign missions — all in one panel with 3 easy tabs.',
+    accentColor: 'emerald',
+    badge: '2. Crew & Missions',
   },
   {
     targetId: 'tour-lock-btn',
     title: 'Lock Command Center',
     description: 'Secures your strategy room. Locks the dashboard behind your 4-digit Campaign Master PIN (2468) when stepping away from your desk.',
     accentColor: 'rose',
-    badge: '4. Security Gate',
+    badge: '3. Security Gate',
   },
   {
     targetId: 'tour-drawer-btn',
     title: 'Campaign Intel & Analytics Drawer',
     description: 'Slide open full precinct voting breakdowns, inventory stock management, CSV export, and granular map layer controls.',
     accentColor: 'cyan',
-    badge: '5. Campaign Intel',
+    badge: '4. Campaign Intel',
   },
   {
     targetId: 'tour-recenter-btn',
     title: 'Recenter Map',
     description: 'One tap snaps your camera back to the geographic center of Bristol, TN whenever you pan away.',
     accentColor: 'emerald',
-    badge: '6. Recenter',
+    badge: '5. Recenter',
   },
   {
     targetId: 'tour-3d-btn, tour-orbit-btn',
     title: '3D Tilt & Cinematic Orbit',
     description: 'Angles into a 3D perspective to visualize Bristol terrain. Tap the Rotate button below it to slowly orbit the map in 3D (tap again to reset default view).',
     accentColor: 'emerald',
-    badge: '7. 3D & Orbit',
+    badge: '6. 3D & Orbit',
   },
   {
     targetId: 'tour-zoom-btns',
     title: 'Map Zoom Controls',
     description: 'Quickly zoom between street-level yard sign placements and ward-wide regional overview.',
     accentColor: 'cyan',
-    badge: '8. Zoom Stack',
+    badge: '7. Zoom Stack',
   },
   {
     targetId: 'tour-signs-toggle, tour-mobile-signs, tour-mobile-palette-toggle',
     title: 'Yard Signs Radar',
     description: 'Toggle sign markers on the map: always displays filter labels with glowing color pills when on. Tap to switch between compact smart pill badges and full pin markers.',
     accentColor: 'emerald',
-    badge: '9. Sign Radar',
+    badge: '8. Sign Radar',
   },
   {
     targetId: 'tour-missions-layer',
     title: 'Target Missions Layer',
     description: 'Toggle purple target rings to see active high-priority dispatch missions deployed across Bristol with live progress tracking.',
     accentColor: 'purple',
-    badge: '10. Missions Layer',
+    badge: '9. Missions Layer',
   },
   {
     targetId: 'tour-canvass-layer, tour-mobile-doors',
     title: 'Canvass Knocks & Flyers',
     description: 'Display teal footprint pins for every household visited, literature flyer dropped, and voter sentiment recorded by the walk team.',
     accentColor: 'teal',
-    badge: '11. Canvass Doors',
+    badge: '10. Canvass Doors',
   },
   {
     targetId: 'tour-field-ops, tour-mobile-field-ops',
     title: 'Field Ops & Turf Routes',
     description: 'Live GPS volunteer tracks, walking breadcrumbs, and assigned canvass neighborhood walking loops.',
     accentColor: 'emerald',
-    badge: '12. Field Force',
+    badge: '11. Field Force',
   },
   {
     targetId: 'tour-precincts-layer, tour-mobile-precincts',
     title: 'Voting Precincts & Wards',
     description: 'Color-coded boundaries for all 12 Bristol voting precincts with turnout history and sign density benchmarks.',
     accentColor: 'emerald',
-    badge: '13. Precincts',
+    badge: '12. Precincts',
   },
   {
     targetId: 'tour-boundary',
     title: 'Bristol TN City Boundary',
     description: 'Toggles the official Bristol, TN municipal border outline. Click to explore key city stats, square mileage, and geographic perimeter.',
     accentColor: 'cyan',
-    badge: '14. City Boundary',
+    badge: '13. City Boundary',
   },
   {
     targetId: 'tour-corridors-layer',
     title: 'TDOT Traffic Corridors (AADT)',
     description: 'Traffic heat-map layer displaying Annual Average Daily Traffic counts along major arterials to prioritize high-dwell commuter visibility.',
     accentColor: 'amber',
-    badge: '15. Traffic Corridors',
+    badge: '14. Traffic Corridors',
   },
   {
     targetId: 'tour-heatmap-layer, tour-mobile-heatmap',
     title: 'Sign Density Heatmap',
     description: 'High-visibility visual gradient showing campaign saturation hot spots versus underserved neighborhoods across Bristol.',
     accentColor: 'rose',
-    badge: '16. Heatmap',
+    badge: '15. Heatmap',
   },
   {
     targetId: 'tour-map-search',
     title: 'Address & Voter Search',
     description: 'Quickly find any Bristol street address, intersection, or voter location and jump the camera directly there.',
     accentColor: 'cyan',
-    badge: '17. Map Search',
+    badge: '16. Map Search',
   },
   {
     targetId: 'tour-scout-ai',
     title: 'Scout AI Strategic Advisor',
     description: 'Autonomous AI cross-references TDOT traffic volume with sign gaps to generate short, actionable placement recommendations and 1-tap dispatching.',
     accentColor: 'amber',
-    badge: '18. Scout AI',
+    badge: '17. Scout AI',
   },
   {
     targetId: 'tour-minimap-hud, tour-minimap-toggle',
     title: 'Tactical Radar Minimap HUD',
     description: 'Square bird’s-eye radar in the bottom-left showing color-coded asset dots and a live dynamic camera bounding box that tracks your exact viewport when zoomed into street view. Click anywhere to teleport!',
     accentColor: 'cyan',
-    badge: '19. Radar HUD',
+    badge: '18. Radar HUD',
   },
 ];
 
@@ -434,8 +425,7 @@ export default function DashboardPage() {
   const [editingStock, setEditingStock] = useState(false);
 
   // Volunteer & PIN Directory Modal & Dispatch Missions
-  const [showVolunteerModal, setShowVolunteerModal] = useState(false);
-  const [modalInitialTab, setModalInitialTab] = useState<'roster' | 'dispatch'>('roster');
+  const [crewPanelInitialTab, setCrewPanelInitialTab] = useState<'tracker' | 'roster' | 'missions'>('tracker');
   const [modalInitialTarget, setModalInitialTarget] = useState<{
     title: string;
     street_address?: string;
@@ -473,7 +463,7 @@ export default function DashboardPage() {
   const [volunteerPings, setVolunteerPings] = useState<VolunteerLocationPing[]>([]);
   const [showCanvassLayer, setShowCanvassLayer] = useState(false);
   const [showFieldForceLayer, setShowFieldForceLayer] = useState(false);
-  const [isVolunteerFilterOpen, setIsVolunteerFilterOpen] = useState(false);
+  const [isCrewPanelOpen, setIsCrewPanelOpen] = useState(false);
   const [selectedVolunteerGroup, setSelectedVolunteerGroup] = useState<string>('all');
   const [selectedVolunteerFilter, setSelectedVolunteerFilter] = useState<string | null>(null);
   const [selectedCanvassRecord, setSelectedCanvassRecord] = useState<CanvassRecord | null>(null);
@@ -520,7 +510,7 @@ export default function DashboardPage() {
   }, [showCanvassLayer, is3D]);
 
   // Drawer Active Tab ('signs' | 'inventory' | 'precincts' | 'missions')
-  const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts' | 'missions'>('signs');
+  const [drawerTab, setDrawerTab] = useState<'signs' | 'inventory' | 'precincts'>('signs');
 
   // Load saved inventory stock and dispatched assignments from localStorage
   useEffect(() => {
@@ -2373,7 +2363,7 @@ export default function DashboardPage() {
           el.addEventListener('click', (e) => {
             e.stopPropagation();
             setSelectedVolunteerFilter(vol.volunteer_name);
-            setIsVolunteerFilterOpen(true);
+            setCrewPanelInitialTab('tracker'); setIsCrewPanelOpen(true);
           });
 
           const marker = new mgl.Marker({
@@ -2925,22 +2915,29 @@ export default function DashboardPage() {
 
           {/* — Right Controls (Stacked in 2 Sleek Rows: Ops above Utilities) — */}
           <div className="pointer-events-auto flex flex-col items-end gap-1.5 animate-slide-up" style={{ animationDelay: '160ms' }}>
-            {/* Row 1: Ground Force & Missions Hub */}
+            {/* Row 1: Unified Crew & Mission Control */}
             <div className="flex items-center gap-1.5">
-              {/* Quick Access to Field Force / Volunteer Filter */}
               <button
-                id="tour-ground-force"
-                onClick={() => setIsVolunteerFilterOpen(!isVolunteerFilterOpen)}
-                className={`glass rounded-2xl px-3 py-1.5 flex items-center gap-1.5 transition-all text-xs font-bold active:scale-95 h-[34px] ${
-                  selectedVolunteerFilter || isVolunteerFilterOpen
-                    ? 'bg-teal-500/25 text-teal-200 border border-teal-500/50 shadow-lg shadow-teal-500/20'
-                    : 'hover:scale-105 border border-white/10 text-slate-300 hover:text-white'
+                id="tour-crew-control"
+                onClick={() => {
+                  setCrewPanelInitialTab('tracker');
+                  setModalInitialTarget(null);
+                  setIsCrewPanelOpen(true);
+                }}
+                className={`glass rounded-2xl px-3.5 py-2 flex items-center gap-2 transition-all text-sm font-black border active:scale-95 h-[38px] ${
+                  selectedVolunteerFilter || isCrewPanelOpen
+                    ? 'bg-emerald-500/25 text-emerald-200 border-emerald-500/50 shadow-lg shadow-emerald-500/20'
+                    : 'hover:scale-105 border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 shadow-lg shadow-purple-500/10'
                 }`}
-                title="Filter map by volunteer individual or team"
+                title="Crew & Mission Control — Field Tracker, Roster, Dispatch"
               >
-                <Users className="w-3.5 h-3.5 text-teal-400" />
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4 text-emerald-400" />
+                  <span className="text-white/20 text-[10px]">/</span>
+                  <Target className="w-3.5 h-3.5 text-amber-400" />
+                </div>
                 <span>
-                  {selectedVolunteerFilter ? selectedVolunteerFilter.split(' ')[0] : 'Ground Force'}
+                  {selectedVolunteerFilter ? selectedVolunteerFilter.split(' ')[0] : 'Crew & Missions'}
                 </span>
                 {selectedVolunteerFilter && (
                   <span
@@ -2948,35 +2945,17 @@ export default function DashboardPage() {
                       e.stopPropagation();
                       setSelectedVolunteerFilter(null);
                     }}
-                    className="ml-0.5 text-xs text-teal-300 hover:text-white"
+                    className="ml-0.5 text-xs text-teal-300 hover:text-white cursor-pointer"
                   >
                     ✕
                   </span>
                 )}
-              </button>
-
-              {/* Unified Crew & Missions Command Hub */}
-              <button
-                id="tour-crew-missions-btn"
-                onClick={() => {
-                  setModalInitialTab('roster');
-                  setModalInitialTarget(null);
-                  setShowVolunteerModal(true);
-                }}
-                className="glass rounded-2xl px-3 py-1.5 flex items-center gap-2 hover:scale-105 transition-all text-xs font-bold border border-purple-500/30 hover:border-purple-500/50 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 shadow-lg shadow-purple-500/10 active:scale-95 group h-[34px]"
-                title="Crew Roster, PINs & Sign Missions Dispatch"
-              >
-                <div className="flex items-center gap-1 text-purple-400 group-hover:text-purple-300">
-                  <Users className="w-3.5 h-3.5" />
-                  <span className="text-white/20 text-[10px]">/</span>
-                  <Target className="w-3 h-3 text-emerald-400" />
-                </div>
-                <span>Crew & Missions</span>
-                {activeMissionsCount > 0 ? (
-                  <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
+                {!selectedVolunteerFilter && activeMissionsCount > 0 && (
+                  <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
                     {activeMissionsCount}
                   </span>
-                ) : (
+                )}
+                {!selectedVolunteerFilter && activeMissionsCount === 0 && (
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-white/10 text-slate-400">
                     Ready
                   </span>
@@ -3339,8 +3318,8 @@ export default function DashboardPage() {
               quantity: 1,
               targetType: 'scout_rec',
             });
-            setModalInitialTab('dispatch');
-            setShowVolunteerModal(true);
+            setCrewPanelInitialTab('roster');
+            setIsCrewPanelOpen(true);
           }}
         />
       )}
@@ -3379,33 +3358,7 @@ export default function DashboardPage() {
             setSelectedRec(null);
             mapRef.current?.flyTo({ center: p.center, zoom: 15.2, pitch: is3D ? 50 : 0, duration: 900 });
           }}
-          assignments={assignments}
-          activeMissionsCount={activeMissionsCount}
-          onOpenDispatch={() => {
-            setModalInitialTab('dispatch');
-            setModalInitialTarget(null);
-            setShowVolunteerModal(true);
-          }}
-          onSelectMission={(m) => {
-            setShowMissionsLayer(true);
-            setSelectedMission(m);
-            setSelectedSign(null);
-            setSelectedRec(null);
-            setSelectedPrecinct(null);
-            setDrawerOpen(false);
-            mapRef.current?.flyTo({ center: [m.lng, m.lat], zoom: 15.8, pitch: is3D ? 55 : 0, duration: 800 });
-          }}
-          onToggleMissionComplete={(id) => {
-            const updated = assignments.map(a => {
-              if (a.id === id) {
-                const isCompleted = a.status === 'completed';
-                return { ...a, status: (isCompleted ? 'assigned' : 'completed') as any, completed_at: isCompleted ? undefined : new Date().toISOString() };
-              }
-              return a;
-            });
-            setAssignments(updated);
-            saveStoredAssignments(updated);
-          }}
+
           inventoryStock={inventoryStock}
           inventoryStats={inventoryStats}
           editingStock={editingStock}
@@ -3568,24 +3521,12 @@ export default function DashboardPage() {
       {/* ============================================================
           VOLUNTEER & PIN DIRECTORY MODAL (Center Pop Card)
           ============================================================ */}
-      <VolunteerManagerModal
-        isOpen={showVolunteerModal}
-        onClose={() => {
-          setShowVolunteerModal(false);
-          setModalInitialTarget(null);
-        }}
-        signsCountByVolunteer={signsCountByVolunteer}
-        isDark={isDark}
-        initialTab={modalInitialTab}
-        initialTarget={modalInitialTarget}
-      />
-
       {/* ============================================================
-          FIELD FORCE & VOLUNTEER FILTER PANEL (Floating Glass Modal)
+          CREW & MISSION CONTROL PANEL
           ============================================================ */}
-      <VolunteerFilterPanel
-        isOpen={isVolunteerFilterOpen}
-        onClose={() => setIsVolunteerFilterOpen(false)}
+      <CrewMissionControl
+        isOpen={isCrewPanelOpen}
+        onClose={() => { setIsCrewPanelOpen(false); setModalInitialTarget(null); }}
         selectedGroup={selectedVolunteerGroup}
         onSelectGroup={(grp) => {
           setSelectedVolunteerGroup(grp);
@@ -3622,6 +3563,28 @@ export default function DashboardPage() {
         }}
         showRoutesLayer={showRoutesLayer}
         setShowRoutesLayer={setShowRoutesLayer}
+        assignments={assignments}
+        onSelectMission={(m) => {
+          setShowMissionsLayer(true);
+          setSelectedMission(m);
+          setIsCrewPanelOpen(false);
+          mapRef.current?.flyTo({ center: [m.lng, m.lat], zoom: 15.8, pitch: 55, duration: 1200 });
+        }}
+        onToggleComplete={(id) => {
+          const current = assignments.find(a => a.id === id);
+          if (!current) return;
+          const newStatus = current.status === 'completed' ? 'assigned' : 'completed';
+          const updated = assignments.map(a => a.id === id ? { ...a, status: newStatus as any } : a);
+          setAssignments(updated);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('campaignos_assignments', JSON.stringify(updated));
+            window.dispatchEvent(new CustomEvent('campaignos_assignments_updated', { detail: updated }));
+          }
+        }}
+        signsCountByVolunteer={signsCountByVolunteer}
+        isDark={isDark}
+        initialTab={crewPanelInitialTab}
+        initialTarget={modalInitialTarget}
       />
 
       {/* ============================================================
@@ -3672,8 +3635,8 @@ export default function DashboardPage() {
             quantity: 5,
             targetType: 'precinct',
           });
-          setModalInitialTab('dispatch');
-          setShowVolunteerModal(true);
+          setCrewPanelInitialTab('roster');
+          setIsCrewPanelOpen(true);
         }}
         isDark={isDark}
       />

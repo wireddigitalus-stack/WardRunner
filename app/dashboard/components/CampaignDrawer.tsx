@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { X, Sparkles, Target, Package, Search, MapPin, CircleDot, Download, Vote } from 'lucide-react';
-import { Sign, SignType, VolunteerAssignment, InventoryStock } from '@/lib/types';
+import { X, Sparkles, Package, Search, MapPin, CircleDot, Download, Vote } from 'lucide-react';
+import { Sign, SignType, InventoryStock } from '@/lib/types';
 import PrecinctLeaderboard from './PrecinctLeaderboard';
-import MissionsDrawerTab from './MissionsDrawerTab';
 import DictateButton from '@/app/components/DictateButton';
 import { PrecinctInfo } from '@/lib/precinctData';
 
@@ -39,7 +38,7 @@ export interface InventoryStatsData {
   placedByType: Record<string, number>;
 }
 
-export type DrawerTab = 'signs' | 'precincts' | 'missions' | 'inventory';
+export type DrawerTab = 'signs' | 'precincts' | 'inventory';
 
 interface CampaignDrawerProps {
   isDark: boolean;
@@ -69,13 +68,6 @@ interface CampaignDrawerProps {
   selectedPrecinctId?: string;
   onSelectPrecinct: (p: PrecinctInfo) => void;
 
-  // Missions tab
-  assignments: VolunteerAssignment[];
-  activeMissionsCount: number;
-  onOpenDispatch: () => void;
-  onSelectMission: (m: VolunteerAssignment) => void;
-  onToggleMissionComplete: (id: string) => void;
-
   // Inventory tab
   inventoryStock: InventoryStock;
   inventoryStats: InventoryStatsData;
@@ -95,7 +87,6 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
     filtered, signs, selectedSign, searchQ, ownerFilter, typeFilter, statusFilter, useDotMode, stats,
     onSetSearchQ, onSetOwnerFilter, onSetTypeFilter, onSetStatusFilter, onSetUseDotMode, onSelectSign, onFlyTo,
     selectedPrecinctId, onSelectPrecinct,
-    assignments, activeMissionsCount, onOpenDispatch, onSelectMission, onToggleMissionComplete,
     inventoryStock, inventoryStats, editingStock, onSetEditingStock, onUpdateStockQuantity, aadtCorridors,
     onExportCSV, onExportGeoJSON,
   } = props;
@@ -130,7 +121,7 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
         </div>
 
         {/* Tabs */}
-        <div className={`grid grid-cols-4 gap-1 p-2 border-b shrink-0 ${isDark ? 'border-white/[0.06] bg-black/20' : 'border-black/[0.06] bg-black/[0.02]'}`}>
+        <div className={`grid grid-cols-3 gap-1 p-2 border-b shrink-0 ${isDark ? 'border-white/[0.06] bg-black/20' : 'border-black/[0.06] bg-black/[0.02]'}`}>
           <button onClick={() => onSetTab('signs')}
             className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${drawerTab === 'signs' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm' : 'text-slate-400 hover:text-white'}`}>
             <span>Signs</span>
@@ -140,14 +131,6 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
             className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${drawerTab === 'precincts' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm' : 'text-slate-400 hover:text-white'}`}>
             <Vote className="w-3.5 h-3.5" />
             <span>Precincts</span>
-          </button>
-          <button onClick={() => onSetTab('missions')}
-            className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${drawerTab === 'missions' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-sm' : 'text-slate-400 hover:text-white'}`}>
-            <Target className="w-3.5 h-3.5 text-purple-400" />
-            <span>Missions</span>
-            {activeMissionsCount > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/40 text-purple-100 font-mono font-bold">{activeMissionsCount}</span>
-            )}
           </button>
           <button onClick={() => onSetTab('inventory')}
             className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${drawerTab === 'inventory' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-sm' : 'text-slate-400 hover:text-white'}`}>
@@ -163,16 +146,6 @@ export default function CampaignDrawer(props: CampaignDrawerProps) {
               signs={signs}
               selectedPrecinctId={selectedPrecinctId}
               onSelectPrecinct={onSelectPrecinct}
-              isDark={isDark}
-            />
-          )}
-
-          {drawerTab === 'missions' && (
-            <MissionsDrawerTab
-              assignments={assignments}
-              onOpenDispatch={onOpenDispatch}
-              onSelectMission={onSelectMission}
-              onToggleComplete={onToggleMissionComplete}
               isDark={isDark}
             />
           )}
