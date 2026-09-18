@@ -31,6 +31,8 @@ import {
   Scan,
   Zap,
   Eye,
+  HelpCircle,
+  X,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 
@@ -161,6 +163,7 @@ export default function FieldPage() {
     summary: string;
   } | null>(null);
   const [aiScanError, setAiScanError] = useState<string | null>(null);
+  const [showCameraInfo, setShowCameraInfo] = useState(false);
 
   // Noticeable Sign Dropped Success State for Giant Action Button
   const [justDroppedSuccess, setJustDroppedSuccess] = useState<{
@@ -1256,36 +1259,97 @@ export default function FieldPage() {
 
             {/* TOOL 1: AI Photo Sign Scanner (Gemini Multimodal Vision) */}
             <div>
-              <button
-                id="tour-field-camera"
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isAiScanning}
-                className="w-full p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 via-slate-900 to-indigo-950/60 border border-purple-500/40 hover:border-purple-400 text-left flex items-center justify-between shadow-lg active:scale-[0.98] transition-all disabled:opacity-60 group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-black shadow-md shadow-purple-500/30 group-hover:scale-105 transition shrink-0">
-                    <Camera className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-sm font-black text-white uppercase tracking-wide">
-                        📸 AI Photo Sign Scanner
-                      </span>
-                      <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 flex items-center gap-1">
-                        <Sparkles className="w-2.5 h-2.5 fill-purple-300" />
-                        Gemini Vision
-                      </span>
+              <div className="relative">
+                <button
+                  id="tour-field-camera"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isAiScanning}
+                  className="w-full p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-950/60 via-slate-900 to-indigo-950/60 border border-purple-500/40 hover:border-purple-400 text-left flex items-center justify-between shadow-lg active:scale-[0.98] transition-all disabled:opacity-60 group"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-black shadow-md shadow-purple-500/30 group-hover:scale-105 transition shrink-0">
+                      <Camera className="w-5 h-5 text-white" />
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5 truncate">
-                      Point camera to auto-read candidate & sign dimensions
-                    </p>
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-black text-white uppercase tracking-wide">
+                          📸 AI Photo Scanner
+                        </span>
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 flex items-center gap-1 shrink-0">
+                          <Sparkles className="w-2.5 h-2.5 fill-purple-300" />
+                          Gemini Vision
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-1 leading-snug break-words">
+                        Point camera to auto-read candidate & sign dimensions
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-400/20 flex items-center justify-center shrink-0 ml-2">
-                  <ChevronRight className="w-4 h-4 text-purple-300 group-hover:translate-x-0.5 transition" />
-                </div>
-              </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowCameraInfo(true);
+                      }}
+                      className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 flex items-center justify-center transition active:scale-90"
+                      title="Camera Scanner Instructions"
+                    >
+                      <HelpCircle className="w-4 h-4" />
+                    </button>
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-400/20 flex items-center justify-center">
+                      <ChevronRight className="w-4 h-4 text-purple-300 group-hover:translate-x-0.5 transition" />
+                    </div>
+                  </div>
+                </button>
+
+                {/* Mobile Camera Instructions Modal / Popover */}
+                {showCameraInfo && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in pointer-events-auto">
+                    <div className="relative w-full max-w-sm glass-heavy rounded-2xl p-5 border border-purple-500/40 shadow-2xl space-y-3.5 animate-slide-up">
+                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                        <div className="flex items-center gap-2 text-purple-300 font-extrabold text-sm">
+                          <Camera className="w-4 h-4 text-purple-400" />
+                          <span>AI Camera Instructions</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowCameraInfo(false)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="space-y-2.5 text-xs text-slate-300">
+                        <div className="flex items-start gap-2.5 p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                          <span className="font-mono font-black text-purple-300 text-sm">1.</span>
+                          <p>Point your phone camera directly at any yard sign, roadside banner, or opponent poster.</p>
+                        </div>
+                        <div className="flex items-start gap-2.5 p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                          <span className="font-mono font-black text-purple-300 text-sm">2.</span>
+                          <p>Gemini Vision AI automatically scans the candidate name, sign format, and competitor status in under 2 seconds.</p>
+                        </div>
+                        <div className="flex items-start gap-2.5 p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                          <span className="font-mono font-black text-purple-300 text-sm">3.</span>
+                          <p>The placement form will auto-fill so you can one-tap drop the sign with verified high-accuracy GPS coordinates.</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCameraInfo(false);
+                          fileInputRef.current?.click();
+                        }}
+                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-purple-500/30 active:scale-95 transition"
+                      >
+                        <Camera className="w-4 h-4" />
+                        <span>Open Camera Now</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <input
                 ref={fileInputRef}

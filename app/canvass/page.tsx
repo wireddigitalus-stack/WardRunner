@@ -28,6 +28,8 @@ import {
   Scan,
   RefreshCw,
   Zap,
+  HelpCircle,
+  X,
 } from 'lucide-react';
 import DictateButton from '@/app/components/DictateButton';
 import { compressImageToBase64 } from '@/lib/imageCompression';
@@ -174,6 +176,7 @@ export default function CanvassPage() {
   const signPhotoInputRef = useRef<HTMLInputElement>(null);
   const [isScanningSign, setIsScanningSign] = useState(false);
   const [scannedSignToast, setScannedSignToast] = useState<{ label: string; color: string } | null>(null);
+  const [showSignCameraInfo, setShowSignCameraInfo] = useState(false);
 
   // Sound Chime helper
   const playTactileChime = (tone: 'high' | 'mid' | 'flyer') => {
@@ -1002,37 +1005,98 @@ export default function CanvassPage() {
         </button>
 
         {/* BUTTON 4: SPOT YARD SIGN (AI PHOTO SCAN) */}
-        <button
-          id="tour-canvass-spot-sign"
-          type="button"
-          onClick={() => signPhotoInputRef.current?.click()}
-          disabled={isScanningSign}
-          className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 hover:from-purple-900 hover:to-indigo-900 text-white shadow-2xl shadow-purple-950/40 active:scale-[0.96] transition-all duration-150 border-2 border-purple-400/80 flex items-center justify-between group disabled:opacity-60"
-        >
-          <div className="flex items-center gap-4 min-w-0 flex-1">
-            <div className="w-14 h-14 rounded-2xl bg-purple-500/25 border border-purple-400/40 flex items-center justify-center text-3xl group-hover:scale-105 transition shrink-0">
-              {isScanningSign ? (
-                <RefreshCw className="w-7 h-7 animate-spin text-purple-300" />
-              ) : (
-                <Scan className="w-7 h-7 text-purple-300 stroke-[2.5]" />
-              )}
-            </div>
-            <div className="text-left min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <h3 className="text-base sm:text-xl font-black tracking-tight text-white leading-tight uppercase truncate">
-                  {isScanningSign ? 'AI Scanning...' : 'Spot Yard Sign'}
-                </h3>
+        <div className="relative">
+          <button
+            id="tour-canvass-spot-sign"
+            type="button"
+            onClick={() => signPhotoInputRef.current?.click()}
+            disabled={isScanningSign}
+            className="w-full p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 hover:from-purple-900 hover:to-indigo-900 text-white shadow-2xl shadow-purple-950/40 active:scale-[0.96] transition-all duration-150 border-2 border-purple-400/80 flex items-center justify-between gap-2 group disabled:opacity-60"
+          >
+            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-purple-500/25 border border-purple-400/40 flex items-center justify-center text-3xl group-hover:scale-105 transition shrink-0">
+                {isScanningSign ? (
+                  <RefreshCw className="w-6 h-6 sm:w-7 sm:h-7 animate-spin text-purple-300" />
+                ) : (
+                  <Scan className="w-6 h-6 sm:w-7 sm:h-7 text-purple-300 stroke-[2.5]" />
+                )}
               </div>
-              <p className="text-xs sm:text-sm text-purple-200/90 font-bold mt-0.5 truncate min-w-0">
-                Snap any sign · AI reads candidate & drops pin
-              </p>
+              <div className="text-left min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <h3 className="text-base sm:text-xl font-black tracking-tight text-white leading-tight uppercase">
+                    {isScanningSign ? 'AI Scanning...' : 'Spot Yard Sign'}
+                  </h3>
+                </div>
+                <p className="text-xs sm:text-sm text-purple-200/90 font-bold mt-1 leading-snug break-words">
+                  Snap any sign · AI reads candidate & drops pin
+                </p>
+              </div>
             </div>
-          </div>
-          <span className="text-xs font-black uppercase tracking-wider text-purple-950 bg-purple-300 px-4 py-2 rounded-2xl shadow-md shrink-0 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 fill-purple-950" />
-            AUTO-PIN ✓
-          </span>
-        </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSignCameraInfo(true);
+                }}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-purple-200 hover:text-white border border-purple-400/30 flex items-center justify-center transition active:scale-90"
+                title="Spot Sign Instructions"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </button>
+              <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-purple-950 bg-purple-300 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl shadow-md shrink-0 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 fill-purple-950" />
+                AUTO-PIN
+              </span>
+            </div>
+          </button>
+
+          {/* Mobile Camera Instructions Modal / Popover */}
+          {showSignCameraInfo && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in pointer-events-auto">
+              <div className="relative w-full max-w-sm glass-heavy rounded-2xl p-5 border border-purple-500/40 shadow-2xl space-y-3.5 animate-slide-up">
+                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <div className="flex items-center gap-2 text-purple-300 font-extrabold text-sm">
+                    <Scan className="w-4 h-4 text-purple-400" />
+                    <span>Spot Sign Instructions</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSignCameraInfo(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="space-y-2.5 text-xs text-slate-300">
+                  <div className="flex items-start gap-2.5 p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                    <span className="font-mono font-black text-purple-300 text-sm">1.</span>
+                    <p>When walking turf, spot any campaign sign (Melissa K. Brown or opponent).</p>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                    <span className="font-mono font-black text-purple-300 text-sm">2.</span>
+                    <p>Take a clear snapshot. Multimodal AI instantly identifies the name, office, and whether it is our sign or an opponent.</p>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                    <span className="font-mono font-black text-purple-300 text-sm">3.</span>
+                    <p>It automatically marks GPS coordinates and drops an official map pin without any typing.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSignCameraInfo(false);
+                    signPhotoInputRef.current?.click();
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-purple-500/30 active:scale-95 transition"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Snap Photo Now</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Hidden Camera Input for Canvass Yard Sign Spotting */}
         <input
