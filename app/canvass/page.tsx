@@ -599,7 +599,7 @@ export default function CanvassPage() {
   // =========================================================================
   if (!session) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 max-w-md mx-auto select-none">
+      <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 max-w-md mx-auto select-none overflow-x-hidden w-full">
         <div className="pt-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 min-w-12 min-h-12 shrink-0 aspect-square rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-black text-lg leading-none shadow-lg shadow-emerald-500/20 select-none">
@@ -709,20 +709,20 @@ export default function CanvassPage() {
   // VIEW: Active Door Knocker Walk Interface
   // =========================================================================
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-16 max-w-md mx-auto select-none">
+    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-16 max-w-md mx-auto select-none overflow-x-hidden w-full">
       {/* 1. Header Bar with Volunteer & GPS Status */}
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
         <div className="flex items-center justify-between">
-          <div id="tour-canvass-session" className="flex items-center gap-2">
+          <div id="tour-canvass-session" className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 aspect-square rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs leading-none tracking-tight select-none">
               COS
             </div>
             <div>
-              <p className="text-xs font-bold text-white leading-tight truncate max-w-[190px]">
+              <p className="text-xs font-bold text-white leading-tight truncate">
                 {session.volunteerName}
               </p>
-              <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1 truncate">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 {volunteerRole} • Live Tracking
               </p>
             </div>
@@ -761,7 +761,7 @@ export default function CanvassPage() {
         </div>
 
         {/* GPS Status & Screen Keep Awake Pill */}
-        <div className="mt-2.5 flex items-center justify-between text-[11px] bg-slate-900/90 rounded-xl px-3 py-1.5 border border-slate-800">
+        <div className="mt-2.5 flex items-center justify-between text-xs bg-slate-900/90 rounded-xl px-3 py-1.5 border border-slate-800 flex-wrap gap-y-1">
           <div className="flex items-center gap-1.5">
             <Navigation className={`w-3.5 h-3.5 ${gpsStatus === 'locked' ? 'text-emerald-400' : 'text-amber-400 animate-spin'}`} />
             {gpsStatus === 'locked' && coords ? (
@@ -776,7 +776,7 @@ export default function CanvassPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsLiveBroadcasting(!isLiveBroadcasting)}
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition ${
+              className={`text-[11px] font-bold px-2 py-0.5 rounded-full border transition ${
                 isLiveBroadcasting
                   ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
                   : 'bg-slate-800 border-slate-700 text-slate-400'
@@ -785,7 +785,7 @@ export default function CanvassPage() {
               {isLiveBroadcasting ? '📡 Beacon ON' : 'Beacon Paused'}
             </button>
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+              className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
                 wakeLockActive
                   ? 'bg-teal-500/15 border-teal-500/30 text-teal-300'
                   : 'bg-slate-800 border-slate-700 text-slate-400'
@@ -806,14 +806,14 @@ export default function CanvassPage() {
               <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shrink-0">
                 <Compass className="w-4 h-4" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/25 text-indigo-300 border border-indigo-500/30">
+                  <span className="text-[11px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/25 text-indigo-300 border border-indigo-500/30">
                     Turf {activeRoute.precinct_code}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-semibold">Assigned Walking Route</span>
+                  <span className="text-[11px] text-slate-400 font-semibold">Assigned Walking Route</span>
                 </div>
-                <h3 className="text-sm font-bold text-white mt-0.5 leading-tight">
+                <h3 className="text-sm font-bold text-white mt-0.5 leading-tight truncate">
                   {activeRoute.name}
                 </h3>
               </div>
@@ -876,17 +876,17 @@ export default function CanvassPage() {
                       className="p-2 rounded-xl bg-slate-950/70 border border-slate-800/80 text-[11px] flex items-center justify-between"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-black flex items-center justify-center shrink-0">
+                        <span className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-black flex items-center justify-center shrink-0">
                           {i + 1}
                         </span>
                         <div>
                           <p className="font-bold text-white leading-tight">{wp.street}</p>
-                          <p className="text-[10px] text-slate-400">
+                          <p className="text-[11px] text-slate-400">
                             {wp.house_range ? `${wp.house_range} • ` : ''}{wp.notes || 'Walking segment'}
                           </p>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/15 px-1.5 py-0.5 rounded border border-indigo-500/25 shrink-0">
+                      <span className="text-[11px] font-bold text-indigo-300 bg-indigo-500/15 px-1.5 py-0.5 rounded border border-indigo-500/25 shrink-0">
                         {wp.target_doors || 10} doors
                       </span>
                     </div>
@@ -902,21 +902,21 @@ export default function CanvassPage() {
       <div id="tour-canvass-hud" className="p-4">
         <div className="grid grid-cols-3 gap-2.5">
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-center">
-            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Doors Knocked</p>
-            <p className="text-2xl font-black text-white mt-0.5">{totalDoors}</p>
-            <p className="text-[10px] text-slate-500">This Session</p>
+            <p className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Doors Knocked</p>
+            <p className="text-xl sm:text-2xl font-black text-white mt-0.5">{totalDoors}</p>
+            <p className="text-[11px] text-slate-500">This Session</p>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-center">
-            <p className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Contacts</p>
-            <p className="text-2xl font-black text-emerald-400 mt-0.5">{contactsCount}</p>
-            <p className="text-[10px] text-emerald-500/80 font-semibold">{contactRate}% Spoke</p>
+            <p className="text-[11px] uppercase font-bold text-emerald-400 tracking-wider">Contacts</p>
+            <p className="text-xl sm:text-2xl font-black text-emerald-400 mt-0.5">{contactsCount}</p>
+            <p className="text-[11px] text-emerald-500/80 font-semibold">{contactRate}% Spoke</p>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 text-center">
-            <p className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">Flyers Left</p>
-            <p className="text-2xl font-black text-amber-400 mt-0.5">{flyersCount}</p>
-            <p className="text-[10px] text-slate-500">Door Lit</p>
+            <p className="text-[11px] uppercase font-bold text-amber-400 tracking-wider">Flyers Left</p>
+            <p className="text-xl sm:text-2xl font-black text-amber-400 mt-0.5">{flyersCount}</p>
+            <p className="text-[11px] text-slate-500">Door Lit</p>
           </div>
         </div>
       </div>
@@ -935,15 +935,15 @@ export default function CanvassPage() {
           onClick={handleOpenContactModal}
           className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-2xl shadow-emerald-500/30 active:scale-[0.96] transition-all duration-150 border-2 border-emerald-300 flex items-center justify-between group"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition shrink-0">
               🤝
             </div>
-            <div className="text-left">
-              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight uppercase">
+            <div className="text-left min-w-0 flex-1">
+              <h3 className="text-base sm:text-xl font-black tracking-tight text-white leading-tight uppercase truncate">
                 Voter Contact
               </h3>
-              <p className="text-xs sm:text-sm text-emerald-100 font-bold mt-0.5">
+              <p className="text-xs sm:text-sm text-emerald-100 font-bold mt-0.5 truncate min-w-0">
                 Spoke face-to-face · Record reaction
               </p>
             </div>
@@ -959,15 +959,15 @@ export default function CanvassPage() {
           onClick={handleNoContactTap}
           className="w-full p-5 sm:p-6 rounded-3xl bg-slate-900 hover:bg-slate-850 text-white shadow-xl active:scale-[0.96] transition-all duration-150 border-2 border-slate-700 flex items-center justify-between group"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-3xl group-hover:scale-105 transition shrink-0">
               🚪
             </div>
-            <div className="text-left">
-              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-slate-100 leading-tight uppercase">
+            <div className="text-left min-w-0 flex-1">
+              <h3 className="text-base sm:text-xl font-black tracking-tight text-slate-100 leading-tight uppercase truncate">
                 Not Home / No Answer
               </h3>
-              <p className="text-xs sm:text-sm text-slate-400 font-bold mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-400 font-bold mt-0.5 truncate min-w-0">
                 Nobody at door · 1-Tap drop pin
               </p>
             </div>
@@ -983,15 +983,15 @@ export default function CanvassPage() {
           onClick={handleLeftFlyerTap}
           className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-500 hover:to-amber-600 text-white shadow-2xl shadow-amber-600/30 active:scale-[0.96] transition-all duration-150 border-2 border-amber-300 flex items-center justify-between group"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner group-hover:scale-105 transition shrink-0">
               📰
             </div>
-            <div className="text-left">
-              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight uppercase">
+            <div className="text-left min-w-0 flex-1">
+              <h3 className="text-base sm:text-xl font-black tracking-tight text-white leading-tight uppercase truncate">
                 Left Flyer / Lit
               </h3>
-              <p className="text-xs sm:text-sm text-amber-100 font-bold mt-0.5">
+              <p className="text-xs sm:text-sm text-amber-100 font-bold mt-0.5 truncate min-w-0">
                 Hung door hanger · 1-Tap drop pin
               </p>
             </div>
@@ -1009,7 +1009,7 @@ export default function CanvassPage() {
           disabled={isScanningSign}
           className="w-full p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 hover:from-purple-900 hover:to-indigo-900 text-white shadow-2xl shadow-purple-950/40 active:scale-[0.96] transition-all duration-150 border-2 border-purple-400/80 flex items-center justify-between group disabled:opacity-60"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="w-14 h-14 rounded-2xl bg-purple-500/25 border border-purple-400/40 flex items-center justify-center text-3xl group-hover:scale-105 transition shrink-0">
               {isScanningSign ? (
                 <RefreshCw className="w-7 h-7 animate-spin text-purple-300" />
@@ -1017,13 +1017,13 @@ export default function CanvassPage() {
                 <Scan className="w-7 h-7 text-purple-300 stroke-[2.5]" />
               )}
             </div>
-            <div className="text-left">
-              <div className="flex items-center gap-1.5">
-                <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight uppercase">
+            <div className="text-left min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h3 className="text-base sm:text-xl font-black tracking-tight text-white leading-tight uppercase truncate">
                   {isScanningSign ? 'AI Scanning...' : 'Spot Yard Sign'}
                 </h3>
               </div>
-              <p className="text-xs sm:text-sm text-purple-200/90 font-bold mt-0.5">
+              <p className="text-xs sm:text-sm text-purple-200/90 font-bold mt-0.5 truncate min-w-0">
                 Snap any sign · AI reads candidate & drops pin
               </p>
             </div>
@@ -1050,17 +1050,17 @@ export default function CanvassPage() {
       <div className="px-4 mt-3">
         {scannedSignToast && (
           <div className={`${scannedSignToast.color} text-white px-4 py-3 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xl animate-slide-up mb-2 border border-white/20`}>
-            <span>{scannedSignToast.label}</span>
+            <span className="break-words min-w-0">{scannedSignToast.label}</span>
           </div>
         )}
 
         {justLoggedToast && (
           <div className={`${justLoggedToast.color} text-white px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center justify-between shadow-lg animate-slide-up mb-2`}>
-            <span>✓ {justLoggedToast.label}</span>
+            <span className="min-w-0 flex-1 break-words">✓ {justLoggedToast.label}</span>
             {lastLoggedRecord && (
               <button
                 onClick={handleUndoLast}
-                className="bg-black/30 hover:bg-black/40 px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition"
+                className="bg-black/30 hover:bg-black/40 px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition shrink-0"
               >
                 <Undo2 className="w-3 h-3" /> Undo
               </button>
@@ -1082,7 +1082,7 @@ export default function CanvassPage() {
 
       {/* 4. Recent Doors Logged this Session */}
       <div className="p-4 mt-2">
-        <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center justify-between mb-2.5 flex-wrap gap-y-1">
           <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Footprints className="w-3.5 h-3.5 text-emerald-400" />
             <span>Walk Log ({sessionHistory.length} Doors)</span>
@@ -1108,16 +1108,16 @@ export default function CanvassPage() {
                 key={rec.id}
                 className="bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between text-xs"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-lg">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <span className="text-lg shrink-0">
                     {rec.result === 'contact' ? '🤝' : rec.result === 'left_flyer' ? '📰' : '🚪'}
                   </span>
-                  <div>
-                    <p className="font-bold text-white leading-tight">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-white leading-tight truncate">
                       {rec.street_address || `Door #${sessionHistory.length - idx}`}
                       {rec.voter_name ? ` • ${rec.voter_name}` : ''}
                     </p>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-400 truncate">
                       {rec.result === 'contact' ? (
                         <span className="text-emerald-400 font-semibold">
                           Contact {rec.sentiment ? `(${rec.sentiment.replace('_', ' ')})` : ''}
@@ -1131,7 +1131,7 @@ export default function CanvassPage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[11px] text-slate-500 font-mono shrink-0">
                   {new Date(rec.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -1184,12 +1184,12 @@ export default function CanvassPage() {
                       >
                         <div className="flex items-center gap-2.5">
                           <span className="text-2xl">{opt.icon}</span>
-                          <span className="font-black text-xs sm:text-sm uppercase tracking-tight text-white">
+                          <span className="font-black text-[11px] sm:text-xs uppercase tracking-tight text-white">
                             {opt.label}
                           </span>
                         </div>
                         {isChosen && (
-                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white text-slate-950">
+                          <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-white text-slate-950">
                             ✓
                           </span>
                         )}

@@ -711,7 +711,7 @@ export default function FieldPage() {
   // =========================================================================
   if (!session) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-5 max-w-md mx-auto">
+      <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-5 max-w-md mx-auto overflow-x-hidden w-full">
         <div className="pt-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 min-w-10 min-h-10 shrink-0 aspect-square rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-sm leading-none tracking-tight shadow-lg shadow-emerald-500/10 select-none">
@@ -815,19 +815,19 @@ export default function FieldPage() {
   // VIEW: Active Mobile Field Operator Interface
   // =========================================================================
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-24 max-w-md mx-auto select-none">
+    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-24 max-w-md mx-auto select-none overflow-x-hidden w-full">
       {/* 1. Header Bar with Volunteer & GPS Status */}
       <header className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-md">
         <div className="flex items-center justify-between">
-          <div id="tour-field-session" className="flex items-center gap-2">
+          <div id="tour-field-session" className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-8 h-8 min-w-8 min-h-8 shrink-0 aspect-square rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs leading-none tracking-tight select-none">
               COS
             </div>
             <div>
-              <p className="text-xs font-bold text-white leading-tight truncate max-w-[200px]">
+              <p className="text-xs font-bold text-white leading-tight truncate">
                 {session.campaignName}
               </p>
-              <p className="text-[11px] text-slate-400 font-medium">
+              <p className="text-xs text-slate-400 font-medium truncate">
                 Operated by <span className="text-emerald-400 font-semibold">{session.volunteerName}</span>
               </p>
             </div>
@@ -876,7 +876,7 @@ export default function FieldPage() {
                   : 'bg-rose-500'
               }`}
             />
-            <span className="font-mono text-[11px] text-slate-300">
+            <span className="font-mono text-xs text-slate-300 truncate min-w-0">
               {gpsStatus === 'locked' && coords
                 ? `GPS ±${coords.accuracy}m (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`
                 : gpsStatus === 'locating'
@@ -928,14 +928,14 @@ export default function FieldPage() {
       {successMessage && (
         <div className="mx-4 my-2 p-3.5 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 font-semibold text-sm flex items-center gap-2.5 shadow-lg shadow-emerald-500/10 animate-bounce">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span>{successMessage}</span>
+          <span className="break-words min-w-0">{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
         <div className="mx-4 my-2 p-3.5 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-200 font-semibold text-sm flex items-center gap-2.5">
           <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
-          <span>{errorMessage}</span>
+          <span className="break-words min-w-0">{errorMessage}</span>
         </div>
       )}
 
@@ -953,7 +953,7 @@ export default function FieldPage() {
                     <Target className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[10px] font-black uppercase text-purple-300 tracking-wider block">
+                    <span className="text-[11px] font-black uppercase text-purple-300 tracking-wider block">
                       Active Sign Mission
                     </span>
                     <p className="font-extrabold text-sm text-white truncate">{activeMission.title}</p>
@@ -965,7 +965,7 @@ export default function FieldPage() {
                 <button
                   type="button"
                   onClick={() => setActiveMission(null)}
-                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white/10 hover:bg-white/15 text-slate-300 transition shrink-0"
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white/10 hover:bg-white/15 text-slate-300 transition shrink-0"
                 >
                   Clear
                 </button>
@@ -975,8 +975,8 @@ export default function FieldPage() {
                 <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs font-medium flex items-start gap-2">
                   <span className="shrink-0 text-sm">📝</span>
                   <div className="min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">Placement Instructions</span>
-                    <p className="italic leading-relaxed">{activeMission.notes}</p>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 block">Placement Instructions</span>
+                    <p className="italic leading-relaxed break-words">{activeMission.notes}</p>
                   </div>
                 </div>
               )}
@@ -995,7 +995,7 @@ export default function FieldPage() {
                     Your Assigned Missions ({myMissions.length})
                   </span>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
                   Dispatched
                 </span>
               </div>
@@ -1017,7 +1017,7 @@ export default function FieldPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
+                            <span className={`text-[11px] font-black uppercase px-2 py-0.5 rounded border ${
                               m.priority === 'critical'
                                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                                 : m.priority === 'high'
@@ -1044,7 +1044,7 @@ export default function FieldPage() {
                           </div>
 
                           {m.notes && (
-                            <p className="text-[11px] text-slate-300 mt-1 pl-2 border-l border-purple-500/40 italic">
+                            <p className="text-xs text-slate-300 mt-1 pl-2 border-l border-purple-500/40 italic break-words">
                               "{m.notes}"
                             </p>
                           )}
@@ -1091,7 +1091,7 @@ export default function FieldPage() {
           {/* ================================================================= */}
           <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-2 border-emerald-500/50 shadow-2xl shadow-emerald-950/40 space-y-3.5">
             {/* Status Header */}
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-xs flex-wrap gap-y-1">
               <div className="flex items-center gap-2">
                 <span className={`w-2.5 h-2.5 rounded-full ${
                   justDroppedSuccess
@@ -1145,7 +1145,7 @@ export default function FieldPage() {
                     <span>SIGN DROPPED! ✓</span>
                     <Sparkles className="w-6 h-6 text-amber-900 fill-amber-300 animate-pulse" />
                   </div>
-                  <span className="text-xs font-black uppercase tracking-widest text-emerald-950/90 mt-0.5">
+                  <span className="text-xs font-black uppercase tracking-wide text-emerald-950/90 mt-0.5 break-words text-center px-2">
                     {justDroppedSuccess.isCompetitor
                       ? `Competitor Logged · Saved to Map`
                       : `${justDroppedSuccess.signLabel} Planted · Logged in ${justDroppedSuccess.elapsedSeconds}s (±${justDroppedSuccess.accuracy}m)`}
@@ -1169,7 +1169,7 @@ export default function FieldPage() {
                         : 'DROP SIGN PIN HERE'}
                     </span>
                   </div>
-                  <span className={`text-xs font-extrabold uppercase tracking-wider ${
+                  <span className={`text-xs font-extrabold uppercase tracking-wide truncate max-w-full block px-2 ${
                     isCompetitor ? 'text-rose-100' : 'text-slate-950/80'
                   }`}>
                     {isCompetitor
@@ -1200,7 +1200,7 @@ export default function FieldPage() {
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
                   Sign Size / Format:
                 </span>
-                <span className="text-[10px] font-bold text-emerald-400">
+                <span className="text-[11px] font-bold text-emerald-400">
                   {SIGN_TYPES.find(t => t.id === selectedType)?.size}
                 </span>
               </div>
@@ -1244,12 +1244,12 @@ export default function FieldPage() {
                   <span className="text-xs font-black uppercase tracking-wider text-slate-300 block">
                     Optional Field Tools
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[11px] text-slate-500">
                     Photo verification, AI sign scan & competitor spotting
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
                 Secondary
               </span>
             </div>
@@ -1272,7 +1272,7 @@ export default function FieldPage() {
                       <span className="text-sm font-black text-white uppercase tracking-wide">
                         📸 AI Photo Sign Scanner
                       </span>
-                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 flex items-center gap-1">
+                      <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 flex items-center gap-1">
                         <Sparkles className="w-2.5 h-2.5 fill-purple-300" />
                         Gemini Vision
                       </span>
@@ -1304,7 +1304,7 @@ export default function FieldPage() {
                     <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
                     <span>Gemini Multimodal AI Scanning Sign...</span>
                   </div>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[11px] text-slate-400">
                     Auto-detecting candidate name, sign dimensions & competitor status
                   </p>
                 </div>
@@ -1320,15 +1320,15 @@ export default function FieldPage() {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <span className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
                       AI Auto-Detected ({Math.round(aiScanResult.confidence * 100)}% Match)
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded font-black bg-white/10 text-white">
+                    <span className="text-[11px] px-1.5 py-0.5 rounded font-black bg-white/10 text-white">
                       {aiScanResult.sign_type.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
-                  <p className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                  <p className="font-extrabold text-sm text-white break-words">
                     <span>{aiScanResult.is_competitor ? '⚔️ Competitor Spotted:' : '✅ Supporter Sign:'}</span>
                     <span className="underline decoration-indigo-400 decoration-2 underline-offset-2">
                       {aiScanResult.candidate_name || (aiScanResult.is_competitor ? 'Opponent' : 'Melissa K. Brown')}
@@ -1339,7 +1339,7 @@ export default function FieldPage() {
                       "{aiScanResult.summary}"
                     </p>
                   )}
-                  <div className="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between text-[10px]">
+                  <div className="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between text-[11px]">
                     <span className="text-slate-400">Form auto-configured</span>
                     <span className="font-black text-emerald-400">Ready to Drop 📍</span>
                   </div>
@@ -1384,9 +1384,9 @@ export default function FieldPage() {
 
             {/* TOOL 2: Target Ownership Switch (Whose Sign Is This?) */}
             <div id="tour-field-ownership" className="pt-3 border-t border-slate-800/80">
-              <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+              <div className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between flex-wrap gap-1">
                 <span>Sign Ownership / Territory:</span>
-                <span className="text-[10px] text-slate-500">Tap to report opponent</span>
+                <span className="text-[11px] text-slate-500">Tap to report opponent</span>
               </div>
               <div className="grid grid-cols-2 gap-2.5">
                 {/* BUTTON 1: OUR SIGN */}
@@ -1406,7 +1406,7 @@ export default function FieldPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-black text-xs text-white truncate">OUR CAMPAIGN</p>
-                    <p className="text-[10px] font-bold text-emerald-400 truncate">Melissa K. Brown</p>
+                    <p className="text-[11px] font-bold text-emerald-400 truncate">Melissa K. Brown</p>
                   </div>
                 </button>
 
@@ -1427,14 +1427,14 @@ export default function FieldPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-black text-xs text-white truncate">COMPETITOR INTEL</p>
-                    <p className="text-[10px] font-bold text-rose-400 truncate">Opponent Sign</p>
+                    <p className="text-[11px] font-bold text-rose-400 truncate">Opponent Sign</p>
                   </div>
                 </button>
               </div>
 
               {/* Competitor Details Drawer */}
               {isCompetitor && (
-                <div className="mt-3 pt-2.5 border-t border-slate-800 animate-fadeIn space-y-3">
+                <div className="mt-3 pt-2.5 border-t border-slate-800 animate-fade-in space-y-3">
                   {/* Opponent Sign Type Picker */}
                   <div>
                     <label className="block text-[11px] font-black text-rose-400 uppercase tracking-wider mb-1.5">
@@ -1455,7 +1455,7 @@ export default function FieldPage() {
                             }`}
                           >
                             <span className="text-xl mb-0.5">{type.icon}</span>
-                            <span className="text-[10px] font-black leading-tight truncate max-w-full">
+                            <span className="text-[11px] font-black leading-tight truncate max-w-full">
                               {type.label}
                             </span>
                           </button>
@@ -1558,7 +1558,7 @@ export default function FieldPage() {
                     key={sign.id}
                     className="p-3.5 rounded-2xl bg-slate-900/95 border border-slate-800 flex items-center justify-between gap-3 shadow-lg"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl shrink-0">
                         {sign.photo_url ? (
                           <img
@@ -1570,18 +1570,18 @@ export default function FieldPage() {
                           signInfo?.icon || '📍'
                         )}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-sm text-white">
                             {signInfo?.label || sign.sign_type}
                           </span>
                           {sign.is_competitor && (
-                            <span className="text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded border border-rose-500/30">
+                            <span className="text-[11px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded border border-rose-500/30">
                               {sign.competitor_name || 'Competitor'}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-slate-400 truncate">
                           {sign.distance_meters !== undefined
                             ? `${sign.distance_meters}m away`
                             : `Lat ${Number(sign.latitude).toFixed(3)}`} • {sign.is_competitor ? 'Reported by' : 'By'} {sign.placed_by_name}
