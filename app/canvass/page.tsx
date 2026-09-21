@@ -675,12 +675,9 @@ export default function CanvassPage() {
 
             </form>
 
-            <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-center text-xs text-slate-400">
               <Link href="/field" className="text-emerald-400 hover:underline flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5" /> Yard Sign Drop App
-              </Link>
-              <Link href="/dashboard" className="text-slate-400 hover:text-white flex items-center gap-1">
-                Command Map
               </Link>
             </div>
           </div>
@@ -1138,14 +1135,6 @@ export default function CanvassPage() {
             <Footprints className="w-3.5 h-3.5 text-emerald-400" />
             <span>Walk Log ({sessionHistory.length} Doors)</span>
           </h4>
-          <Link
-            href="/dashboard"
-            target="_blank"
-            className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
-          >
-            <span>View Command Map</span>
-            <ChevronRight className="w-3 h-3" />
-          </Link>
         </div>
 
         {sessionHistory.length === 0 ? (
