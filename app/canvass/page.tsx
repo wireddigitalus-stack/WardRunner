@@ -381,7 +381,7 @@ export default function CanvassPage() {
         campaignId: result.session?.campaignId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
         campaignName: result.session?.campaignName || 'Melissa K. Brown for City Council',
         pin: pinInput.trim(),
-        volunteerName: result.session?.volunteerName || nameInput.trim(),
+        volunteerName: nameInput.trim() || result.session?.volunteerName || 'Field Director',
       };
 
       localStorage.setItem('campaignos_session', JSON.stringify(newSession));

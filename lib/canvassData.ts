@@ -1,6 +1,7 @@
 import { CanvassRecord, VolunteerLocationPing, GroundVolunteerRole } from './types';
 import { getCampaignId } from '@/lib/auth';
 import { fetchFromSupabase, upsertToSupabase, deleteFromSupabase, subscribeToTable } from '@/lib/syncEngine';
+import { checkDataVersion } from './signData';
 
 export const CANVASS_STORAGE_KEY = 'campaignos_canvass_records';
 export const CANVASS_PING_KEY = 'campaignos_canvass_ping';
@@ -17,6 +18,7 @@ export const SEED_VOLUNTEER_PINGS: VolunteerLocationPing[] = [];
 
 export function getStoredCanvassRecords(): CanvassRecord[] {
   if (typeof window === 'undefined') return SEED_CANVASS_RECORDS;
+  checkDataVersion();
   try {
     const raw = localStorage.getItem(CANVASS_STORAGE_KEY) || localStorage.getItem('wardrunner_canvass_records');
     if (!raw) {
@@ -98,6 +100,7 @@ export async function deleteCanvassRecord(id: string): Promise<void> {
 
 export function getStoredVolunteerPings(): VolunteerLocationPing[] {
   if (typeof window === 'undefined') return SEED_VOLUNTEER_PINGS;
+  checkDataVersion();
   try {
     const raw = localStorage.getItem(VOLUNTEER_PINGS_STORAGE_KEY) || localStorage.getItem('wardrunner_volunteer_pings');
     if (!raw) {

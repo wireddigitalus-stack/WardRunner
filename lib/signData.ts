@@ -8,10 +8,10 @@ export const SIGNS_STORAGE_KEY = 'campaignos_signs_data';
 export const SIGNS_PING_KEY = 'campaignos_signs_ping';
 
 // Data version stamp — bump to force client-side cache reset
-const DATA_VERSION = '2';
-const DATA_VERSION_KEY = 'campaignos_data_version';
+export const DATA_VERSION = '3';
+export const DATA_VERSION_KEY = 'campaignos_data_version';
 
-function checkDataVersion(): boolean {
+export function checkDataVersion(): boolean {
   if (typeof window === 'undefined') return false;
   const stored = localStorage.getItem(DATA_VERSION_KEY);
   if (stored !== DATA_VERSION) {

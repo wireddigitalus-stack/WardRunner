@@ -24,7 +24,7 @@ import { initRemoteChannel, LiveMode, CommandAction } from '@/lib/remoteCommande
 import { PrecinctInfo, BRISTOL_PRECINCTS, BRISTOL_PRECINCTS_GEOJSON, BRISTOL_ALL_PRECINCTS_BOUNDS, BRISTOL_ALL_PRECINCTS_CENTER } from '@/lib/precinctData';
 import { getStoredAssignments, saveStoredAssignments } from '@/lib/assignmentData';
 import { getStoredSigns, addPlacedSign, SEED_SIGNS, subscribeSigns } from '@/lib/signData';
-import { getStoredCanvassRecords, getStoredVolunteerPings, snapWalkingPathToStreets, SEED_CANVASS_RECORDS } from '@/lib/canvassData';
+import { getStoredCanvassRecords, getStoredVolunteerPings, fetchVolunteerPings, subscribeVolunteerPings, snapWalkingPathToStreets, SEED_CANVASS_RECORDS } from '@/lib/canvassData';
 import { getStoredCanvassRoutes, saveStoredCanvassRoutes, assignCanvassRoute, updateCanvassRouteStatus } from '@/lib/canvassRouteData';
 import { Sign, SignType, Recommendation, InventoryStock, VolunteerAssignment, CanvassRecord, VolunteerLocationPing, CanvassRoute } from '@/lib/types';
 import { getAppleMapsUrl } from '@/lib/mapUrls';
@@ -555,9 +555,15 @@ export default function DashboardPage() {
             const merged = [...onlyLocal, ...sanitized];
             setCanvassRecords(merged);
           }
+
+          // Fetch fresh live volunteer pings from Supabase
+          const remotePings = await fetchVolunteerPings();
+          if (Array.isArray(remotePings)) {
+            setVolunteerPings(remotePings);
+          }
         }
       } catch (err) {
-        console.warn('Remote canvass records sync offline/deferred:', err);
+        console.warn('Remote ground campaign sync offline/deferred:', err);
       }
     };
     loadGroundData();
@@ -565,6 +571,10 @@ export default function DashboardPage() {
     window.addEventListener('campaignos_pings_updated', loadGroundData);
     window.addEventListener('wardrunner_canvass_updated', loadGroundData);
     window.addEventListener('wardrunner_pings_updated', loadGroundData);
+
+    const unsubPings = subscribeVolunteerPings((pings) => {
+      if (Array.isArray(pings)) setVolunteerPings(pings);
+    });
 
     // Canvass Routes Data Loader
     const loadRoutes = () => {
@@ -586,6 +596,7 @@ export default function DashboardPage() {
       window.removeEventListener('wardrunner_pings_updated', loadGroundData);
       window.removeEventListener('campaignos_routes_updated', loadRoutes);
       window.removeEventListener('wardrunner_routes_updated', loadRoutes);
+      unsubPings();
       clearInterval(groundInterval);
     };
   }, []);
@@ -802,12 +813,7 @@ export default function DashboardPage() {
         role: String(p.role || 'Volunteer'),
       }));
     }
-    return [
-      { id: 'vol-1', name: 'Sarah Jenkins', role: 'Door Canvasser' },
-      { id: 'vol-2', name: 'Marcus Taylor', role: 'Flyer Hanger' },
-      { id: 'vol-3', name: 'David Vance', role: 'Field Director' },
-      { id: 'vol-4', name: 'Campaign Volunteer', role: 'Field Volunteer' },
-    ];
+    return [];
   }, [volunteerPings]);
 
   /* ---------- Inventory Supply Calculations ---------- */
