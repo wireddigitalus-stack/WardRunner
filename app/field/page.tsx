@@ -815,7 +815,7 @@ export default function FieldPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-white leading-tight truncate">
-                {session.campaignName}
+                Melissa K. Brown Campaign
               </p>
               <p className="text-xs text-slate-400 font-medium truncate">
                 Operated by <span className="text-emerald-400 font-semibold">{session.volunteerName}</span>
