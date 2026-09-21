@@ -120,20 +120,7 @@ export default function FieldPage() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
 
-  // Auto-launch field briefing for first-time session (Desktop only for now)
-  useEffect(() => {
-    if (!session) return;
-    if (typeof window !== 'undefined' && window.innerWidth < 768) return;
-    try {
-      const seen = localStorage.getItem('campaignos_tour_completed_field_v1') || localStorage.getItem('wardrunner_tour_completed_wardrunner_field_tour_v1');
-      if (!seen) {
-        const timer = setTimeout(() => {
-          setIsTourOpen(true);
-        }, 1200);
-        return () => clearTimeout(timer);
-      }
-    } catch {}
-  }, [session]);
+  // Tour is on-demand only (click 'Tour' button anytime)
 
   // Field Placement State
   const [activeTab, setActiveTab] = useState<'place' | 'retrieve'>('place');
